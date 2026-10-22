@@ -1,0 +1,103 @@
+{
+  "recipe": "reelmimic-pacing-v2",
+  "source": "edenfunf/reelmimic（参考片节奏克隆）+ 对 sushi.mp4 的逐秒抽帧实测",
+  "thesis": "情绪过山车：快切密集 → 沉浸蓄力 → 空间奇观 → 苍凉留白 → 诛心 → 逆转 → 升华",
+  "sections": [
+    {
+      "id": "hook",
+      "name": "快切密集期",
+      "range": [0.0, 13.5],
+      "avg_shot_s": 1.8,
+      "emotion": "盛唐气象 → 崩塌",
+      "beats": [
+        { "t": 0.0, "event": "宣纸暖白直接入场（零黑屏）+ 水墨墨环疾转", "type": "hit" },
+        { "t": 0.7, "event": "朱砂印「诗圣」砸落 + 墨点飞溅 + 相机震动", "type": "impact" },
+        { "t": 1.2, "event": "6500 粒子汇聚为「杜甫」", "type": "assemble" },
+        { "t": 2.4, "event": "Z 轴极速拉远，进入活字矩阵地面", "type": "camera" },
+        { "t": 4.5, "event": "「会当凌绝顶」立体朱牌错落升起", "type": "enter" },
+        { "t": 7.8, "event": "「致君尧舜上」第二排升起", "type": "enter" },
+        { "t": 9.4, "event": "巨型「落第」斜印砸下", "type": "impact" },
+        { "t": 10.4, "event": "压暗为战火焦黑 + 血红「乱」印", "type": "cut" },
+        { "t": 11.0, "event": "描边大字「七五五」", "type": "reveal" },
+        { "t": 12.1, "event": "「国破山河在」+ 朱砂红圈划过「破」", "type": "reveal" }
+      ]
+    },
+    {
+      "id": "immersion",
+      "name": "沉浸蓄力期",
+      "range": [13.5, 23.5],
+      "avg_shot_s": 3.0,
+      "emotion": "风雨压城 → 悲悯",
+      "beats": [
+        { "t": 13.5, "event": "茅屋剪影 + 三层竹子随风弯曲", "type": "scene" },
+        { "t": 15.5, "event": "「八月秋高风怒号」出现，0.7s 后逐列被风剥离", "type": "dissolve" },
+        { "t": 17.2, "event": "竖排「大庇天下寒士」", "type": "reveal" },
+        { "t": 19.5, "event": "朱砂红剑光劈下", "type": "impact" },
+        { "t": 20.0, "event": "子弹时间：雨速 1.0 → 0.015，雨滴凝为圆珠", "type": "bullet_time" },
+        { "t": 21.0, "event": "「安得广厦千万间」定格海报帧", "type": "poster" }
+      ]
+    },
+    {
+      "id": "spectacle",
+      "name": "空间奇观期",
+      "range": [23.5, 37.8],
+      "avg_shot_s": 2.4,
+      "emotion": "天地浩大 → 家国破碎",
+      "beats": [
+        { "t": 23.5, "event": "「七六六」圆心张开 → 穿越进长江", "type": "portal" },
+        { "t": 25.0, "event": "江水 + 落叶 + 「无边落木萧萧下」", "type": "scene" },
+        { "t": 28.5, "event": "3.2 万点云由江浪收束为孤峰（90° 方位角旋转）", "type": "camera" },
+        { "t": 30.2, "event": "「会当凌绝顶 / 一览众山小」右侧安全区", "type": "reveal" },
+        { "t": 33.2, "event": "万金球体全屏挤压 + 计数器 1 → 10,000", "type": "spectacle" },
+        { "t": 35.5, "event": "「烽火连三月 / 家书抵万金」", "type": "reveal" }
+      ]
+    },
+    {
+      "id": "breath",
+      "name": "苍凉留白期",
+      "range": [37.8, 54.8],
+      "avg_shot_s": 4.2,
+      "emotion": "孤舟 → 泪目",
+      "beats": [
+        { "t": 37.8, "event": "湘江寒夜 + 月光走廊 + 孤舟", "type": "scene" },
+        { "t": 42.0, "event": "160 颗光粒凝聚成沙鸥，飞向明月", "type": "assemble" },
+        { "t": 46.5, "event": "冲入月光 → 宣纸白「诗是吾家事」", "type": "cut" },
+        { "t": 48.6, "event": "朱砂巨印「少陵野老」", "type": "impact" },
+        { "t": 49.6, "event": "4,739 km 生命轨迹线拉通", "type": "reveal" },
+        { "t": 51.0, "event": "核心金句「没有一首，是写给自己看的。」", "type": "poster" }
+      ]
+    },
+    {
+      "id": "rupture",
+      "name": "黑屏诛心与翻牌逆转期",
+      "range": [54.8, 85.0],
+      "avg_shot_s": 3.5,
+      "emotion": "碾压 → 破防 → 逆转 → 升华",
+      "beats": [
+        { "t": 54.8, "event": "纯黑 + 「如果有一天，」", "type": "hit" },
+        { "t": 56.2, "event": "「你的人生」110px → 「突然崩塌」+ 白色裂纹", "type": "impact" },
+        { "t": 58.2, "event": "刚体字块开始坠落（预烘焙）", "type": "physics" },
+        { "t": 60.4, "event": "18 个汉字刚体倾泻，堆成底部废墟", "type": "physics" },
+        { "t": 61.5, "event": "「自己是个 废物」+ 双道朱砂狂草红圈", "type": "impact" },
+        { "t": 63.2, "event": "「你会怎么办？」", "type": "reveal" },
+        { "t": 64.5, "event": "单字「可」", "type": "hit" },
+        { "t": 65.0, "event": "四张厄运卡牌居中落位", "type": "enter" },
+        { "t": 66.2, "event": "卡牌依次 180° 翻转为名篇", "type": "flip" },
+        { "t": 67.5, "event": "「打成了 诗史。」砸落", "type": "impact" },
+        { "t": 69.5, "event": "湘江孤舟终章 + 「人生不相见」", "type": "scene" },
+        { "t": 75.0, "event": "终极海报帧「却把整个时代，写成了诗。」", "type": "poster" },
+        { "t": 80.0, "event": "单字「诗」→ 墨黑终章落版", "type": "reveal" }
+      ]
+    }
+  ],
+  "holds": [
+    { "at": 21.0, "hold_s": 1.2, "reason": "子弹时间海报帧：动→静，让观众能截图" },
+    { "at": 31.6, "hold_s": 1.0, "reason": "孤峰成形后静一拍，再出诗行" },
+    { "at": 45.4, "hold_s": 1.1, "reason": "空江无人，留白" },
+    { "at": 53.0, "hold_s": 1.8, "reason": "金句读完后停顿，不叠加新信息" },
+    { "at": 63.6, "hold_s": 0.9, "reason": "「你会怎么办？」停在黑屏上" }
+  ],
+  "sfx_timing_rule": "所有音效比视觉落点提前 2–3 帧（0.07–0.1s），落点本身配低频冲击",
+  "bpm": 60,
+  "frames_per_beat": 30
+}

@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>杜甫 · 诗史 — 确定性动态图形复刻</title>
+<style>
+  @font-face {
+    font-family: 'NotoSerifSC';
+    src: url('assets/fonts/NotoSerifSC-VF.ttf') format('truetype');
+    font-weight: 200 900;
+    font-display: block;
+  }
+  @font-face {
+    font-family: 'SourceHanSerifHeavy';
+    src: url('assets/fonts/SourceHanSerifSC-Heavy.ttf') format('truetype');
+    font-weight: 400 900;
+    font-display: block;
+  }
+  @font-face {
+    font-family: 'LXGWWenKai';
+    src: url('assets/fonts/LXGWWenKai-Regular.ttf') format('truetype');
+    font-weight: 300 700;
+    font-display: block;
+  }
+  @font-face {
+    font-family: 'MaShanZheng';
+    src: url('assets/fonts/MaShanZheng-Regular.ttf') format('truetype');
+    font-weight: 400;
+    font-display: block;
+  }
+  html, body {
+    margin: 0; padding: 0; background: #050604; overflow: hidden;
+    height: 100%;
+  }
+  #wrap {
+    position: fixed; inset: 0; display: flex; align-items: center; justify-content: center;
+  }
+  canvas#stage {
+    width: min(100vw, calc(100vh * 16 / 9));
+    height: min(100vh, calc(100vw * 9 / 16));
+    display: block;
+    background: #000;
+  }
+  #hint {
+    position: fixed; left: 12px; bottom: 10px; color: #8a8578;
+    font: 12px/1.6 "Courier New", monospace; letter-spacing: 0.08em;
+    opacity: 0.7; user-select: none;
+  }
+  #loading {
+    position: fixed; inset: 0; display: flex; align-items: center; justify-content: center;
+    color: #cfc6b0; font: 15px/1.8 "Courier New", monospace; letter-spacing: 0.2em;
+    background: #050604; transition: opacity .4s ease;
+  }
+</style>
+</head>
+<body>
+<div id="wrap"><canvas id="stage" width="1920" height="1080"></canvas></div>
+<div id="loading">LOADING</div>
+<div id="hint"></div>
+
+<!-- 引擎层（顺序即依赖顺序） -->
+<script src="engine/theme.js"></script>
+<script src="engine/layers.js"></script>
+<script src="engine/kinetic.js"></script>
+<script src="engine/hud.js"></script>
+<script src="engine/world3d.js"></script>
+<script src="engine/water.js"></script>
+<script src="engine/figures.js"></script>
+
+<!-- 外挂美学底座（6 大模块） -->
+<script src="engine/aesthetics-hub/motion-rules.js"></script>
+<script src="engine/aesthetics-hub/uiux-typography.js"></script>
+<script src="engine/aesthetics-hub/remonster-physics.js"></script>
+<script src="engine/aesthetics-hub/opuscar-fx.js"></script>
+
+<!-- V4 笔墨工具箱 + 句读律动 -->
+<script src="engine/v4/inkbrush.js"></script>
+<script src="engine/v4/cadence.js"></script>
+
+<!-- V4 五层管线：宣纸墨渗 / 界画木构 / 金石碑拓 -->
+<script src="engine/v3/paper-fluid.js"></script>
+<script src="engine/v3/celestial-lattice.js"></script>
+<script src="engine/v3/fine-poly-ruins.js"></script>
+<script src="engine/v3/eight-layer.js"></script>
+
+<!-- 分镜层 -->
+<script src="scenes/s01_title.js"></script>
+<script src="scenes/s02_typeworld.js"></script>
+<script src="scenes/s03_thatched.js"></script>
+<script src="scenes/s04_gao.js"></script>
+<script src="scenes/s05_boat.js"></script>
+<script src="scenes/s06_timeline.js"></script>
+<script src="scenes/s07_dark.js"></script>
+<script src="scenes/s08_cards.js"></script>
+<script src="scenes/s09_end.js"></script>
+
+<!-- 播放器 -->
+<script src="app.js"></script>
+</body>
+</html>

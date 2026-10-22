@@ -1,0 +1,108 @@
+{
+  "recipe_id": "chinese_kinetic_biography_dufu_v1",
+  "derived_from": {
+    "reference": "sushi.mp4 (1280x720, 30fps, 83.2s, no audio track)",
+    "analyzed_at": "2026-10",
+    "method": "逐秒抽帧 + 关键帧放大目检 + 像素取色 + 帧差/亮度曲线"
+  },
+  "target": {
+    "subject": "杜甫（712—770）· 诗圣 · 诗史",
+    "duration_s": 85.0,
+    "width": 1920,
+    "height": 1080,
+    "fps": 30,
+    "aspect": "16:9",
+    "audio": "中文男声旁白（edge-tts YunjianNeural）+ 程序化氛围配乐 + 音效"
+  },
+
+  "design_tokens": {
+    "colors": {
+      "paper": "#E7DAC2",
+      "paperHi": "#F8F1E1",
+      "paperLo": "#D8C9AD",
+      "ink": "#1A1309",
+      "cinnabar": "#D8402A",
+      "night": "#16170F",
+      "nightSea": "#2B2B22",
+      "hudLight": "rgba(74,71,55,0.80)",
+      "hudDark": "rgba(226,216,196,0.74)"
+    },
+    "fonts": {
+      "title": "Source Han Serif SC Heavy + 木刻打孔质感",
+      "body": "Noto Serif SC",
+      "poem": "LXGW WenKai（楷体）",
+      "numerals": "Courier New（等宽，宽字距）"
+    },
+    "safe_zone": { "left": 96, "top": 54, "right": 1824, "bottom": 1026 },
+    "hud": {
+      "anchor": "top-right",
+      "right_margin": 82,
+      "line1_y": 86,
+      "line2_y": 130,
+      "size1": 27,
+      "size2": 24,
+      "enter": "右滑 18px + 淡入 0.55s（easeOutExpo）",
+      "exit": "0.22s 淡出",
+      "km_tween": "1.6s easeInOutCubic"
+    }
+  },
+
+  "five_layer_stack": {
+    "1_background": "宣纸（fbm 云纹 + 纤维 + 杂质 + 折痕）或夜海径向渐变；soft-light 漂移渐变网格",
+    "2_assets": "活字版面（四角投影 + 仿射贴字）／点云群山／茅草与雨／水面与月光柱／金球与信笺",
+    "3_typography": "思源宋体 Heavy 巨字 + 中文纪年 + 等宽数字；逐字 3–6 帧错落",
+    "4_color_grade": "soft-light 冷暖映射；夜场压到 #16170F 系",
+    "5_overlay": "按帧号取种子的胶片颗粒（4 张 tile 随机偏移，overlay 0.40）+ 径向暗角（0.12）"
+  },
+
+  "motion_rules": [
+    "禁止线性插值；统一使用 outExpo / spring / easeInExpo / inOutCubic",
+    "入场同时联动 Fade + Rise(26px) + Scale(0.96→1) + Blur(4–7px→0)",
+    "同屏多元素错落 0.05–0.09s（≈1.5–3 帧）",
+    "退场时长约为入场的 40%，采用 inExpo",
+    "停留期元素叠加正弦呼吸（1–3px / 0.6–0.9Hz）",
+    "所有时序由 t（秒）派生，禁止魔法帧数"
+  ],
+
+  "shot_grammar": {
+    "hard_cut": "章与章之间以 0.2–0.3s 交叉溶解（纸↔夜）或硬切（夜↔夜）",
+    "camera_moves": [
+      "活字版面：Z 轴指数推进（7.2→1.2），俯角 25°→26°",
+      "点云群山：方位角 -0.62→0.22 rad，配合 focus 0→1 收束成孤峰",
+      "夜海：固定机位，仅月光柱与水纹呼吸",
+      "空江：小舟横向漂移 0.24W，水纹微弱起伏"
+    ],
+    "typography_beats": [
+      "巨字（300–430px）：标题、年号、可、诗",
+      "中字（96–140px）：诗句主行、你的人生",
+      "小字（20–34px）：注释、诗题、HUD",
+      "竖排（60–80px）：诗行列，右起"
+    ]
+  },
+
+  "quality_gates": {
+    "min_text_contrast": 4.5,
+    "max_text_width_ratio": 0.82,
+    "forbidden": ["Math.random", "Date.now", "wall-clock rAF 驱动", "hardcoded fps frames"],
+    "checks": [
+      "逐秒抽帧拼图（6 张 15 格）目检：溢出、重叠、黑屏、死帧",
+      "章节切换处 HUD 是否换值且数字滚动",
+      "旁白与章节边界是否重叠（build_audio.py 会打印每句起止）",
+      "成片时长/帧率/分辨率/音轨是否存在"
+    ]
+  },
+
+  "rework_notes": [
+    "文字自带 globalAlpha 时必须乘环境 alpha，否则交叉溶解失效（本项目已改为离屏缓冲合成，从根上规避）",
+    "Canvas 上一帧内的 fillText 数量控制在 2500 以内，否则单帧 >100ms；活字版面靠 fogFar 裁剪",
+    "Playwright screenshot(PNG) 约 700ms/帧，改用 getImageData+POST+rawvideo 可降到 ~200ms/帧",
+    "朱印的字必须画在红色印面之上（阴文），不要在字上打孔，否则不可读",
+    "点云山要做出'山体'而非'沙尘'：点要沿高度场分布、密度随高度衰减，基线不要出现黑带"
+  ],
+
+  "reusable_inputs": {
+    "storyboard": "storyboard.json（章节/HUD cue/旁白时间点）",
+    "scenes": ["s01_title", "s02_typeworld", "s03_thatched", "s04_gao", "s05_boat", "s06_timeline", "s07_dark", "s08_cards", "s09_end"],
+    "swap_points": ["主题人物", "HUD cue 表", "红牌/诗行文案", "旁白文本", "第 4 章的点云与水面配色"]
+  }
+}

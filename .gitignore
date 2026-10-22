@@ -1,0 +1,27 @@
+# Dependencies / build output
+node_modules/
+out/
+dist/
+build/
+.remotion/
+*.log
+
+# Legacy Du Fu release binaries (kept locally, not part of the new source tree)
+archive/dufu_releases/
+
+# Local tooling
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+__pycache__/
+*.pyc
+
+# Secrets / local env
+.env
+.env.*
+!.env.example
+
+# Large intermediate renders
+public/renders/
+public/tmp/
