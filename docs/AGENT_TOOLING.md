@@ -11,7 +11,8 @@
 |---|---|
 | 工作目录 | `D:\AI\wukong-motion-mv` |
 | 远端 | `git@github.com:leninmd/wukong-motion-mv.git`（分支 `main`，已设 upstream） |
-| Node / 包管理 | Node 24.16，npm；`remotion` 与 `@remotion/media-utils` 锁 `4.0.537` |
+| Node / 包管理 | Node 24.16，npm；`remotion` / `@remotion/media-utils` / `@remotion/three` 锁 `4.0.537` |
+| 三维栈 | `three 0.186.1`、`@react-three/fiber 9.8.2`、`@types/three 0.186.0`（与 remotion 精确同版本，禁止 `^`） |
 | Python | `D:\dev\runtimes\python\Python313\python.exe`，可用 `numpy 2.2.6` / `scipy 1.18.1` / `Pillow 11.3` |
 | ffmpeg | **系统没有**，用 Remotion 自带的精简构建：`node_modules\@remotion\compositor-win32-x64-msvc\ffmpeg.exe`（`ffprobe.exe` 同目录）。只有 `scale/crop/loudnorm/ebur128` 等基础滤镜，**没有 `fps` / `tile`** |
 | GPU | **无**（`nvidia-smi` 不存在） |
@@ -90,13 +91,43 @@ $env:AGY_WORKDIR = 'D:\AI\wukong-motion-mv'             # 传给 --add-dir 的�
 npm run typecheck
 npx remotion compositions src/index.ts
 python scripts/verify_climax.py
-npx remotion still src/index.ts WukongClimaxSegment out/climax_preview_45.png --frame=45
-npx remotion render src/index.ts WukongClimaxSegment out/wukong-climax.mp4
+npx remotion still src/index.ts WukongClimaxSegment out/senbon_v2_f045.png --frame=45
+npx remotion still src/index.ts WukongClimaxSegment out/senbon_v2_f085.png --frame=85
+npx remotion still src/index.ts WukongClimaxSegment out/senbon_v2_f120.png --frame=120
+npx remotion still src/index.ts WukongClimaxSegment out/senbon_v2_f190.png --frame=190
+npx remotion still src/index.ts WukongClimaxSegment out/senbon_v2_f280.png --frame=280
+npx remotion render src/index.ts WukongClimaxSegment out/senbon_v2_mvp.mp4 --concurrency=4
 ```
 
 - **禁止用"能编译"替代"能渲染"**。
 - 改 Root / 关键 primitive 后，额外跑一次 `WukongPrologue` 的 still 防回归。
-- 交付前必须出**接触表**（多时间点拼图）自检画面，不靠单帧判断。
+- 第 120 帧必须真的渲染出 Three.js 几何体（棋盘、40 柱、金箍棒、冲击环），不能只看 DOM 覆盖层。
+- 交付前必须出**接触表**（≥12 个时间点拼图）自检画面，不靠单帧判断。
+
+---
+
+## 3.1 纯代码视觉原语 `src/primitives/senbon_style/`（2026-10-22 新增）
+
+| 文件 | 职责 | 关键约束 |
+|---|---|---|
+| `style.ts` | 四色令牌、缓动、弹簧、线宽 | 不新增第五主色 |
+| `geometry.ts` | Catmull-Rom / 变宽飘带 / 锯齿 / 圆弧 | 纯函数，无时钟 |
+| `HalftoneOverlay.tsx` | SVG `<pattern>` 半调网点 + 纸屑 + 径向光晕 | 光晕 ≤0.25、颗粒 ≤0.3，否则暗场发灰 |
+| `WukongSilhouette.tsx` | 参数化大圣：`stand / eyes_closeup / kneel_defiant / smash` | 翎子/披风绑 `useCurrentFrame()` 正余弦；眼睛用小型 blur 滤镜 |
+| `NandamenDoors.tsx` | 南天门双扇推拉门 | 0–12 帧，先蓄力再崩开 |
+| `CourtSky.tsx` | 满月/云/飞檐/飞鸟/浮尘 | 三层视差按 pan×0.22/0.5/1 |
+| `CelestialArmy.tsx` | 60 天兵 + 前景枪林 | 单 `<g>` symbol + `<use>`，不要复制 60 份路径 |
+| `WarBanners.tsx` | 四分战幡 | 弹簧落幅；竖排字用 HTML + `whiteSpace: nowrap` |
+| `ForegroundMotion.tsx` | 宫灯/火星/光条 | 只放屏幕两侧与下三分之一，禁止挡字 |
+| `EyeCut.tsx` | 火眼横切条 | 斜切 `clip-path: polygon()`；标题容器必须有显式宽度 |
+| `CudgelImpact3D.tsx` | Three.js 天庭棋盘 + 40 柱 + 三圈冲击波 | 地面用 `meshBasicMaterial` 保证棋盘可读 |
+| `SplitType.tsx` | 一棒劈字 | 两个相同文本图层 + 互补斜切遮罩 |
+| `MountainCage.tsx` | 五指山铁笼 | 五柱依次砸落；中央缝隙留 280px 给跪姿剪影 |
+| `Talismans.tsx` | 六张封印符咒 | 从四角飞入、落钉、文字 clip 揭示 |
+| `VerdictTags.tsx` | 三层罪状木牌 + 破壁 | 远/中/近三层景深；木牌翻面用 `rotateY` |
+| `FinalSeals.tsx` | 四枚朱砂巨印 | 重字用粗黑体重栈，裂纹裁在字内 |
+
+分镜秒表在 `src/sequences/senbonPlan.ts`；**所有分镜帧号只允许出现在这里**，且统一 `sb(n)=n/30` 转秒。歌词落点一律从 `public/alignment/climax_words.json` 取。
 
 ---
 
@@ -104,7 +135,7 @@ npx remotion render src/index.ts WukongClimaxSegment out/wukong-climax.mp4
 
 | 目录 | 契约 |
 |---|---|
-| `public/ai/` | AI 板：1920×1080 PNG，必须先在 `assets.manifest.json` 声明；文件名稳定；见 `public/ai/README.md` |
+| `public/ai/` | **2026-10-22 起本段已清空**：`WukongClimaxSegment` 为纯代码，`assets` 为空；仅当其它镜头需要美术板时才按旧契约生成 |
 | `public/alignment/` | 只有秒，无帧号；`units` 升序、`end>start`；见 `public/alignment/README.md` |
 | `public/audio/` | `climax_mix.wav` 播放用；`drums_stem.wav` 频谱用；48 kHz / 10.000 s；见 `public/audio/README.md` |
 | `out/` | 全部构建产物，**不进 git** |
@@ -120,4 +151,9 @@ npx remotion render src/index.ts WukongClimaxSegment out/wukong-climax.mp4
 | 生成的 png 打不开 | 实际是 JPEG 改了扩展名 | 用 Pillow 校验 `im.format`，统一转 PNG |
 | Python 调 CLI 抛 GBK 解码错 | Windows 默认编码 | `subprocess(..., encoding="utf-8", errors="replace")` |
 | `remotion still` 卡住 | 音频/图片 `delayRender` 未释放 | 检查 `staticFile()` 资源是否真的存在 |
-| 画面"像 PPT" | 纯代码几何拼贴，缺插画密度 | 走 AI 板 + 代码合成，不要继续堆图形 |
+| 竖排中文被拆成两列 / 变成横排 | 绝对定位 flex 容器没有显式 `width`，垂直书写时的 shrink-to-fit 计算出错 | 给容器固定 `width`，并给文字加 `whiteSpace: 'nowrap'`；参见 `WarBanners` / `EyeCut` |
+| 纯代码画面发灰、对比度低 | 全屏半调光晕 + 颗粒叠太狠（`HalftoneOverlay` 早期 opacity 0.55） | 光晕 ≤0.25、颗粒 ≤0.3；暗场靠局部光源而非整屏提亮 |
+| Three.js 画面只剩一片雾 | 雾 `near` 太近 + 环境光/平行光把地面染成棕色 | 雾 `near ≥180`；地面改 `meshBasicMaterial`；柱体加 emissive；先把 still 渲出来再调 |
+| `ThreeCanvas` 在无 GPU 机器上空白 | 无独立 GPU 时走 SwiftShader，但材质/光照过暗会被误判为没渲染 | 用第 120 帧 still 验证；确认 `<color attach="background">`、相机 `lookAt` 与网格实际在视锥内 |
+| 全屏反色帧把整段压灰 | 冲击白闪与 `HalftoneOverlay` 叠加 | 白闪 opacity ≤0.32、时长 ≤0.12 s；反色只在指定 1–2 帧 |
+| 纯代码几何"像卡片"（旧结论） | 缺密度、缺视差、缺物理 | 2026-10-22 起改为：多层视差 + 每层 30–60 个实例 + 半调/纸纹 + 物理弹簧/抛物线 + Three.js 几何体；**不再以"上 AI 板"作为唯一解** |

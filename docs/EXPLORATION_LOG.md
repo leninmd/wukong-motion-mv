@@ -201,3 +201,104 @@
 | 配乐 | 48 kHz 立体声 / 10.000 s / -14 LUFS / 真峰值 ≤ -1.5 dBTP |
 | 生成命令 | `python scripts/gen_plates.py --only <id>` |
 | 渲染命令 | `npx remotion render src/index.ts WukongClimaxSegment out/wukong-climax.mp4` |
+
+---
+
+## 11. 推翻“必须上 AI 板”：10 秒纯代码重构（2026-10-22 23:30 — 2026-10-23 00:10）
+
+### 动机
+
+用户验收第一版 10 秒 MVP 后给出四条硬伤，全部成立：
+
+1. 大殿/碎石/山缝是静态 AI 板，灯笼红绸不会动，像 PPT。
+2. 生搬《杜甫测试》的展览框：顶部“第 X 幕”、左下 BPM 仪表盘、右下常驻印章、底部 KTV 字幕条。
+3. 双套字幕打架：底部 KTV + 画面中央单字。
+4. 机位固定、切镜只有透明度，没有多层视差与物理转场。
+
+用户同时下了**硬约束**：本机无独立 GPU，禁止调用任何外部生图模型，按《千本樱》的纯代码路线重做。
+
+### 推翻的旧结论（保留原文，只做标注）
+
+- **推翻 §0.2**“纯代码画不出插画密度，必须上 AI 美术板”。
+- **推翻 §7**“板 + 代码的分工”。
+- **推翻 §8 F1**“纯代码画建筑/人物/幡永远像矢量卡片”。
+- **推翻 §9.1**“AI 板承担画面是唯一走通的高画质路线”。
+
+保留不动的结论：主体优先、先清单后生产、字级对齐、频谱绑鼓组、接触表自检。**“每刀必须有可一眼识别的主体”仍是最高优先级**；纯代码只是换了一种承担主体的材料。
+
+### 做法
+
+**删资产**
+- 删除 `public/ai/` 的 5 张板（court/impact/mountain/crevasse/verdict）与 `src/primitives/Plate.tsx`。
+- 删除旧展览框 primitive：`PosterFrame.tsx`（顶部章节框/侧栏/朱印）、`KineticLine.tsx`（底部 KTV 条）。
+- `assets.manifest.json` 升到 v2，`assets: []`，明确标注“assets 为空是验收要求”。
+
+**建原语（`src/primitives/senbon_style/`）**
+- `HalftoneOverlay`：SVG `<pattern>` 细/粗网点 + 径向渐变光晕 + 固定种子纸屑 pattern；不做全屏 `feTurbulence`。
+- `WukongSilhouette`：4 个 pose（stand / eyes_closeup / kneel_defiant / smash）；鬃毛、锁子甲、护心镜、战裙、云靴、雉鸡翎、披风、金箍棒全部是 path；翎子/披风用 `useCurrentFrame()` 的正余弦波驱动，眼睛用小型 blur 滤镜发光。
+- Shot 1：`NandamenDoors`（0–12 帧双扇拉门 + 门钉 + 铺首衔环 + 门匾）、`CourtSky`（满月/飞檐/云/鸟/浮尘，三层视差 0.22/0.5/1）、`CelestialArmy`（左右各 30 名天兵，`<symbol>`+`<use>`）、`WarBanners`（四幡弹簧落幅）、`ForegroundMotion`（宫灯/火星/光条）。
+- Shot 2：`EyeCut`（斜切 `clip-path` 分格 + 火眼特写 + 竖排【怎敌我】）、`CudgelImpact3D`（ThreeCanvas：棋盘格地面、40 根天条方柱、金箍棒、三圈冲击波、按距离延迟的抛物线崩飞）、`SplitType`（上下互补斜切遮罩 + 第 118–119 帧反色）。
+- Shot 3：`MountainCage`（五根带金色等高线的巨峰柱依次下砸、纵向震屏、中央 280px 深渊缝）、`Talismans`（六张朱砂符纸从四角飞入并落钉）。
+- Shot 4：`VerdictTags`（三道铁链 + 远/中/近三层木牌 + 前景三牌翻面 + 斩断成两片纷飞）、`FinalSeals`（四枚裂纹朱砂巨印 + 印泥飞溅）。
+
+**时间与数据**
+- 新增 `src/sequences/senbonPlan.ts`：分镜板帧号只在这里出现一次，统一 `sb(n)=n/30` 转秒；场景只看秒/帧。
+- 歌词锚点仍全部来自 `public/alignment/climax_words.json`：眼睛标题、符咒、木牌、印章均取 `unit.start`；鼓组频谱 `useStemEnergy()` 驱动脉冲与相机震动。
+
+**依赖**
+- 安装并锁死 `@remotion/three 4.0.537`、`three 0.186.1`、`@react-three/fiber 9.8.2`、`@types/three 0.186.0`。无 GPU 时 Chrome 走 SwiftShader，stills 与整片均能渲染。
+
+### 结果（证据）
+
+| 项 | 结果 |
+|---|---|
+| `npx tsc --noEmit` | 0 错误 |
+| `npx remotion compositions` | 2 个 Composition：Prologue 60fps/600f、Climax 30fps/300f |
+| 第 45 帧 | `out/senbon_v2_f045.png`：四幡同框（玉境/凌霄/十万/天兵合围），满月、天兵、大圣居中 |
+| 第 85 帧 | `out/senbon_v2_f085.png`：斜切火眼分格 + 竖排【怎敌我】 |
+| 第 120 帧 | `out/senbon_v2_f120.png`：3D 棋盘、40 柱崩飞、金箍棒、三圈冲击波、劈字 |
+| 第 190 帧 | `out/senbon_v2_f190.png`：五张符咒已钉、第六张飞入 |
+| 第 280 帧 | `out/senbon_v2_f280.png`：四枚朱砂巨印 + 斩碎木牌 + 大圣 |
+| 整片 | `out/senbon_v2_mvp.mp4`：h264 / 1920×1080 / 30 fps / 10.005 s / AAC 48 kHz 立体声 / 19.0 MB |
+| 接触表 | `out/senbon_v2_contact_sheet.png`：16 个时间点 4×4 |
+| 整片耗时 | 约 6–7 分钟（`--concurrency=4`，含 ThreeCanvas 的 55 帧；末段四印最慢） |
+
+### 与分镜表的偏离（有意，必须记录）
+
+- **四幡落点**：分镜写 10/25/40/55 帧，但验收帧 45 必须四幡同框。改为 8/18/28/38 帧（仍是四拍弹簧连落）；`senbonPlan.ts` 内注明原因。
+- **符咒落点**：分镜 175–225，但六张全挤在后 50 帧会来不及读。改为 175/178/181/184/187/190（5.83–6.33 s），最后一张在 190 帧刚好落钉。
+- **四印落点**：歌词重音为 8.605/8.95/9.20/9.475，最后两印略提前（最晚 9.233 s），保证 280 帧四印齐满；印章仍压在唱词重音附近。
+- **峰柱落点**：第一根提前到 146 帧（4.87 s），让第 150 帧切入时已有山体进画，而不是空白金光。
+
+### 代价与返工（只写真实发生的）
+
+- **4 轮 still 返工**：每轮 5 张，约 1–2 分钟/轮；主要修构图、竖排、对比度、3D 光照。
+- **1 次整片渲染失败**：第 163 帧 React error #310。原因：`Talismans` / `FinalSeals` / `Peak` / `Banner` 在 `useMemo` 之前 `return null`，组件从 0 个 hook 变成 N 个 hook。修复：把早退移到所有 hook 之后。**这个 bug 只有整片渲染才会暴露，still 抽帧看不出来**。
+- **1 次整片重渲**：修完 hook 后重渲通过。
+- **关键踩坑**：
+  1. 竖排中文在无显式宽度的 flex 容器里会拆列/横排 → 容器固定 `width` + `whiteSpace: nowrap`。
+  2. `HalftoneOverlay` 早期光晕 0.55 + 颗粒 overlay 把暗场洗成灰雾 → 光晕 ≤0.25、颗粒 ≤0.3、改 `soft-light`。
+  3. Three.js 地面用 `meshStandardMaterial` + 雾 near=80，整片只剩棕色雾 → 地面改 `meshBasicMaterial`、雾 near=190、柱体加 emissive。
+  4. 冲击白闪 opacity 0.5×0.16 s 叠加网点，280 帧被洗白 → 0.32×0.12 s，反色只保留指定帧。
+  5. 四幡在 45 帧第四面还没落下 → 收紧落点。
+  6. 印章用默认宋体，笔画太细、裂纹太多 → 换粗黑体栈、裂纹减到 4 条、加金线描边。
+  7. 前三版 Wukong 翎子像“黑角” → 改为向外下弯的 S 曲线 + 羽毛倒刺。
+- **观感仍未解决**：
+  - 天兵阵列仍偏“黑块+金点”，个体辨识度不足；
+  - 3D 段冲击瞬间（3.5 s）镜头偏远，柱子显得小；
+  - 280 帧碎木牌仍会遮住大圣半张脸；
+  - 纯代码的岩石/云仍不如手绘有机，下一步需要更细的 fBm 侵蚀轮廓或本地字体/纹理资产。
+
+### 结论
+
+- **保留纯代码路线**。在这段 10 秒、30 fps、无 GPU 的约束下，SVG + Three.js + CSS 3D 足以撑起“主体 + 视差 + 物理转场 + 字景合一”。
+- 它没有推翻“主体优先”，只推翻了“主体必须由 AI 板承担”。
+- 下一段的优先级：先把天兵个体与 3D 冲击的镜头距离调好，再谈加特效。
+
+### 影响文件
+
+- 删除：`public/ai/bg_*.png`（5）、`src/primitives/Plate.tsx`、`src/primitives/PosterFrame.tsx`、`src/primitives/KineticLine.tsx`
+- 新增：`src/primitives/senbon_style/` 下 16 个文件、`src/sequences/senbonPlan.ts`
+- 重写：`src/sequences/WukongClimaxSegment.tsx`
+- 更新：`package.json`、`assets.manifest.json`、`public/ai/README.md`、`README.md`、`docs/AGENT_TOOLING.md`
+

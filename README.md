@@ -3,16 +3,18 @@
 > 一部以代码为笔、以鼓点为骨的填词调音 MV。
 > 视觉节奏对标《千本樱》代码生成 MV；听觉与叙事张力对标《美猴王》鬼畜调音。
 
-当前状态：**阶段二 · 高潮复刻段完成**。
+当前状态：**阶段三 · 纯代码重构完成**。
 
 阶段一建立了全新 Remotion 仓库、素材契约、工程宪法 `AGENTS.md`，并用 `WukongPrologue` 验证了「宣纸纹 × 三维金墨点云 × 火星/飞灰 × 朱砂印 × 切片打字机」的合成链路。
 
-阶段二不再从零发散，而是**逐镜头复刻参考视频 `00:09–00:19` 的「天庭凌霄交战 × 五行山下压迫」**，落地为 `WukongClimaxSegment`（1920×1080 / 30 fps / 300 帧），并补齐了字级对齐、鼓组频谱驱动与动力学字幕三层管线。
+阶段二逐镜头复刻了参考视频 `00:09–00:19`，但第一版依赖 5 张 AI 静态板与杜甫母版的展览框，被判定为“像放 PPT”。阶段三按《千本樱》的纯代码路线彻底重写：**删除全部 AI 静态背景、顶部章节框、BPM 仪表盘、常驻印章与底部 KTV 字幕条**，改由 SVG / Canvas 2D / Three.js 几何体实时绘制四镜，歌词作为战幡、符咒、罪状牌与印章进入画面。
+
+> 本机无独立 GPU，且本轮明确禁止调用外部生图模型；纯代码是验收要求，不是权宜之计。
 
 ## 先读这两份
 
-- [`docs/EXPLORATION_LOG.md`](docs/EXPLORATION_LOG.md)：**为什么现在这么做**。记录了从"纯代码仿拍"到"AI 板 + 代码合成"的全部弯路、失败清单与代价。
-- [`docs/AGENT_TOOLING.md`](docs/AGENT_TOOLING.md)：**怎么在这台机器上干活**。环境事实、Antigravity 生图调用方式、脚本索引、踩坑对照表。
+- [`docs/EXPLORATION_LOG.md`](docs/EXPLORATION_LOG.md)：**为什么现在这么做**。记录了从"纯代码仿拍"到"AI 板 + 代码合成"、再到"纯代码重构"的全部弯路、失败清单与代价。
+- [`docs/AGENT_TOOLING.md`](docs/AGENT_TOOLING.md)：**怎么在这台机器上干活**。环境事实、Three.js 无 GPU 渲染、Antigravity 生图调用方式、脚本索引、踩坑对照表。
 
 ## 快速开始
 
@@ -23,11 +25,15 @@ npm run typecheck
 npm run compositions
 ```
 
-渲染高潮复刻段静帧（30 fps 下的第 45 帧＝交战瞬间，第 210 帧＝五指山特写）：
+渲染高潮复刻段的五个验收静帧（30 fps / 300 帧）：
 
 ```powershell
-npx remotion still src/index.ts WukongClimaxSegment out/climax_preview_45.png --frame=45
-npx remotion still src/index.ts WukongClimaxSegment out/climax_preview_210.png --frame=210
+npx remotion still src/index.ts WukongClimaxSegment out/senbon_v2_f045.png --frame=45
+npx remotion still src/index.ts WukongClimaxSegment out/senbon_v2_f085.png --frame=85
+npx remotion still src/index.ts WukongClimaxSegment out/senbon_v2_f120.png --frame=120
+npx remotion still src/index.ts WukongClimaxSegment out/senbon_v2_f190.png --frame=190
+npx remotion still src/index.ts WukongClimaxSegment out/senbon_v2_f280.png --frame=280
+npx remotion render src/index.ts WukongClimaxSegment out/senbon_v2_mvp.mp4 --concurrency=4
 ```
 
 复刻段的音画自检（缺一不可）：
@@ -55,50 +61,45 @@ npm run render
 
 所以本段重做时的取舍是：**往"印刷海报"靠，而不是往"夜戏特效"靠**。大色块承担构图，金线承担细节，快切承担节奏。
 
-## 高潮复刻段：12 个镜头
+## 高潮复刻段：四镜（纯代码）
 
-分镜切成 12 刀（10 秒），每一刀的边界都是一个 `unit id`，运行时由对齐 JSON 解出秒数再乘 fps：
+分镜切成四刀（10 秒），每一刀的边界在 `src/sequences/senbonPlan.ts` 里由分镜秒表与对齐 JSON 共同解出：
 
-| # | 段落 | 镜头 | 主体 |
+| # | 帧 | 唱词 | 主体 / 物理转场 |
 |---|---|---|---|
-| 01 | 天庭肃杀 | 全景推入 | 朱砂幡阵 + 大月 + 天兵剪影（分层视差） |
-| 02 | 天兵合围 | 横移 | 幡阵特写（十万天兵合围六字直接挂在幡上） |
-| 03 | 如意在手 | 举棒 | 金箍棒贯穿画面，日轮在棒后 |
-| 04 | 一棒破阵 | 切分 | 三条切割光带扫过，闪白 |
-| 05 | 秩序崩塌 |  whip | 方阵刚体坍塌 |
-| 06 | 横扫千军 | 近身 | 多段扫击 + 火星 |
-| 07 | 摧 | 冲击 | 全屏闪白 + 双爆字 |
-| 08 | 五指压顶 | 砸落 | 五根石柱错峰砸下 |
-| 09 | 石下 | 特写 | 石缝漏光、镜下小人比例 |
-| 10 | 罪状 | 滑入 | 三张羊皮纸告示：罪名／不敬／权威 |
-| 11 | 镇压 | 加压 | 镜头压到 1.4×，抖动拉满 |
-| 12 | 罪名昭彰 | 收束 | 爆字 + 终闪 |
+| 01 | 0–75 | 玉境凌霄十万天兵合围 | 南天门双扇拉门 → 满月飞檐 → 60 天兵三层合围 → 四道战幡弹簧砸落 |
+| 02 | 75–150 | 怎敌我无坚不摧 | 斜切火眼金睛横条 → Three.js 天庭棋盘：金箍棒砸地、三圈冲击波、40 柱抛物线崩飞 → 一棒劈字 + 全屏反色 |
+| 03 | 150–225 | 五指山下偿自由的罪 | 五座巨峰柱依次下砸（纵向震屏）→ 中央石缝跪姿大圣 → 六张符咒从四角钉入 |
+| 04 | 225–300 | 罪名是老孙不敬权威 | 三层罪状木牌阵 → 金猴破壁斩断所有木牌 → 四枚朱砂巨印砸满全屏 |
 
-版画层常驻：`PosterFrame`（双重边框、角饰、侧栏竖排、朱印、顶部题签）+ `Halftone`（细网点 + 粗烫金颗粒，两次 pattern 烘焙）。
+### 纯代码视觉原语（现在的做法）
 
-### AI 美术板 + 代码合成（现在的做法）
+`src/primitives/senbon_style/` 是这一段的全部“美术资产”：
 
-纯代码画不出插画密度，这一点已经过反复验证。现在的分工是：
+| 文件 | 作用 |
+|---|---|
+| `HalftoneOverlay` | SVG `<pattern>` 半调网点 + 径向渐变光晕 + 暗金纸屑噪点 |
+| `WukongSilhouette` | 参数化大圣剪影：`stand / eyes_closeup / kneel_defiant / smash`；雉鸡翎与披风绑 `useCurrentFrame()` 正余弦，金箍棒独立旋转 |
+| `NandamenDoors` | 南天门玄黑描金双扇门、门钉、铺首衔环、门匾 |
+| `CourtSky` | 赤金满月（半调阴影）、飞檐殿宇、云带、飞鸟、浮尘 |
+| `CelestialArmy` | 左右各 30 名执戈天兵 + 前景枪林，按压力值合拢 |
+| `WarBanners` | 四分屏战幡，弹簧落幅 |
+| `EyeCut` | 斜切漫画分格 + 火眼特写 + 横向赤金闪电 + 竖排【怎敌我】 |
+| `CudgelImpact3D` | `@remotion/three`：棋盘格地面、40 根天条方柱、金箍棒、三圈冲击波、抛物线崩飞 |
+| `SplitType` | 上下互补 `clip-path` 的一棒劈字 |
+| `MountainCage` | 五峰柱下砸 + 金色等高线 + 中央 280px 深渊缝 |
+| `Talismans` | 六张朱砂符纸从四角飞入、落钉、文字揭示 |
+| `VerdictTags` | 远/中/近三层罪状木牌 + 链条 + 翻面 + 断裂纷飞 |
+| `FinalSeals` | 四枚带裂纹的朱砂巨印，印泥飞溅 |
 
-1. **板负责"像画"**：`assets.manifest.json` 先写死镜头表与 5 张板的清单（id / 用途 / 尺寸 / 提示词 / 文件），再由
-   `python scripts/gen_plates.py --only <id>` 通过本机 Antigravity CLI 的 `image-generator` 子 agent 生成，脚本自动规整成
-   1920×1080 PNG 并校验落地。板存在 `public/ai/`，契约见 [public/ai/README.md](public/ai/README.md)。
-2. **代码负责"像镜头"**：`Plate` 只做推轨 / 横移 / 呼吸浮动 / 四色罩染 / 网点；`CudgelSlash`、`BurstType`、`KineticLine`、
-   `PosterFrame`、`ParchmentPanels`、粒子层继续叠在上面。
-3. **板上留白给代码**：`bg_verdict` 的三张卷轴是空白的，`ParchmentPanels` 的 `bare` 模式只排"罪名/不敬/权威"与朱印，
-   正好落在卷轴上。
-
-一条硬规矩：**板缺失时自动回落纯代码底**（`PalaceHall` / `FiveFingerMountain`），渲染不会黑屏。
+这些组件全部是**时间函数**：没有 `Math.random()`、没有 `Date.now()`、没有跨帧状态；随机量来自固定种子 `hash(seed, i)`。歌词文字始终是单个文本节点，不做逐字 DOM 动画。
 
 ### 画面精致的四个抓手
 
-`CourtDiorama` 按这四条重写了一遍，任何新镜头都应复用同一套：
-
-1. **分层视差**：星空（0.18×）→ 云团（0.3×）→ 天际线（0.35×）→ 幡阵（0.55×）→ 灯阵（0.72×）→ 前景柱与碎石（1×），镜头一动就出纵深。
-2. **次级运动**：幡按各自相位摆动并带褶皱阴影、灯笼按相位晃、天兵随拍点头、雾带与云团持续飘、余烬按深度分层下落——画面上没有静止元素。
-3. **大气层次**：远景天际线 `blur(0.9px)`、雾带 `blur(14px)`、云团 `blur(18px)`，焦点始终留在中景；雾只画成薄带，绝不整屏压。
-4. **前中后景框**：前景柱压住两侧、石栏压住下缘、幡阵压住上缘，中间留给月和主体——画面先有"框"，细节才有落点。
-5. **有依据的光**：石缝两侧的岩面用渐变描边做"贴边受光"，月亮的辉光有明确衰减；不做无来源的全局泛光。
+1. **三层视差**：满月/飞檐（0.22×）→ 60 天兵（中速合拢）→ 宫灯/火星/光条（高速划过）。镜头一动就出纵深。
+2. **物理而不是淡入淡出**：门板被拉开、战幡被弹簧砸落、山柱按节拍砸下并触发纵向震屏、40 根方柱按抛物线崩飞、木牌被斩断成两片纷飞。
+3. **印刷层**：全片叠一层 SVG 半调网点与暗金纸纹；暗场靠局部金色光源提亮，不整屏压雾。
+4. **字景合一**：唱词只以战幡、符咒、罪状牌、印章、竖排大字出现，没有底部字幕条，也没有顶部章节框与 BPM 仪表盘。
 
 音频：**全部由代码合成**。`scripts/score.py` 用分轨总线 + 卷积混响 + 侧链 + 胶水压缩 + 前瞻限幅 + 两遍 loudnorm（-14 LUFS）产出一版 10.000 s 的配乐；旋律直接由对齐 JSON 驱动（每字一个音，五声音阶），主唱是按拼音韵母做 F1/F2/F3 共振峰合成的合成人声——这就是"填词调音"里的那条人声轨。产物 `public/audio/climax_mix.wav`（播放）与 `public/audio/drums_stem.wav`（频谱源）。
 
@@ -109,9 +110,10 @@ npm run render
 ## 技术栈
 
 - Remotion `4.0.537`（锁定精确版本）
-- `@remotion/media-utils` `4.0.537`（与 remotion 逐位一致）
+- `@remotion/media-utils` / `@remotion/three` `4.0.537`（与 remotion 逐位一致）
+- `three 0.186.1` / `@react-three/fiber 9.8.2`（无 GPU 时走 SwiftShader，仍可渲染基础几何体）
 - React `19.3.1` / TypeScript `5.9.3`
-- 1920×1080 / 60 fps / PNG frame sequence
+- 1920×1080 / 复刻段 30 fps / PNG frame sequence
 
 ## 目录
 
@@ -122,8 +124,9 @@ src/
   compositions/
     WukongPrologue.tsx         阶段一视觉底片（非正片歌词）
   sequences/
-    WukongClimaxSegment.tsx    阶段二高潮复刻段（12 刀 / 30 fps / 300 帧）
-    climaxPlan.ts              对齐 JSON → 分镜 / 爆破字 / 冲击 cue 的唯一解析层
+    WukongClimaxSegment.tsx    阶段三高潮复刻段（四镜 / 30 fps / 300 帧 / 纯代码）
+    senbonPlan.ts              分镜秒表 + 歌词锚点 + 冲击/震屏/反色 cue 的唯一来源
+    climaxPlan.ts              对齐 JSON 的旧解析层（四镜仍复用其 fallbackEnergy）
   config/
     theme.ts                   四色宪法 / 画幅 / 安全区 / CLIMAX 交付规格
     fonts.ts                   FontFace 字体加载（缺失可回落）
@@ -131,25 +134,20 @@ src/
     spectrum.ts                32-band 鼓组频谱 + useStemEnergy 三频段能量
     sfx.ts                     音效 cue → frame 调度
   primitives/
+    senbon_style/              ★ 纯代码视觉原语族（HalftoneOverlay / WukongSilhouette /
+                               NandamenDoors / CourtSky / CelestialArmy / WarBanners /
+                               EyeCut / CudgelImpact3D / SplitType / MountainCage /
+                               Talismans / VerdictTags / FinalSeals）
     paperTexture.ts / PaperSurface.tsx   宣纸/麻纸/纤维/颗粒
     Vignette.tsx               暗角 + 胶片颗粒
-    Seal.tsx                   朱砂毛边印章（收尾玉玺）
+    Seal.tsx                   朱砂毛边印章（仅 WukongPrologue 使用）
     Typewriter.tsx             严格的 text.slice 打字机
     pointCloud.ts / InkPointCloud.tsx    三维金墨点云
     ParticleRain.tsx           火星 / 飞灰 / 墨雨
     rigidBody.ts / RigidTextCollapse.tsx 预烘焙刚体坍塌
-    CourtBlocks.tsx            天兵方阵刚体坍塌（单 Canvas）
-    PalaceHall.tsx             一点透视长殿（AI 板缺失时的纯代码回落）
-    Plate.tsx                  AI 美术板合成层（推轨/横移/罩染/网点）
-    CudgelSlash.tsx            金箍棒横扫（拖影/扫弧/火星）
-    FiveFingerMountain.tsx     五指山石柱镇压
-    HeroTitle.tsx              竖排大字主视觉（单节点 + 整组变换）
-    BurstType.tsx              爆破字（单 Canvas 绘制，符合 §9.2）
-    KineticLine.tsx            卡点卡拉 OK 行（单 Canvas）
-    ParchmentPanels.tsx        罪状卷轴（bare 模式只排字，落在 AI 板上）
-    PosterFrame.tsx            版画边框（双线/角饰/侧栏竖排/朱印）
-    Halftone.tsx               半调网点 + 烫金颗粒
-    RadialBurst.tsx            放射线 / 冲击环
+    BurstType.tsx              爆破字（单 Canvas 绘制，符合 §9.2；旧段遗留）
+    Halftone.tsx               旧 Canvas 半调（新段用 senbon_style/HalftoneOverlay）
+    RadialBurst.tsx            放射线 / 冲击环（旧段遗留）
     ComfySprite.tsx / BlenderAlphaVideo.tsx  预留：立绘与 Alpha 视频
   utils/
     math.ts                    确定性 rng/hash/noise/缓动/弹簧
@@ -167,7 +165,7 @@ docs/
   AGENT_TOOLING.md             环境事实 / Antigravity 用法 / 脚本 / 踩坑（跨 session 复用）
   EXPLORATION_LOG.md           代码生成视频的探索日志（弯路、失败清单、可复用手法）
 public/
-  ai/                          AI 美术板（manifest 驱动，见 public/ai/README.md）
+  ai/                          2026-10-22 起清空：本段纯代码，不引用 AI 位图（见 public/ai/README.md）
   audio/                       合成配乐 + 鼓组总线
   alignment/                   字级对齐 JSON + 节拍网格
   comfy_sprites/ blender_renders/ fonts/   预留资产位
