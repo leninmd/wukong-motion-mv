@@ -97,3 +97,12 @@ npx remotion still src/index.ts WukongPrologue out/qa-prologue.png --frame=240
 - 环境事实、Antigravity 生图调用方式、可复用脚本、踩坑清单，统一记录在 [`docs/AGENT_TOOLING.md`](docs/AGENT_TOOLING.md)。
 - 生图只允许通过 `scripts/gen_plates.py`（读 `assets.manifest.json`）或 `scripts/agy_image.mjs`（会话保活桥）调用，禁止在场景代码里发起任何网络/AIGC 调用。
 - 新增外部能力时，必须同时更新 `docs/AGENT_TOOLING.md`，否则下一个 session 视为不存在。
+
+## 11. 探索日志（强制追加）
+
+- 文件：[`docs/EXPLORATION_LOG.md`](docs/EXPLORATION_LOG.md)。
+- **触发条件**：任何一次"视频生成技术更新"——包含但不限于：新增/替换画面渲染方式（纯代码 / AI 板 / 3D 资产）、生图管线与提示词策略、音频合成与母带、转场系统、排版系统、镜头运动模型、渲染规格与帧率——都必须在**同一次提交里**追加一节。
+- **每条至少写**：日期 / 动机 / 做法 / 结果（含证据：帧号、截图路径、参数、耗时）/ 结论（保留还是回滚）/ 影响到的文件。
+- **只加不改**：被推翻的结论保留原文，在新条目里标注"推翻第 N 条"。把弯路写下来比把成功写漂亮更有价值。
+- **必须写代价**：花了多久、生成了几次、返工几轮。只写"成功了"不算记录。
+- 新增外部能力时，同一次提交里同步更新 [`docs/AGENT_TOOLING.md`](docs/AGENT_TOOLING.md)。

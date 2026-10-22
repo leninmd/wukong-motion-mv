@@ -9,6 +9,11 @@
 
 阶段二不再从零发散，而是**逐镜头复刻参考视频 `00:09–00:19` 的「天庭凌霄交战 × 五行山下压迫」**，落地为 `WukongClimaxSegment`（1920×1080 / 30 fps / 300 帧），并补齐了字级对齐、鼓组频谱驱动与动力学字幕三层管线。
 
+## 先读这两份
+
+- [`docs/EXPLORATION_LOG.md`](docs/EXPLORATION_LOG.md)：**为什么现在这么做**。记录了从"纯代码仿拍"到"AI 板 + 代码合成"的全部弯路、失败清单与代价。
+- [`docs/AGENT_TOOLING.md`](docs/AGENT_TOOLING.md)：**怎么在这台机器上干活**。环境事实、Antigravity 生图调用方式、脚本索引、踩坑对照表。
+
 ## 快速开始
 
 ```powershell
@@ -160,6 +165,7 @@ scripts/
   spectrum_probe.mjs           直接跑 media-utils 的 FFT 标定三频段
 docs/
   AGENT_TOOLING.md             环境事实 / Antigravity 用法 / 脚本 / 踩坑（跨 session 复用）
+  EXPLORATION_LOG.md           代码生成视频的探索日志（弯路、失败清单、可复用手法）
 public/
   ai/                          AI 美术板（manifest 驱动，见 public/ai/README.md）
   audio/                       合成配乐 + 鼓组总线
