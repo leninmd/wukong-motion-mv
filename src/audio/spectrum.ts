@@ -76,6 +76,26 @@ export const BAND_REFERENCE = {
   high: 0.013,
 } as const;
 
+/**
+ * 实测峰值：`public/audio/climax_real_vocal.wav`（参考视频 09.000–19.200 s 的
+ * 真实摇滚唱段）。由 `scripts/analyze_climax_audio.py` 用与 `visualizeAudio()`
+ * 完全相同的 64 点 FFT + 3×3 平滑算出，取各频段 99 分位。
+ *
+ * 全混音的 mid/high 比鼓组 stem 高一个数量级，沿用鼓组参考值会让 mid/high
+ * 永久饱和，因此这套参考值必须随音源一起走。
+ */
+export const CLIMAX_VOCAL_REFERENCE = {
+  low: 0.2248,
+  mid: 0.0416,
+  high: 0.0089,
+} as const;
+
+export interface BandReference {
+  low: number;
+  mid: number;
+  high: number;
+}
+
 export interface StemEnergy {
   /** Kick / bass body, 0–1. Drives camera shake. */
   low: number;
@@ -102,6 +122,8 @@ export interface StemEnergyOptions {
   /** Frames of attack hold, so a 1-frame transient stays readable. */
   lookbehind?: number;
   dataOffsetInSeconds?: number;
+  /** 该音源实测的频段峰值；缺省用鼓组 stem 的参考值。 */
+  bandReference?: BandReference;
 }
 
 /**
@@ -118,6 +140,7 @@ export const useStemEnergy = ({
   src,
   lookbehind = 3,
   dataOffsetInSeconds = 0,
+  bandReference = BAND_REFERENCE,
 }: StemEnergyOptions): StemEnergy | null => {
   const frame = useCurrentFrame();
   const {fps} = useVideoConfig();
@@ -142,14 +165,14 @@ export const useStemEnergy = ({
       mid = Math.max(mid, meanSlice(bars, BAND_SLICES.mid));
       high = Math.max(high, meanSlice(bars, BAND_SLICES.high));
     }
-    const lowNorm = low / BAND_REFERENCE.low;
-    const midNorm = mid / BAND_REFERENCE.mid;
-    const highNorm = high / BAND_REFERENCE.high;
+    const lowNorm = low / bandReference.low;
+    const midNorm = mid / bandReference.mid;
+    const highNorm = high / bandReference.high;
     return {
       low: clamp(lowNorm),
       mid: clamp(midNorm),
       high: clamp(highNorm),
       level: clamp(lowNorm * 0.55 + midNorm * 0.3 + highNorm * 0.15),
     };
-  }, [audioData, dataOffsetInSeconds, fps, frame, lookbehind]);
+  }, [audioData, bandReference, dataOffsetInSeconds, fps, frame, lookbehind]);
 };

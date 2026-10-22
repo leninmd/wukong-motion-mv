@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 820 1120" width="820" height="1120">
+  <title>WukongRig · snarl_closeup</title>
+  <desc>Sharp angular polygon armor cutout. Interior #0B090A, 2px gilded rim. No facial
+  features other than the two inverted-triangle eyes and the gold headband.</desc>
+  <defs>
+    <filter id="gold-glow" x="-25%" y="-25%" width="150%" height="150%">
+      <feDropShadow dx="0" dy="0" stdDeviation="3" flood-color="#FCC934" />
+    </filter>
+    <linearGradient id="gold-fill" x1="0" y1="0" x2="0.35" y2="1">
+      <stop offset="0%" stop-color="#FFEFB0" />
+      <stop offset="46%" stop-color="#FCC934" />
+      <stop offset="100%" stop-color="#9A6A0D" />
+    </linearGradient>
+    <linearGradient id="eye-fill" x1="0" y1="0" x2="0.2" y2="1">
+      <stop offset="0%" stop-color="#FFF7DA" />
+      <stop offset="46%" stop-color="#FCC934" />
+      <stop offset="100%" stop-color="#D93025" />
+    </linearGradient>
+  </defs>
+  <g filter="url(#gold-glow)">
+    <polygon data-part="skull" data-layer="10" points="128,306 186,190 410,120 634,190 692,306 672,526 560,696 410,766 260,696 148,526" fill="#0B090A" fill-opacity="1" stroke="#FCC934" stroke-width="2" stroke-opacity="1" stroke-linejoin="miter" />
+    <polygon data-part="jaw" data-layer="11" points="198,506 410,458 622,506 576,650 410,750 244,650" fill="rgba(252,201,52,0.10)" fill-opacity="1" stroke="#FCC934" stroke-width="1.2" stroke-opacity="1" stroke-linejoin="miter" />
+    <polygon data-part="cheek-l" data-layer="12" points="186,340 44,266 76,460 178,502" fill="#0B090A" fill-opacity="1" stroke="#FCC934" stroke-width="2" stroke-opacity="1" stroke-linejoin="miter" />
+    <polygon data-part="cheek-r" data-layer="12" points="634,340 776,266 744,460 642,502" fill="#0B090A" fill-opacity="1" stroke="#FCC934" stroke-width="2" stroke-opacity="1" stroke-linejoin="miter" />
+    <polygon data-part="brow" data-layer="13" points="146,334 250,302 410,334 570,302 674,334" fill="none" fill-opacity="1" stroke="#FCC934" stroke-width="2" stroke-opacity="0.62" stroke-linejoin="miter" />
+    <polygon data-part="nose-bridge" data-layer="14" points="410,350 368,486 410,516 452,486" fill="none" fill-opacity="1" stroke="#FCC934" stroke-width="2" stroke-opacity="0.62" stroke-linejoin="miter" />
+    <polygon data-part="cheek-scar-l" data-layer="15" points="244,388 300,440 246,484" fill="none" fill-opacity="1" stroke="#FCC934" stroke-width="2" stroke-opacity="0.62" stroke-linejoin="miter" />
+    <polygon data-part="cheek-scar-r" data-layer="15" points="576,388 520,440 574,484" fill="none" fill-opacity="1" stroke="#FCC934" stroke-width="2" stroke-opacity="0.62" stroke-linejoin="miter" />
+    <polygon data-part="crown" points="118,302 172,250 410,200 648,250 702,302 632,340 410,288 188,340" fill="url(#gold-fill)" stroke="#FFEFB0" stroke-width="1.6" />
+    <polygon data-part="crown-wing-0" points="124,300 -10,232 30,342 128,356" fill="url(#gold-fill)" stroke="#FFEFB0" stroke-width="1.4" />
+    <polygon data-part="crown-wing-1" points="696,300 830,232 790,342 692,356" fill="url(#gold-fill)" stroke="#FFEFB0" stroke-width="1.4" />
+    <polygon data-part="crown-crest" points="410,204 368,104 410,22 452,104" fill="#FFEFB0" stroke="#FCC934" stroke-width="1.4" />
+    <polygon data-part="eye-left" points="160,356 384,394 289.9,482" fill="url(#eye-fill)" stroke="#FCC934" stroke-width="1.6" />
+    <polygon data-part="eye-right" points="660,356 436,394 530.1,482" fill="url(#eye-fill)" stroke="#FCC934" stroke-width="1.6" />
+    <polygon data-part="eye-core-left" points="260.6,380.6 283.4,380.6 278.3,437.3 265.7,437.3" fill="#FFF7DA" opacity="0.75" />
+    <polygon data-part="eye-core-right" points="536.6,380.6 559.4,380.6 554.3,437.3 541.7,437.3" fill="#FFF7DA" opacity="0.75" />
+  </g>
+  <metadata>{"pose":"snarl_closeup","eyeFocus":{"x":410,"y":408,"r":300},"feathers":[{"origin":[300,214],"angle":-2.3707963267948964,"length":280,"hand":-1,"width":72},{"origin":[520,214],"angle":-0.7707963267948965,"length":280,"hand":1,"width":72}],"staff":null}</metadata>
+</svg>

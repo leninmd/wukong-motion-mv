@@ -1,0 +1,56 @@
+{
+  "generator": "scripts/export_wukong_model.mjs",
+  "source": "src/primitives/senbon_style/wukongRigGeometry.ts",
+  "viewBox": [
+    820,
+    1120
+  ],
+  "palette": {
+    "ink": "#0B090A",
+    "paper": "#F4EFE6",
+    "cinnabar": "#D93025",
+    "gold": "#FCC934"
+  },
+  "poses": {
+    "spin_staff": {
+      "svg": "wukong_spin_staff.svg",
+      "png": "wukong_spin_staff.png",
+      "parts": 40,
+      "polygons": 46,
+      "vertices": 234,
+      "feathers": 2,
+      "staff": true,
+      "pathPreview": "M352 396 L292 408 L262 528 L252 656 L232 748 L27"
+    },
+    "slash_horizontally": {
+      "svg": "wukong_slash_horizontally.svg",
+      "png": "wukong_slash_horizontally.png",
+      "parts": 38,
+      "polygons": 44,
+      "vertices": 213,
+      "feathers": 2,
+      "staff": true,
+      "pathPreview": "M330 396 L222 456 L168 646 L208 818 L300 730 L31"
+    },
+    "trapped_overhead": {
+      "svg": "wukong_trapped_overhead.svg",
+      "png": "wukong_trapped_overhead.png",
+      "parts": 20,
+      "polygons": 26,
+      "vertices": 117,
+      "feathers": 2,
+      "staff": false,
+      "pathPreview": "M305.1171486968907 687.0896924038132 L272.539131"
+    },
+    "snarl_closeup": {
+      "svg": "wukong_snarl_closeup.svg",
+      "png": "wukong_snarl_closeup.png",
+      "parts": 8,
+      "polygons": 14,
+      "vertices": 39,
+      "feathers": 2,
+      "staff": false,
+      "pathPreview": "M128 306 L186 190 L410 120 L634 190 L692 306 L67"
+    }
+  }
+}

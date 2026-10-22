@@ -1,14 +1,16 @@
 /**
- * 10 秒复刻段（300 帧 @ 30 fps）的唯一分镜表。
+ * 10 秒复刻段（300 帧 @ 30 fps）的唯一分镜表 —— V3。
  *
- * 两层时间：
- *  1. `sb(n)` —— 分镜板帧号换算成秒。分镜表是创作基准（0–75–150–225–300），
- *     这里只在**一个地方**登记这些数，再统一除以参考帧率变成秒；场景代码只
- *     看秒/帧，看不到裸魔法帧号。
+ * 两层时间，互不越界：
+ *  1. `sb(n)` —— 分镜板帧号换算成秒。板号只在这一个文件出现，场景代码只看
+ *     秒/帧（AGENTS.md §1）。V3 的板号取自本次重制的逐帧要求
+ *     （0/7/14/21/28/75/98/112/150/170/225/256/264/272/280/290/300）。
  *  2. `unit()` —— 歌词字级落点，来自 `public/alignment/climax_words.json`。
- *     凡是"跟着唱词走"的元素（火眼标题、符咒、罪状牌、印章）一律用字级时间。
  *
- * 所有时间都是秒；由场景按当前 fps 转帧（AGENTS.md §1）。
+ * 例外说明（已登记到 docs/EXPLORATION_LOG.md）：Shot 2 的【怎】【敌】【我】
+ * 三字被板号钉死在 75–98 帧的横条分格内，而这三字的字级对齐落在 87/96/105
+ * 帧（最后一字超出横条）。为了既不改动歌词时钟、又保持横条分格的完整性，
+ * 这三字改用板号节拍（78/86/93），其余歌词元素仍走 alignment。
  */
 
 import {CLIMAX} from '../config/theme';
@@ -41,14 +43,6 @@ export const unit = (id: string): ClimaxUnit => {
 };
 
 export const unitStart = (id: string): number => unit(id).start;
-
-/** 每句唱词的起止（秒），直接取自对齐文档。 */
-export const LINES = (CLIMAX_ALIGNMENT.sections ?? []).map((section) => ({
-  id: section.id,
-  text: section.label ?? '',
-  start: section.start,
-  end: section.end,
-}));
 
 /* -------------------------------------------------------------------------- */
 /*  四镜                                                                      */
@@ -83,47 +77,41 @@ export const shotAt = (seconds: number): ShotSpan => {
 /* -------------------------------------------------------------------------- */
 
 export const CUE = {
-  /* Shot 1 — 南天门开合 / 三层视差 / 四分战幡 */
-  doorOpen: {start: sb(0), end: sb(12)},
-  /**
-   * 四道战幡的落点：分镜要求 10/25/40/55 帧连落，但验收帧 45 必须同时看到
-   * 四幡，所以落点收紧为 8/20/32/44 帧（仍是四拍弹簧连落，末幡在 45 帧已
-   * 基本落位）。
-   */
-  bannerDrop: [sb(8), sb(18), sb(28), sb(38)],
-  parallax: {start: sb(12), end: sb(75)},
-  armyConverge: {start: sb(12), end: sb(72)},
+  /* Shot 1 —— 四分屏战幡 → 浓雾合围 + 转棍护盾 */
+  panelDrop: [sb(0), sb(7), sb(14), sb(21)],
+  panelExit: sb(28),
+  panelGone: sb(35),
+  siege: {start: sb(28), end: sb(75)},
+  armyWaves: [sb(28), sb(45), sb(60)],
+  staffWheel: {start: sb(26), end: sb(75)},
 
-  /* Shot 2 — 火眼横切 / 3D 金箍棒 / 劈字 */
-  eyeCut: {start: sb(75), end: sb(95)},
-  eyeBurst: sb(85),
-  threeD: {start: sb(95), end: sb(150)},
-  staffImpact: sb(105),
-  splitType: {reveal: unitStart('l2c04'), slash: sb(118)},
-  invert: [sb(118), sb(119)],
+  /* Shot 2 —— 眼部横条 → 凌霄宝殿崩裂 + 劈字 */
+  eyeBand: {start: sb(75), open: sb(80), end: sb(98)},
+  eyeWords: [sb(78), sb(86), sb(93)],
+  palace: {start: sb(98), end: sb(150)},
+  staffSweep: sb(112),
+  columnsBreak: sb(113),
+  slash: {reveal: sb(100), cut: sb(112)},
+  invert: [sb(112), sb(113)],
 
-  /* Shot 3 — 五指山铁笼 / 符咒 */
-  cage: {start: sb(150), end: sb(175)},
-  peakDrops: [sb(146), sb(152), sb(158), sb(164), sb(170)],
-  talismanWindow: {start: sb(175), end: sb(225)},
-  talismanArrivals: [sb(175), sb(178), sb(181), sb(184), sb(187), sb(190)],
+  /* Shot 3 —— 高空俯视石缝 → 米字封印 */
+  rockDrops: [sb(150), sb(154), sb(158), sb(162), sb(166)],
+  trappedReveal: sb(151),
+  chains: [sb(172), sb(176), sb(180), sb(184), sb(188), sb(192)],
+  talismanText: [sb(178), sb(185), sb(192), sb(199), sb(206)],
 
-  /* Shot 4 — 罪状木牌 / 终局 */
-  tagWindow: {start: sb(225), end: sb(265)},
-  tagReveals: [sb(225), sb(232), sb(239)],
-  finale: {start: Math.min(sb(265), unitStart('l4c06')), end: sb(300)},
-  tagBreak: Math.min(sb(265), unitStart('l4c06')),
-  sealLands: [
-    /**
-     * 四印落点压在唱词重音上，但把最后两印略提前（最长提前 0.17s），保证
-     * 验收帧 280 四印齐满。歌词本身仍由对齐文档驱动。
-     */
-    sb(258),
-    unitStart('l4c07') - 0.04,
-    unitStart('l4c08') - 0.06,
-    sb(277),
-  ],
+  /* Shot 4 —— 悬签罪状 → 四连跳切 → 黑屏留白 */
+  chamber: sb(225),
+  tagReveals: [sb(228), sb(236), sb(244)],
+  jumpCuts: [sb(256), sb(264), sb(272), sb(280)],
+  sealLands: [sb(258), sb(266), sb(274), sb(282)],
+  whiteFlash: sb(290),
+  blackout: sb(291),
+  end: sb(300),
 } as const;
+
+/** 四连跳切的放大倍率。 */
+export const JUMP_SCALES = [1, 1.4, 1.9, 2.6] as const;
 
 /* -------------------------------------------------------------------------- */
 /*  四分战幡                                                                  */
@@ -133,167 +121,161 @@ export interface BannerSlot {
   id: string;
   text: string;
   dropAt: number;
-  /** 画布 x 中心（px）。 */
-  x: number;
-  width: number;
-  height: number;
+  /** 分格在倾斜条带内的列序号。 */
+  column: number;
+  /** 出画方向：-1 向左，+1 向右。 */
+  exit: -1 | 1;
   fontSize: number;
-  rotate: number;
-  accent: string;
+  accent: 'gold' | 'cinnabar';
 }
 
+export const PANEL_TILT = 5;
+
 export const BANNERS: BannerSlot[] = [
-  {
-    id: 'b1',
-    text: '玉境',
-    dropAt: CUE.bannerDrop[0]!,
-    x: 178,
-    width: 250,
-    height: 566,
-    fontSize: 108,
-    rotate: -1.2,
-    accent: 'gold',
-  },
-  {
-    id: 'b2',
-    text: '凌霄',
-    dropAt: CUE.bannerDrop[1]!,
-    x: 612,
-    width: 250,
-    height: 612,
-    fontSize: 108,
-    rotate: 0.8,
-    accent: 'cinnabar',
-  },
-  {
-    id: 'b3',
-    text: '十万',
-    dropAt: CUE.bannerDrop[2]!,
-    x: 1308,
-    width: 250,
-    height: 612,
-    fontSize: 108,
-    rotate: -0.6,
-    accent: 'gold',
-  },
-  {
-    id: 'b4',
-    text: '天兵合围',
-    dropAt: CUE.bannerDrop[3]!,
-    x: 1742,
-    width: 286,
-    height: 690,
-    fontSize: 80,
-    rotate: 1.1,
-    accent: 'cinnabar',
-  },
+  {id: 'b1', text: '玉境', dropAt: CUE.panelDrop[0]!, column: 0, exit: -1, fontSize: 138, accent: 'cinnabar'},
+  {id: 'b2', text: '凌霄', dropAt: CUE.panelDrop[1]!, column: 1, exit: -1, fontSize: 138, accent: 'gold'},
+  {id: 'b3', text: '十万', dropAt: CUE.panelDrop[2]!, column: 2, exit: 1, fontSize: 138, accent: 'cinnabar'},
+  {id: 'b4', text: '天兵合围', dropAt: CUE.panelDrop[3]!, column: 3, exit: 1, fontSize: 96, accent: 'gold'},
 ];
 
 /* -------------------------------------------------------------------------- */
-/*  六张封印符咒                                                              */
+/*  六道封印锁链 + 五张符咒                                                   */
 /* -------------------------------------------------------------------------- */
+
+export interface ChainSlot {
+  id: string;
+  arriveAt: number;
+  /** 端点（画布坐标）。 */
+  x1: number;
+  y1: number;
+  x2: number;
+  y2: number;
+}
+
+/** 米字封印：从画面四边向中心交叉锁死。 */
+export const CHAINS: ChainSlot[] = [
+  {id: 'c1', arriveAt: CUE.chains[0]!, x1: 120, y1: 150, x2: 1800, y2: 930},
+  {id: 'c2', arriveAt: CUE.chains[1]!, x1: 1800, y1: 130, x2: 120, y2: 950},
+  {id: 'c3', arriveAt: CUE.chains[2]!, x1: 960, y1: -140, x2: 960, y2: 1180},
+  {id: 'c4', arriveAt: CUE.chains[3]!, x1: -140, y1: 560, x2: 2060, y2: 560},
+  {id: 'c5', arriveAt: CUE.chains[4]!, x1: 60, y1: 980, x2: 1880, y2: 180},
+  {id: 'c6', arriveAt: CUE.chains[5]!, x1: 1880, y1: 980, x2: 60, y2: 190},
+];
 
 export interface TalismanSlot {
   id: string;
   text: string;
-  arriveAt: number;
-  /** 落点中心（px）与尺寸。 */
+  revealAt: number;
   x: number;
   y: number;
   width: number;
   height: number;
   rotate: number;
   fontSize: number;
-  /** 飞入起点：屏幕四角。 */
-  fromX: number;
-  fromY: number;
-  fromRotate: number;
 }
 
 export const TALISMANS: TalismanSlot[] = [
+  {id: 't1', text: '五指山下', revealAt: CUE.talismanText[0]!, x: 356, y: 306, width: 168, height: 470, rotate: -6, fontSize: 86},
+  {id: 't2', text: '偿', revealAt: CUE.talismanText[1]!, x: 852, y: 232, width: 158, height: 300, rotate: 3.5, fontSize: 132},
+  {id: 't3', text: '自由', revealAt: CUE.talismanText[2]!, x: 1180, y: 782, width: 158, height: 400, rotate: -4, fontSize: 104},
+  {id: 't4', text: '的', revealAt: CUE.talismanText[3]!, x: 1520, y: 268, width: 150, height: 290, rotate: 6, fontSize: 132},
+  {id: 't5', text: '罪', revealAt: CUE.talismanText[4]!, x: 700, y: 858, width: 156, height: 300, rotate: -6, fontSize: 138},
+];
+
+/* -------------------------------------------------------------------------- */
+/*  五块玄黑巨岩                                                              */
+/* -------------------------------------------------------------------------- */
+
+export type RockSide = 'left' | 'right' | 'top' | 'bottom' | 'corner';
+
+export interface RockSlot {
+  id: string;
+  side: RockSide;
+  dropAt: number;
+  /** 落位后的内缘顶点（指向画面中心的折线）。 */
+  edge: Array<[number, number]>;
+}
+
+/**
+ * 五块岩石把画面挤成一条竖直石缝：左、右、上、下各一块，第五块从左下压角。
+ * edge 是**落位后**的内侧锯齿边，落位前整体沿 side 方向外移 1400px。
+ */
+export const ROCKS: RockSlot[] = [
   {
-    id: 't1',
-    text: '五指山',
-    arriveAt: CUE.talismanArrivals[0]!,
-    x: 296,
-    y: 366,
-    width: 196,
-    height: 388,
-    rotate: -6.5,
-    fontSize: 62,
-    fromX: -300,
-    fromY: -260,
-    fromRotate: -110,
+    id: 'r-left',
+    side: 'left',
+    dropAt: CUE.rockDrops[0]!,
+    edge: [
+      [0, -80],
+      [470, -80],
+      [392, 168],
+      [512, 300],
+      [404, 470],
+      [498, 640],
+      [388, 812],
+      [470, 980],
+      [0, 1180],
+    ],
   },
   {
-    id: 't2',
-    text: '下',
-    arriveAt: CUE.talismanArrivals[1]!,
-    x: 612,
-    y: 596,
-    width: 168,
-    height: 314,
-    rotate: 4.2,
-    fontSize: 86,
-    fromX: -260,
-    fromY: 1180,
-    fromRotate: 96,
+    id: 'r-right',
+    side: 'right',
+    dropAt: CUE.rockDrops[1]!,
+    edge: [
+      [1920, -80],
+      [1450, -80],
+      [1528, 168],
+      [1408, 300],
+      [1516, 470],
+      [1422, 640],
+      [1532, 812],
+      [1450, 980],
+      [1920, 1180],
+    ],
   },
   {
-    id: 't3',
-    text: '偿',
-    arriveAt: CUE.talismanArrivals[2]!,
-    x: 796,
-    y: 302,
-    width: 172,
-    height: 330,
-    rotate: -3.4,
-    fontSize: 82,
-    fromX: 560,
-    fromY: -300,
-    fromRotate: 70,
+    id: 'r-top',
+    side: 'top',
+    dropAt: CUE.rockDrops[2]!,
+    edge: [
+      [-80, 0],
+      [2000, 0],
+      [2000, 96],
+      [1524, 214],
+      [1188, 128],
+      [860, 236],
+      [560, 140],
+      [252, 236],
+      [-80, 176],
+    ],
   },
   {
-    id: 't4',
-    text: '自由',
-    arriveAt: CUE.talismanArrivals[3]!,
-    x: 1152,
-    y: 520,
-    width: 190,
-    height: 372,
-    rotate: 5.8,
-    fontSize: 66,
-    fromX: 2100,
-    fromY: 260,
-    fromRotate: 118,
+    id: 'r-bottom',
+    side: 'bottom',
+    dropAt: CUE.rockDrops[3]!,
+    edge: [
+      [-80, 1180],
+      [2000, 1180],
+      [2000, 1004],
+      [1500, 906],
+      [1140, 1006],
+      [840, 902],
+      [470, 1008],
+      [-80, 940],
+    ],
   },
   {
-    id: 't5',
-    text: '的',
-    arriveAt: CUE.talismanArrivals[4]!,
-    x: 1450,
-    y: 322,
-    width: 166,
-    height: 306,
-    rotate: -2.2,
-    fontSize: 86,
-    fromX: 2050,
-    fromY: -240,
-    fromRotate: 84,
-  },
-  {
-    id: 't6',
-    text: '罪',
-    arriveAt: CUE.talismanArrivals[5]!,
-    x: 1732,
-    y: 626,
-    width: 178,
-    height: 336,
-    rotate: 6.6,
-    fontSize: 84,
-    fromX: 2160,
-    fromY: 1240,
-    fromRotate: 132,
+    id: 'r-corner',
+    side: 'corner',
+    dropAt: CUE.rockDrops[4]!,
+    edge: [
+      [-120, 1180],
+      [520, 1180],
+      [392, 994],
+      [512, 902],
+      [300, 830],
+      [-120, 880],
+    ],
   },
 ];
 
@@ -310,50 +292,81 @@ export interface TagSlot {
   height: number;
   swingPhase: number;
   swingAmp: number;
-  /** 0 = 远景, 1 = 中景, 2 = 前景特写. */
+  /** 0 = 远景, 1 = 中景, 2 = 前景. */
   depth: 0 | 1 | 2;
   revealAt: number | null;
+  /** 被跳切震碎的四分之一象限；null = 不碎。 */
+  shatterAt: number | null;
 }
 
-const TAG_WORDS = [
-  '罪', '名', '欺', '天', '妄', '言', '犯', '上', '狂', '徒', '逆', '天',
-  '不', '臣', '妖', '猴', '当', '诛', '天', '条', '镇', '压', '五', '百',
-];
+const FILLER = ['罪', '名', '欺', '天', '妄', '言', '犯', '上', '狂', '徒', '逆', '天', '不', '臣', '妖', '猴', '当', '诛', '天', '条'];
 
 export const TAG_SLOTS: TagSlot[] = [
-  ...Array.from({length: 12}, (_, index) => {
-    const x = 120 + index * 154;
-    return {
-      id: `far-${index}`,
-      text: TAG_WORDS[index % TAG_WORDS.length]!,
-      x,
-      y: 126 + (index % 3) * 26,
-      width: 66,
-      height: 268 + (index % 4) * 22,
-      swingPhase: index * 0.83,
-      swingAmp: 1.4,
-      depth: 0 as const,
-      revealAt: null,
-    };
-  }),
-  ...Array.from({length: 8}, (_, index) => {
-    const x = 190 + index * 222;
-    return {
-      id: `mid-${index}`,
-      text: TAG_WORDS[(index + 7) % TAG_WORDS.length]!,
-      x,
-      y: 196 + (index % 2) * 36,
-      width: 104,
-      height: 400 + (index % 3) * 26,
-      swingPhase: index * 1.27 + 0.6,
-      swingAmp: 2.6,
-      depth: 1 as const,
-      revealAt: null,
-    };
-  }),
-  {id: 'hero-0', text: '罪名', x: 384, y: 286, width: 196, height: 594, swingPhase: 0.4, swingAmp: 1.8, depth: 2, revealAt: CUE.tagReveals[0]!},
-  {id: 'hero-1', text: '是', x: 960, y: 246, width: 186, height: 566, swingPhase: 2.1, swingAmp: 1.5, depth: 2, revealAt: CUE.tagReveals[1]!},
-  {id: 'hero-2', text: '老孙', x: 1536, y: 296, width: 196, height: 594, swingPhase: 3.4, swingAmp: 2.0, depth: 2, revealAt: CUE.tagReveals[2]!},
+  ...Array.from({length: 11}, (_, index) => ({
+    id: `far-${index}`,
+    text: FILLER[index % FILLER.length]!,
+    x: 96 + index * 172,
+    y: 128 + (index % 3) * 24,
+    width: 62,
+    height: 250 + (index % 4) * 20,
+    swingPhase: index * 0.83,
+    swingAmp: 1.3,
+    depth: 0 as const,
+    revealAt: null,
+    shatterAt: CUE.jumpCuts[index % 4]!,
+  })),
+  ...Array.from({length: 7}, (_, index) => ({
+    id: `mid-${index}`,
+    text: FILLER[(index + 6) % FILLER.length]!,
+    x: 236 + index * 236,
+    y: 196 + (index % 2) * 34,
+    width: 96,
+    height: 366 + (index % 3) * 26,
+    swingPhase: index * 1.27 + 0.6,
+    swingAmp: 2.4,
+    depth: 1 as const,
+    revealAt: null,
+    shatterAt: CUE.jumpCuts[index % 4]!,
+  })),
+  {
+    id: 'hero-0',
+    text: '罪名',
+    x: 384,
+    y: 300,
+    width: 190,
+    height: 566,
+    swingPhase: 0.4,
+    swingAmp: 1.7,
+    depth: 2,
+    revealAt: CUE.tagReveals[0]!,
+    shatterAt: CUE.jumpCuts[0]!,
+  },
+  {
+    id: 'hero-1',
+    text: '是',
+    x: 960,
+    y: 262,
+    width: 182,
+    height: 548,
+    swingPhase: 2.1,
+    swingAmp: 1.4,
+    depth: 2,
+    revealAt: CUE.tagReveals[1]!,
+    shatterAt: CUE.jumpCuts[1]!,
+  },
+  {
+    id: 'hero-2',
+    text: '老孙',
+    x: 1536,
+    y: 310,
+    width: 190,
+    height: 566,
+    swingPhase: 3.4,
+    swingAmp: 1.9,
+    depth: 2,
+    revealAt: CUE.tagReveals[2]!,
+    shatterAt: CUE.jumpCuts[2]!,
+  },
 ];
 
 /* -------------------------------------------------------------------------- */
@@ -371,10 +384,10 @@ export interface SealSlot {
 }
 
 export const SEALS: SealSlot[] = [
-  {id: 'seal-0', text: '不', landAt: CUE.sealLands[0]!, x: 400, y: 300, size: 560, rotate: -7},
-  {id: 'seal-1', text: '敬', landAt: CUE.sealLands[1]!, x: 1520, y: 322, size: 552, rotate: 6},
-  {id: 'seal-2', text: '权', landAt: CUE.sealLands[2]!, x: 420, y: 742, size: 548, rotate: 4},
-  {id: 'seal-3', text: '威', landAt: CUE.sealLands[3]!, x: 1500, y: 752, size: 556, rotate: -5},
+  {id: 'seal-0', text: '不', landAt: CUE.sealLands[0]!, x: 318, y: 246, size: 372, rotate: -7},
+  {id: 'seal-1', text: '敬', landAt: CUE.sealLands[1]!, x: 1602, y: 262, size: 366, rotate: 6},
+  {id: 'seal-2', text: '权', landAt: CUE.sealLands[2]!, x: 330, y: 838, size: 360, rotate: 4},
+  {id: 'seal-3', text: '威', landAt: CUE.sealLands[3]!, x: 1590, y: 832, size: 368, rotate: -5},
 ];
 
 /* -------------------------------------------------------------------------- */
@@ -391,16 +404,23 @@ export interface ImpactCue {
 }
 
 export const IMPACTS: ImpactCue[] = [
-  {time: CUE.doorOpen.end, power: 0.55, axis: 'x'},
-  ...CUE.bannerDrop.map((time) => ({time, power: 0.26, axis: 'both' as const})),
-  {time: CUE.eyeCut.start, power: 0.72, axis: 'x'},
-  {time: CUE.eyeBurst, power: 0.5, axis: 'x'},
-  {time: CUE.staffImpact, power: 1, axis: 'both'},
-  {time: CUE.splitType.slash, power: 1, axis: 'x', invert: true},
-  ...CUE.peakDrops.map((time) => ({time, power: 0.82, axis: 'y' as const})),
-  ...CUE.talismanArrivals.map((time) => ({time, power: 0.2, axis: 'both' as const})),
-  {time: CUE.tagBreak, power: 0.9, axis: 'both'},
-  ...CUE.sealLands.map((time) => ({time, power: 1, axis: 'both' as const, invert: true})),
+  ...CUE.panelDrop.map((time) => ({time, power: 0.4, axis: 'both' as const})),
+  {time: CUE.panelExit, power: 0.6, axis: 'x'},
+  {time: CUE.siege.start, power: 0.55, axis: 'both'},
+  ...CUE.armyWaves.map((time) => ({time, power: 0.3, axis: 'x' as const})),
+  {time: CUE.eyeBand.start, power: 0.8, axis: 'x'},
+  {time: CUE.eyeBand.open, power: 0.55, axis: 'x'},
+  ...CUE.eyeWords.map((time) => ({time, power: 0.42, axis: 'both' as const})),
+  {time: CUE.palace.start, power: 0.7, axis: 'both'},
+  {time: CUE.staffSweep, power: 1, axis: 'both', invert: true},
+  ...CUE.rockDrops.map((time) => ({time, power: 0.85, axis: 'y' as const})),
+  ...CUE.chains.map((time) => ({time, power: 0.26, axis: 'both' as const})),
+  ...CUE.talismanText.map((time) => ({time, power: 0.2, axis: 'both' as const})),
+  {time: CUE.chamber, power: 0.6, axis: 'x'},
+  ...CUE.tagReveals.map((time) => ({time, power: 0.3, axis: 'both' as const})),
+  ...CUE.jumpCuts.map((time) => ({time, power: 1, axis: 'both' as const, invert: true})),
+  ...CUE.sealLands.map((time) => ({time, power: 0.9, axis: 'both' as const})),
+  {time: CUE.whiteFlash, power: 1, axis: 'both'},
 ];
 
 /** 单次冲击的位移向量（px），供场景叠加到相机。 */
@@ -446,14 +466,14 @@ export const flashAt = (seconds: number): number => {
   return Math.min(1, value);
 };
 
-/** 第 118–119 帧（30 fps）的全屏黑白反色窗口；其它冲击各吃 1 帧。 */
+/** 第 112–113 帧的全屏黑白反色窗口；四连跳切各吃 1 帧。 */
 export const invertAt = (frame: number, fps: number): boolean => {
   const start = atFrame(CUE.invert[0], fps);
   const end = atFrame(CUE.invert[1], fps);
-  if (frame >= start && frame < end + 1) return true;
+  if (frame >= start && frame <= end) return true;
   for (const cue of IMPACTS) {
     if (!cue.invert) continue;
-    if (cue.time === CUE.splitType.slash) continue;
+    if (cue.time >= CUE.invert[0] && cue.time <= CUE.invert[1]) continue;
     const hit = atFrame(cue.time, fps);
     if (frame >= hit && frame < hit + 1) return true;
   }
@@ -478,8 +498,3 @@ export const beatPulse = (seconds: number): number => {
 
 export const beatIndex = (seconds: number): number =>
   BEATS.reduce((count, beat) => (beat <= seconds ? count + 1 : count), 0);
-
-export const nextBeatAfter = (seconds: number): number => {
-  for (const beat of BEATS) if (beat >= seconds) return beat;
-  return DURATION_SECONDS;
-};

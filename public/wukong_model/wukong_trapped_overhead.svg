@@ -1,0 +1,51 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 820 1120" width="820" height="1120">
+  <title>WukongRig · trapped_overhead</title>
+  <desc>Sharp angular polygon armor cutout. Interior #0B090A, 2px gilded rim. No facial
+  features other than the two inverted-triangle eyes and the gold headband.</desc>
+  <defs>
+    <filter id="gold-glow" x="-25%" y="-25%" width="150%" height="150%">
+      <feDropShadow dx="0" dy="0" stdDeviation="3" flood-color="#FCC934" />
+    </filter>
+    <linearGradient id="gold-fill" x1="0" y1="0" x2="0.35" y2="1">
+      <stop offset="0%" stop-color="#FFEFB0" />
+      <stop offset="46%" stop-color="#FCC934" />
+      <stop offset="100%" stop-color="#9A6A0D" />
+    </linearGradient>
+    <linearGradient id="eye-fill" x1="0" y1="0" x2="0.2" y2="1">
+      <stop offset="0%" stop-color="#FFF7DA" />
+      <stop offset="46%" stop-color="#FCC934" />
+      <stop offset="100%" stop-color="#D93025" />
+    </linearGradient>
+  </defs>
+  <g filter="url(#gold-glow)">
+    <polygon data-part="upperarm-l" data-layer="10" points="305.1,687.1 272.5,602.3 198.1,458.3 149.9,477.7 195.8,633.2 230.9,716.9" fill="#0B090A" fill-opacity="1" stroke="#FCC934" stroke-width="2" stroke-opacity="1" stroke-linejoin="miter" />
+    <polygon data-part="upperarm-r" data-layer="10" points="514.9,687.1 547.5,602.3 621.9,458.3 670.1,477.7 624.2,633.2 589.1,716.9" fill="#0B090A" fill-opacity="1" stroke="#FCC934" stroke-width="2" stroke-opacity="1" stroke-linejoin="miter" />
+    <polygon data-part="forearm-l" data-layer="11" points="199.3,462.2 183,386.4 142.6,254.2 109.4,261.8 130.5,398.4 148.7,473.8" fill="#0B090A" fill-opacity="1" stroke="#FCC934" stroke-width="2" stroke-opacity="1" stroke-linejoin="miter" />
+    <polygon data-part="forearm-r" data-layer="11" points="620.7,462.2 637,386.4 677.4,254.2 710.6,261.8 689.5,398.4 671.3,473.8" fill="#0B090A" fill-opacity="1" stroke="#FCC934" stroke-width="2" stroke-opacity="1" stroke-linejoin="miter" />
+    <polygon data-part="claw-l" data-layer="12" points="64.5,222.5 -5.2,209.2 56.2,244.8 90.1,196.7 36,150.8 71.9,212 125.1,187 100.7,120.3 101.7,191.3 160.3,195.8 172.1,125.8 137.8,188" fill="#FCC934" fill-opacity="1" stroke="#FCC934" stroke-width="2" stroke-opacity="1" stroke-linejoin="miter" />
+    <polygon data-part="claw-r" data-layer="12" points="755.5,222.5 825.2,209.2 763.8,244.8 729.9,196.7 784,150.8 748.1,212 694.9,187 719.3,120.3 718.3,191.3 659.7,195.8 647.9,125.8 682.2,188" fill="#FCC934" fill-opacity="1" stroke="#FCC934" stroke-width="2" stroke-opacity="1" stroke-linejoin="miter" />
+    <polygon data-part="gorget" data-layer="20" points="330,674 410,702 490,674 508,752 410,796 312,752" fill="#0B090A" fill-opacity="1" stroke="#FCC934" stroke-width="2" stroke-opacity="1" stroke-linejoin="miter" />
+    <polygon data-part="chest-rim" data-layer="21" points="316,752 410,796 504,752 540,836 410,898 280,836" fill="#0B090A" fill-opacity="1" stroke="#FCC934" stroke-width="2" stroke-opacity="1" stroke-linejoin="miter" />
+    <polygon data-part="chest-v" data-layer="22" points="410,798 496,866 410,936 324,866" fill="none" fill-opacity="1" stroke="#FCC934" stroke-width="2" stroke-opacity="0.62" stroke-linejoin="miter" />
+    <polygon data-part="pauldron-l" data-layer="30" points="300,618 206,652 176,782 286,838 332,716" fill="#0B090A" fill-opacity="1" stroke="#FCC934" stroke-width="2" stroke-opacity="1" stroke-linejoin="miter" />
+    <polygon data-part="pauldron-r" data-layer="30" points="520,618 614,652 644,782 534,838 488,716" fill="#0B090A" fill-opacity="1" stroke="#FCC934" stroke-width="2" stroke-opacity="1" stroke-linejoin="miter" />
+    <polygon data-part="pauldron-tip-l" data-layer="31" points="206,652 142,600 186,692" fill="#FCC934" fill-opacity="1" stroke="#FCC934" stroke-width="2" stroke-opacity="1" stroke-linejoin="miter" />
+    <polygon data-part="pauldron-tip-r" data-layer="31" points="614,652 678,600 634,692" fill="#FCC934" fill-opacity="1" stroke="#FCC934" stroke-width="2" stroke-opacity="1" stroke-linejoin="miter" />
+    <polygon data-part="cheek-l" data-layer="40" points="288,530 232,494 246,578 292,600" fill="#0B090A" fill-opacity="1" stroke="#FCC934" stroke-width="2" stroke-opacity="1" stroke-linejoin="miter" />
+    <polygon data-part="cheek-r" data-layer="40" points="532,530 588,494 574,578 528,600" fill="#0B090A" fill-opacity="1" stroke="#FCC934" stroke-width="2" stroke-opacity="1" stroke-linejoin="miter" />
+    <polygon data-part="skull" data-layer="41" points="286,512 320,454 410,434 500,454 534,512 524,606 470,674 410,694 350,674 296,606" fill="#0B090A" fill-opacity="1" stroke="#FCC934" stroke-width="2" stroke-opacity="1" stroke-linejoin="miter" />
+    <polygon data-part="jaw" data-layer="42" points="332,602 410,574 488,602 468,666 410,702 352,666" fill="rgba(252,201,52,0.10)" fill-opacity="1" stroke="#FCC934" stroke-width="1.2" stroke-opacity="1" stroke-linejoin="miter" />
+    <polygon data-part="brow" data-layer="43" points="292,514 340,502 410,510 480,502 528,514" fill="none" fill-opacity="1" stroke="#FCC934" stroke-width="2" stroke-opacity="0.62" stroke-linejoin="miter" />
+    <polygon data-part="eyebrow-l" data-layer="44" points="286,528 344,516 336,548 292,552" fill="rgba(252,201,52,0.10)" fill-opacity="1" stroke="#FCC934" stroke-width="1.2" stroke-opacity="1" stroke-linejoin="miter" />
+    <polygon data-part="eyebrow-r" data-layer="44" points="534,528 476,516 484,548 528,552" fill="rgba(252,201,52,0.10)" fill-opacity="1" stroke="#FCC934" stroke-width="1.2" stroke-opacity="1" stroke-linejoin="miter" />
+    <polygon data-part="crown" points="268,508 292,468 410,448 528,468 552,508 516,524 410,502 304,524" fill="url(#gold-fill)" stroke="#FFEFB0" stroke-width="1.6" />
+    <polygon data-part="crown-wing-0" points="272,506 198,462 228,528 274,546" fill="url(#gold-fill)" stroke="#FFEFB0" stroke-width="1.4" />
+    <polygon data-part="crown-wing-1" points="548,506 622,462 592,528 546,546" fill="url(#gold-fill)" stroke="#FFEFB0" stroke-width="1.4" />
+    <polygon data-part="crown-crest" points="410,452 392,394 410,352 428,394" fill="#FFEFB0" stroke="#FCC934" stroke-width="1.4" />
+    <polygon data-part="eye-left" points="294,542 382,526 345,590" fill="url(#eye-fill)" stroke="#FCC934" stroke-width="1.6" />
+    <polygon data-part="eye-right" points="526,542 438,526 475,590" fill="url(#eye-fill)" stroke="#FCC934" stroke-width="1.6" />
+    <polygon data-part="eye-core-left" points="333.5,538.5 342.5,538.5 340.5,567.3 335.5,567.3" fill="#FFF7DA" opacity="0.75" />
+    <polygon data-part="eye-core-right" points="477.5,538.5 486.5,538.5 484.5,567.3 479.5,567.3" fill="#FFF7DA" opacity="0.75" />
+  </g>
+  <metadata>{"pose":"trapped_overhead","eyeFocus":{"x":410,"y":560,"r":150},"feathers":[{"origin":[372,464],"angle":-1.7107963267948967,"length":280,"hand":-1,"width":46},{"origin":[448,464],"angle":-1.4307963267948964,"length":280,"hand":1,"width":46}],"staff":null}</metadata>
+</svg>

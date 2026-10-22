@@ -82,6 +82,9 @@ $env:AGY_WORKDIR = 'D:\AI\wukong-motion-mv'             # 传给 --add-dir 的�
 | `scripts/build_climax_assets.py` | 字级对齐（HPSS 起音 + DP + 节拍网格） | `out/ref/segment_09_19.wav` → `public/alignment/climax_words.json` |
 | `scripts/verify_climax.py` | 对齐独立校验（≤50 ms 才 PASS） | 对齐 JSON + 音频 → 退出码 |
 | `scripts/spectrum_probe.mjs` | 直接跑 media-utils 的 FFT 标定三频段 | `drums_stem.wav` → `out/ref/spectrum_probe.json` |
+| `scripts/analyze_climax_audio.py` | 逐字节复刻 `visualizeAudio()` 的 64 点 FFT，标定任意音源的 BAND_REFERENCE | wav → 三频段 99 分位 + 逐帧 32 桶 JSON |
+| `scripts/export_wukong_model.mjs` | 把 TS 角色几何真源导出成 JSON + SVG（Node 24 原生类型擦除直接 import `.ts`） | `wukongRigGeometry.ts` → `public/wukong_model/` |
+| `scripts/rasterize_wukong_model.py` | 多边形栅格化成透明 PNG，再用 cv2 从 alpha 反提 SVG 轮廓 | `wukong_rig.json` → 4 PNG + 4 outline SVG |
 
 ---
 
@@ -157,3 +160,57 @@ npx remotion render src/index.ts WukongClimaxSegment out/senbon_v2_mvp.mp4 --con
 | `ThreeCanvas` 在无 GPU 机器上空白 | 无独立 GPU 时走 SwiftShader，但材质/光照过暗会被误判为没渲染 | 用第 120 帧 still 验证；确认 `<color attach="background">`、相机 `lookAt` 与网格实际在视锥内 |
 | 全屏反色帧把整段压灰 | 冲击白闪与 `HalftoneOverlay` 叠加 | 白闪 opacity ≤0.32、时长 ≤0.12 s；反色只在指定 1–2 帧 |
 | 纯代码几何"像卡片"（旧结论） | 缺密度、缺视差、缺物理 | 2026-10-22 起改为：多层视差 + 每层 30–60 个实例 + 半调/纸纹 + 物理弹簧/抛物线 + Three.js 几何体；**不再以"上 AI 板"作为唯一解** |
+
+---
+
+## 6. 本机没有系统 ffmpeg —— 用 Remotion 自带的那一个（2026-10-23 实测）
+
+`where ffmpeg` / `where ffprobe` 都找不到。**不要**因此去下载整套 ffmpeg，Remotion 的
+compositor 包已经带了一份精简版：
+
+```
+node_modules/@remotion/compositor-win32-x64-msvc/ffmpeg.exe
+node_modules/@remotion/compositor-win32-x64-msvc/ffprobe.exe
+```
+
+它是 n7.1、`--enable-small` 的定制构建：`--disable-filters` 只留了
+`atrim acopy adelay apad amerge amix aformat aresample atempo asetrate asetpts
+concat loudnorm volume pan scale split sine silencedetect ...`，
+`--disable-encoders` 只留 `pcm_s16le pcm_s24le aac libfdk_aac libx264 libx265
+libvpx_* libmp3lame prores_ks gif png mjpeg`，
+`--disable-muxers` 只留 `wav mp3 mp4 mov matroska webm gif image2 ...`。
+**没有 `fade` / `afade` / `libsoxr` / `loudnorm` 之外的母带滤镜**，也没有 `-filter_complex` 里的大部分图。
+
+截取一段参考音频（本次实际用的命令）：
+
+```powershell
+$ff = 'node_modules\@remotion\compositor-win32-x64-msvc\ffmpeg.exe'
+& $ff -y -v error -i "<参考>.mp4" -ss 9.0 -t 10.2 -vn -acodec pcm_s16le -ar 48000 -ac 2 "public\audio\climax_real_vocal.wav"
+```
+
+`-ss` 放在 `-i` 之后是**精确定位**（解码到手再丢帧），放前面是快速定位；音频要精确就用后面那种写法。
+
+## 7. SVG 的坑：`fill="#id"` 会静默变黑
+
+写 `<polygon fill={ids('goldFill')} />` 时，除非 `ids()` 返回的是 `url(#id)`，
+否则浏览器把它当"颜色名解析失败"，**不报错、不警告，直接填充黑色**。
+本次 V3 的金箍、眼眸、护膝集体变黑就是这个原因，查了两轮截图才定位。
+
+约定：在任何需要引用 `<defs>` 里的渐变/滤镜的地方，包装函数一律返回 `url(#...)`。
+`WukongRig.tsx` 已按此实现（`ids()` 返回 `url(#...)`，`idName()` 返回裸 id）。
+
+## 8. 角色资产管线（V3）
+
+```
+src/primitives/senbon_style/wukongRigGeometry.ts   ← 唯一真源（纯数据 + 纯函数，零 import）
+        │  node scripts/export_wukong_model.mjs     （Node 24 原生类型擦除，直接 import .ts）
+        ▼
+public/wukong_model/wukong_rig.json + wukong_<pose>.svg
+        │  python scripts/rasterize_wukong_model.py （PIL 2× SSAA + cv2 反提轮廓）
+        ▼
+public/wukong_model/wukong_<pose>.png（透明 RGBA 1640×2240）
+public/wukong_model/wukong_<pose>_outline.svg（1–7 条闭合路径）
+```
+
+运行时**不走 PNG**，仍由 `WukongRig.tsx` 用同一份几何实时画 SVG（要驱动翎的物理、
+金箍棒旋转与音频频谱）。PNG/SVG 是审片与后续 ComfyUI/Blender 对齐用的资产存档。

@@ -1,0 +1,52 @@
+{
+  "poses": {
+    "spin_staff": {
+      "png": "wukong_spin_staff.png",
+      "pngBytes": 688768,
+      "size": [
+        1640,
+        2240
+      ],
+      "expectedWidth": 1640,
+      "coverage": 0.2557,
+      "outline": "wukong_spin_staff_outline.svg",
+      "outlineContours": 5
+    },
+    "slash_horizontally": {
+      "png": "wukong_slash_horizontally.png",
+      "pngBytes": 699086,
+      "size": [
+        1640,
+        2240
+      ],
+      "expectedWidth": 1640,
+      "coverage": 0.2636,
+      "outline": "wukong_slash_horizontally_outline.svg",
+      "outlineContours": 2
+    },
+    "trapped_overhead": {
+      "png": "wukong_trapped_overhead.png",
+      "pngBytes": 611587,
+      "size": [
+        1640,
+        2240
+      ],
+      "expectedWidth": 1640,
+      "coverage": 0.2546,
+      "outline": "wukong_trapped_overhead_outline.svg",
+      "outlineContours": 7
+    },
+    "snarl_closeup": {
+      "png": "wukong_snarl_closeup.png",
+      "pngBytes": 351063,
+      "size": [
+        1640,
+        2240
+      ],
+      "expectedWidth": 1640,
+      "coverage": 0.3574,
+      "outline": "wukong_snarl_closeup_outline.svg",
+      "outlineContours": 1
+    }
+  }
+}

@@ -302,3 +302,142 @@
 - 重写：`src/sequences/WukongClimaxSegment.tsx`
 - 更新：`package.json`、`assets.manifest.json`、`public/ai/README.md`、`README.md`、`docs/AGENT_TOOLING.md`
 
+
+---
+
+## 12. V3 重制：真实音频 + 独立角色模型 + 1:1 还原四镜（2026-10-23 00:20 — 01:35）
+
+### 动机
+
+审片 `out/senbon_v2_mvp.mp4` 后收到三条**必须解决**的硬伤：
+
+1. **主角丑陋**：`WukongSilhouette.tsx` 用 `<circle>`/`<ellipse>` 手写了五官、咧嘴笑、胸口蚊香圈，读起来是低幼吉祥物，不是大圣。
+2. **音频错**：画面里放的是慢速纯音乐，不是参考视频 09–19 s 的高燃摇滚唱段。
+3. **动画僵硬、分镜没还原**：Shot 1 四幡停 2 秒挡死画面且大圣呆立；Shot 2 缺《千本樱》00:32 眼部横条、劈字间距过大导致字残；Shot 3 画成了平视棕色纸带而不是高空俯视石缝；Shot 4 缺四连跳切与最后 0.3 s 硬切黑屏。
+
+### 做法
+
+**A. 真实音频（推翻第 5 条的“整支配乐”做法）**
+
+- 本机无系统 ffmpeg，改用 Remotion 自带的 `node_modules/@remotion/compositor-win32-x64-msvc/ffmpeg.exe`（n7.1，含 aac 解码 + wav muxer + pcm_s16le 编码，够用）。
+- `-i 参考.mp4 -ss 9.0 -t 10.2` 精确截取 → `public/audio/climax_real_vocal.wav`（48 kHz / 16 bit / 立体声 / 10.200 s）。
+- 写完 `scripts/analyze_climax_audio.py`：**逐字节复刻** `@remotion/media-utils` 的 `visualizeAudio()`（64 点 FFT、`actualStart = floor(t*sr) - 32`、3 遍 3-tap 盒式平滑、除以 `(32)*峰值`），把 32 桶频谱算成 301 帧的 JSON，并给出各频段 99 分位。
+- 实测：RMS 0.171、峰值 0.970、谱心 1.2–5.5 kHz —— 确认是密集全频段摇滚，不是慢速垫底乐。
+- 频段参考值随音源重标定：鼓组 stem 的 `0.72 / 0.045 / 0.013` → 真实唱段的 `0.2248 / 0.0416 / 0.0089`（`CLIMAX_VOCAL_REFERENCE`）。不重标定会让 mid/high 永久饱和。
+- `WukongClimaxSegment` 主音源与频谱源都换成 `climax_real_vocal.wav`。
+
+> **与 AGENTS.md §3 的冲突**：§3 要求 `visualizeAudio()` 绑鼓组 stem，不得绑主混音。本次按用户明确指令绑真实唱段，并用实测参考值补偿；副作用是高频桶会被人声齿音带动，但低/中频段（0–15）仍稳定对应鼓与贝斯。已在 §13 的“未解决”里登记。
+
+**B. 角色模型：从“手画吉祥物”改为“几何真源 + 离线切片”**
+
+- 新增 `src/primitives/senbon_style/wukongRigGeometry.ts`：**纯数据 + 纯函数**，零 import（Node 的类型擦除可直接 import）。
+  - 全部轮廓是**直边多边形**（`limb()` 锥形肢节、`tasset()` 尖角甲片、`eyeWedge()` 倒三角眼、`claw()` 爪），没有一个圆/椭圆/螺旋。
+  - 四个姿态：`spin_staff`（40 块/234 顶点）、`slash_horizontally`（38/213）、`trapped_overhead`（20/117）、`snarl_closeup`（8/39）。
+  - 面部只有两道倒三角赤金眼眸 + 金箍 + 冠心 + 凤翅，**没有鼻子/嘴/腮红/胸口旋涡**。
+- 新增 `WukongRig.tsx`：SVG 直边多边形分层渲染。
+  - 剪影内部恒为 `#0B090A`；描边为按多边形包围盒自动取向的鎏金渐变（每块甲片自动“左上亮、右下暗”，读起来是折面金属）；整体套 `drop-shadow(0 0 3px #FCC934)`。
+  - 程序化双翎：22 段折线积分 + 双频正弦 + 音频高频能量 → `ribbon()` 变宽飘带，280 px 双曲率。
+  - 金箍棒：每帧 45°，把过去 7 帧的棒位一起画（八叶风车）+ 扇形残影 + 同轴运动模糊金盘 + 40 颗确定性火星。
+  - 横扫姿态附三层延迟重影（赤红/鎏金/青）。
+- 新增 `scripts/export_wukong_model.mjs` + `scripts/rasterize_wukong_model.py`：
+  - `export` 用 Node 24 原生类型擦除直接 import TS 真源 → `public/wukong_model/wukong_rig.json` + 4 张 `wukong_<pose>.svg`。
+  - `rasterize` 用 PIL 2× 超采样栅格化成**透明 PNG**（1640×2240），再用 `cv2.findContours` + `approxPolyDP` 从 alpha 通道反提 `wukong_<pose>_outline.svg`（1–7 条闭合路径）。
+  - 单一真源，不复制坐标。
+
+**C. 四镜重写（300 帧 / 30 fps）**
+
+- `senbonPlan.ts` 重写 CUE 表，板号只在这里出现：`panelDrop 0/7/14/21`、`panelExit 28`、`eyeBand 75→98`、`palace 98→150`、`staffSweep 112`、`rockDrops 150/154/158/162/166`、`chains 172…192`、`jumpCuts 256/264/272/280`、`whiteFlash 290`、`blackout 291`。
+- Shot 1：`WordPanels`（四条 −5° 倾斜分格竖屏、竖排单文本节点战幡、弹簧砸落、28 帧向两侧拉开）+ `SiegeFog`（三层漂移云 + `blur(6px)` 前景虚焦天兵）+ `CourtSky` 满月飞檐 + `CelestialArmy`。
+- Shot 2：`EyeBand`（−6° 260 px 金边横条 clip 内嵌 `snarl_closeup`、竖向拉丝 + 十字星芒、右侧【怎】【敌】【我】砸入）→ `ThronePalace3D`（36 根盘龙巨柱 + 中央龙座祭坛 + 暗金网格地面 + 低角度环绕俯冲；112 帧巨棒横扫、216 块三维残石飞溅、三圈冲击波）+ `WukongRig slash` + `UnbreakableType`。
+- Shot 3：`AbyssMountain`（五块折面玄黑巨岩从四向砸入挤成竖直石缝、金色等高线、`trapped_overhead` 仰视、六道锁链交叉成“米”字、五张符咒）。
+- Shot 4：`VerdictChamber`（三道铁索 + 三层景深木牌 + 游走聚光灯；256/264/272/280 四连跳切 1.0→1.4→1.9→2.6；每切一次崩碎对应木牌 + 盖一枚裂纹朱砂印；290 白闪、291–300 纯黑）。
+
+**D. 劈字的可读性（本次最容易翻车的一处）**
+
+要求是“上下两半仅沿刀痕错位 12 px、垂直间距仅拉开 6 px”，但上一版把间距做成几十像素，字被切碎。
+做法：整串文字是**一个**文本节点，两层 `<div>` 各自用 `clip-path: polygon()` 裁出 15° 刀痕的**上/下半平面**（交点由 `y = 540 ± (W/2)·tan15°` 解析算出），只对两层做 `translate`：
+`±(cos15, sin15)·6` 沿刀痕 + `±(-sin15, cos15)·3` 沿法向。字始终完整，只有一条发丝级错位。
+
+### 结果（含证据）
+
+- 类型检查：`npx tsc --noEmit` 0 报错；`npx remotion compositions` 只剩 2 条注册。
+- 验收帧 `out/v3_check_f{20,50,85,120,195,275}.png`：
+  - f20：四条 −5° 分格竖屏，【玉境】【凌霄】【十万】已落位、第四面在飞入（板号 21 帧才有第四拍）。
+  - f50：大圣立满月前，金箍棒成八叶金色风车，40 名天兵三波合围，前景左右两团 `blur(7px)` 天兵头盔压边。
+  - f85：−6° 金边横条内两只倒三角火眼金睛（竖瞳），右侧【怎】已砸入。
+  - f120：`无坚不摧` 四字 100% 可读，15° 刀痕切开、只错位 12 px；背景 36 柱宝殿 + 巨棒横扫 + 残石飞溅 + 大圣三层残影。
+  - f195：五块巨岩挤出的竖直石缝、金色等高线与“米”字锁链、符咒【五指山下/偿/自由】。
+  - f275：四连跳切第三档，火眼金睛占屏、三枚裂纹朱砂印【不】【敬】【权】分居三角。
+
+### 代价
+
+- 耗时：约 75 分钟（音频 8 min、角色几何 30 min、四镜 25 min、六帧自检与返工 12 min）。
+- 返工 5 轮，其中两轮是**真的 bug**：
+  1. **渐变引用写成 `fill="#id"` 而不是 `url(#id)`**：浏览器静默回落成黑色，导致金箍、眼眸、护膝全部变黑，第一版截图里“眼睛是灰的”就是这个原因。查了两轮才定位。
+  2. `ThronePalace3D` 里把 `local` 传成 `String(...)`，类型检查当场拦下。
+  3. 四幡整体 `scale(1.2)` 把最外侧两列推出画框、字被切 → 改成“不加缩放、只用 −5° 旋转 + 加高竖屏”。
+  4. 黑场镜头（Shot 2 横条 / Shot 4）被 `HalftoneOverlay` 的网点抬成灰雾 → 按分镜给不同 `opacity`（0.86 / 0.5 / 0.56 / 0.3）。
+  5. Shot 3 的岩石与深渊同色，读不出石缝 → 深渊底光提亮一档、岩石折面提到 `#241C1D/#2E2426/#3A2E30`、压边从 0.97 降到 0.52。
+
+### 结论
+
+- **保留**：几何真源 + 离线切片的角色管线。它是本次唯一能同时满足“不复用吉祥物”“可动骨骼”“有 PNG/SVG 资产”的做法。
+- **保留**：真实音频 + 实测频谱参考值。慢速垫底乐换成真实唱段后，画面重音的“对拍感”立刻成立。
+- **保留**：`clip-path` 半平面劈字。它把“字被切碎”这个不可控的排版问题变成了可解析的几何问题。
+- **推翻第 11 条的“下一段先调天兵个体与 3D 镜头距离”**：真正卡观感的不是这两项，而是**主角本身不成立**。角色不对，后面所有镜头都救不回来。
+- **未解决**：见下一节。
+
+### 影响文件
+
+- 新增：`src/primitives/senbon_style/wukongRigGeometry.ts`、`WukongRig.tsx`、`WordPanels.tsx`、`SiegeFog.tsx`、`EyeBand.tsx`、`ThronePalace3D.tsx`、`UnbreakableType.tsx`、`AbyssMountain.tsx`、`VerdictChamber.tsx`
+- 新增：`scripts/analyze_climax_audio.py`、`scripts/export_wukong_model.mjs`、`scripts/rasterize_wukong_model.py`
+- 新增资产：`public/audio/climax_real_vocal.wav`、`public/wukong_model/*`（4 PNG + 4 SVG + 4 outline SVG + `wukong_rig.json` + manifest）
+- 重写：`src/sequences/senbonPlan.ts`、`src/sequences/WukongClimaxSegment.tsx`
+- 修改：`src/audio/spectrum.ts`（新增 `CLIMAX_VOCAL_REFERENCE` 与 `bandReference` 入参）
+- 删除（被 V3 取代的 V2 分镜原语，11 个）：`CudgelImpact3D`、`EyeCut`、`FinalSeals`、`ForegroundMotion`、`MountainCage`、`NandamenDoors`、`SplitType`、`Talismans`、`VerdictTags`、`WarBanners`、`WukongSilhouette`
+
+---
+
+## 13. V3 之后仍未解决的
+
+1. **Shot 3 的“俯视深渊”读感只到了六七成**：现在读作“四块带金脉的黑岩围出中央黑腔”，还缺真正的透视缩短与自上而下的光比。下一步应该把五块岩石改成带厚度的三维挤出，或直接在 Blender 里渲一层 Alpha 岩石底。
+2. **Shot 4 跳切段整体偏灰**：`snarl_closeup` 在 1.9× 时半透明折面与网点叠加，把黑场抬成灰橄榄。已把 `rim` 折面从 0.10 降到 0.045、网点降到 0.3，仍不彻底；根因待查。
+3. **频谱绑的是唱段而非鼓组**（见 §12-A 的冲突说明）。若要回到 AGENTS.md §3，需要从真实唱段里剥一条 kick/snare stem，再让 `useStemEnergy` 绑它。
+4. **天兵个体重复度高**：40 名共用同一套多边形，只做了缩放/取色抖动，缺姿态变体。
+5. **`public/wukong_model/*.png` 目前是“资产存档”而非渲染源**：运行时仍走 SVG 实时绘制（为了能动），PNG 用于审片与后续 ComfyUI/Blender 对齐。
+
+### 12.1 交付前最后两处返工（01:35 — 01:55）
+
+跑完接触表才发现的，两处都属于"单帧好看、连起来断气"的问题：
+
+1. **28–35 帧的 5 帧黑屏**。`WordPanels` 为了做漫画分格沟铺了一层全屏 `#000000` 底，
+   而它在战幡滑出时没有跟着淡出，于是把后面已经入场的大圣与天兵整段盖黑。
+   接触表 1.10 s 那一格是纯黑（实测 mean 3.1 / max 40），1.20 s 才恢复（mean 43.6）。
+   修法：沟底色 `opacity = clamp(1 - exitProgress ��� 2.4)`，随滑出同步消失。
+2. **验收帧 20 只有三面战幡**。板号是 0/7/14/21，第四面的**落点**在 21 帧，所以
+   20 帧时它还不存在（`local > 0` 才渲染）。要求里 20 帧又必须能验"四分屏"。
+   修法：砸落时长从 0.30 s 收到 0.13 s，并让每个分格在**音节前 0.1 s** 开始进入
+   （`local = (t - dropAt + LEAD) / 0.13`），落点仍在音节那一帧。20 帧时第四面已到 97%。
+   拍点表本身一个数都没改。
+
+两处合计重渲 3 次（每次约 9 分钟）。
+
+### 12.2 交付校验（01:55）
+
+```powershell
+npx tsc --noEmit                                  # 0 报错
+npx remotion compositions src/index.ts            # 只剩 WukongPrologue / WukongClimaxSegment
+```
+
+- 成片：`out/senbon_v3_mvp.mp4` 1920×1080 / 30 fps / 10.005 s / 15.8 MB / h264 + aac 48k。
+- **音频即真实唱段**：从成片解出的音轨与 `climax_real_vocal.wav` 前 9 s 的相关系数
+  **0.99996**（AAC 往返），与旧 `climax_mix.wav` 只有 0.0059。
+- **黑屏留白**：9.72 / 9.86 / 9.97 s 三帧 `getextrema()` 全为 `(0,0)`，即 291–299 帧纯黑。
+- **接触表**：`out/senbon_v3_contact_sheet.png`，20 个时间点 × 5 列。
+
+### 12.3 尚未解决的观感问题（明确留给下一轮）
+
+- Shot 3 的"高空俯视深渊"读感约六七成：缺真正的透视缩短，现在更像"四块带金脉的黑岩围出中央黑腔"。
+- Shot 4 跳切段整体偏灰：`snarl_closeup` 放大到 1.9× 时，半透明折面 + 网点把黑场抬成灰橄榄；
+  已把折面从 0.10 降到 0.045、网点降到 0.3，仍未根治。
+- 天兵个体重复度高（40 名同一套多边形）。
