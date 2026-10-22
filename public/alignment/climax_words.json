@@ -1,0 +1,410 @@
+{
+  "version": 1,
+  "source": "HPSS onset alignment on 09.000–19.000 s reference slice",
+  "mode": "char",
+  "audio": "audio/drums_stem.wav",
+  "fps": 30,
+  "duration": 10.0,
+  "units": [
+    {
+      "id": "l1c01",
+      "text": "玉",
+      "start": 0.045,
+      "end": 0.33,
+      "confidence": 0.699,
+      "energy": 0.265,
+      "line": "l1",
+      "source": "mix-snap"
+    },
+    {
+      "id": "l1c02",
+      "text": "境",
+      "start": 0.33,
+      "end": 0.63,
+      "confidence": 0.808,
+      "energy": 0.627,
+      "line": "l1",
+      "source": "vocal"
+    },
+    {
+      "id": "l1c03",
+      "text": "凌",
+      "start": 0.63,
+      "end": 0.915,
+      "confidence": 0.81,
+      "energy": 0.632,
+      "line": "l1",
+      "source": "vocal"
+    },
+    {
+      "id": "l1c04",
+      "text": "霄",
+      "start": 0.915,
+      "end": 1.15,
+      "confidence": 0.841,
+      "energy": 0.736,
+      "line": "l1",
+      "source": "vocal"
+    },
+    {
+      "id": "l1c05",
+      "text": "十",
+      "start": 1.15,
+      "end": 1.475,
+      "confidence": 0.795,
+      "energy": 0.582,
+      "line": "l1",
+      "source": "vocal"
+    },
+    {
+      "id": "l1c06",
+      "text": "万",
+      "start": 1.475,
+      "end": 1.83,
+      "confidence": 0.762,
+      "energy": 0.475,
+      "line": "l1",
+      "source": "vocal"
+    },
+    {
+      "id": "l1c07",
+      "text": "天",
+      "start": 1.83,
+      "end": 2.045,
+      "confidence": 0.753,
+      "energy": 0.444,
+      "line": "l1",
+      "source": "vocal"
+    },
+    {
+      "id": "l1c08",
+      "text": "兵",
+      "start": 2.045,
+      "end": 2.32,
+      "confidence": 0.796,
+      "energy": 0.587,
+      "line": "l1",
+      "source": "vocal"
+    },
+    {
+      "id": "l1c09",
+      "text": "合",
+      "start": 2.32,
+      "end": 2.66,
+      "confidence": 0.794,
+      "energy": 0.582,
+      "line": "l1",
+      "source": "vocal"
+    },
+    {
+      "id": "l1c10",
+      "text": "围",
+      "start": 2.66,
+      "end": 2.87,
+      "confidence": 0.803,
+      "energy": 0.609,
+      "line": "l1",
+      "source": "vocal"
+    },
+    {
+      "id": "l2c01",
+      "text": "怎",
+      "start": 2.9,
+      "end": 3.185,
+      "confidence": 0.839,
+      "energy": 0.729,
+      "line": "l2",
+      "source": "vocal"
+    },
+    {
+      "id": "l2c02",
+      "text": "敌",
+      "start": 3.185,
+      "end": 3.485,
+      "confidence": 0.775,
+      "energy": 0.517,
+      "line": "l2",
+      "source": "vocal"
+    },
+    {
+      "id": "l2c03",
+      "text": "我",
+      "start": 3.485,
+      "end": 3.77,
+      "confidence": 0.736,
+      "energy": 0.388,
+      "line": "l2",
+      "source": "vocal"
+    },
+    {
+      "id": "l2c04",
+      "text": "无",
+      "start": 3.77,
+      "end": 4.035,
+      "confidence": 0.833,
+      "energy": 0.708,
+      "line": "l2",
+      "source": "vocal"
+    },
+    {
+      "id": "l2c05",
+      "text": "坚",
+      "start": 4.035,
+      "end": 4.37,
+      "confidence": 0.749,
+      "energy": 0.432,
+      "line": "l2",
+      "source": "vocal"
+    },
+    {
+      "id": "l2c06",
+      "text": "不",
+      "start": 4.37,
+      "end": 4.615,
+      "confidence": 0.831,
+      "energy": 0.703,
+      "line": "l2",
+      "source": "vocal"
+    },
+    {
+      "id": "l2c07",
+      "text": "摧",
+      "start": 4.615,
+      "end": 4.73,
+      "confidence": 0.759,
+      "energy": 0.464,
+      "line": "l2",
+      "source": "mix-snap"
+    },
+    {
+      "id": "l3c01",
+      "text": "五",
+      "start": 4.87,
+      "end": 5.075,
+      "confidence": 0.701,
+      "energy": 0.271,
+      "line": "l3",
+      "source": "vocal"
+    },
+    {
+      "id": "l3c02",
+      "text": "指",
+      "start": 5.075,
+      "end": 5.325,
+      "confidence": 0.762,
+      "energy": 0.474,
+      "line": "l3",
+      "source": "vocal"
+    },
+    {
+      "id": "l3c03",
+      "text": "山",
+      "start": 5.325,
+      "end": 5.49,
+      "confidence": 0.748,
+      "energy": 0.426,
+      "line": "l3",
+      "source": "vocal"
+    },
+    {
+      "id": "l3c04",
+      "text": "下",
+      "start": 5.49,
+      "end": 5.775,
+      "confidence": 0.815,
+      "energy": 0.649,
+      "line": "l3",
+      "source": "vocal"
+    },
+    {
+      "id": "l3c05",
+      "text": "偿",
+      "start": 5.775,
+      "end": 6.045,
+      "confidence": 0.782,
+      "energy": 0.539,
+      "line": "l3",
+      "source": "vocal"
+    },
+    {
+      "id": "l3c06",
+      "text": "自",
+      "start": 6.045,
+      "end": 6.345,
+      "confidence": 0.813,
+      "energy": 0.645,
+      "line": "l3",
+      "source": "vocal"
+    },
+    {
+      "id": "l3c07",
+      "text": "由",
+      "start": 6.345,
+      "end": 6.635,
+      "confidence": 0.848,
+      "energy": 0.761,
+      "line": "l3",
+      "source": "vocal"
+    },
+    {
+      "id": "l3c08",
+      "text": "的",
+      "start": 6.635,
+      "end": 6.865,
+      "confidence": 0.779,
+      "energy": 0.529,
+      "line": "l3",
+      "source": "vocal"
+    },
+    {
+      "id": "l3c09",
+      "text": "罪",
+      "start": 6.865,
+      "end": 7.04,
+      "confidence": 0.727,
+      "energy": 0.357,
+      "line": "l3",
+      "source": "vocal"
+    },
+    {
+      "id": "l4c01",
+      "text": "罪",
+      "start": 7.19,
+      "end": 7.4,
+      "confidence": 0.778,
+      "energy": 0.528,
+      "line": "l4",
+      "source": "vocal"
+    },
+    {
+      "id": "l4c02",
+      "text": "名",
+      "start": 7.4,
+      "end": 7.775,
+      "confidence": 0.821,
+      "energy": 0.67,
+      "line": "l4",
+      "source": "vocal"
+    },
+    {
+      "id": "l4c03",
+      "text": "是",
+      "start": 7.775,
+      "end": 8.055,
+      "confidence": 0.794,
+      "energy": 0.579,
+      "line": "l4",
+      "source": "vocal"
+    },
+    {
+      "id": "l4c04",
+      "text": "老",
+      "start": 8.055,
+      "end": 8.33,
+      "confidence": 0.753,
+      "energy": 0.442,
+      "line": "l4",
+      "source": "vocal"
+    },
+    {
+      "id": "l4c05",
+      "text": "孙",
+      "start": 8.33,
+      "end": 8.605,
+      "confidence": 0.755,
+      "energy": 0.45,
+      "line": "l4",
+      "source": "vocal"
+    },
+    {
+      "id": "l4c06",
+      "text": "不",
+      "start": 8.605,
+      "end": 8.95,
+      "confidence": 0.753,
+      "energy": 0.444,
+      "line": "l4",
+      "source": "vocal"
+    },
+    {
+      "id": "l4c07",
+      "text": "敬",
+      "start": 8.95,
+      "end": 9.2,
+      "confidence": 0.7,
+      "energy": 0.265,
+      "line": "l4",
+      "source": "vocal"
+    },
+    {
+      "id": "l4c08",
+      "text": "权",
+      "start": 9.2,
+      "end": 9.475,
+      "confidence": 0.767,
+      "energy": 0.489,
+      "line": "l4",
+      "source": "vocal"
+    },
+    {
+      "id": "l4c09",
+      "text": "威",
+      "start": 9.475,
+      "end": 9.815,
+      "confidence": 0.873,
+      "energy": 0.845,
+      "line": "l4",
+      "source": "vocal"
+    }
+  ],
+  "sections": [
+    {
+      "id": "l1",
+      "start": 0.045,
+      "end": 3.0,
+      "label": "玉境凌霄十万天兵合围"
+    },
+    {
+      "id": "l2",
+      "start": 2.9,
+      "end": 4.955,
+      "label": "怎敌我无坚不摧"
+    },
+    {
+      "id": "l3",
+      "start": 4.87,
+      "end": 7.205,
+      "label": "五指山下偿自由的罪"
+    },
+    {
+      "id": "l4",
+      "start": 7.19,
+      "end": 9.815,
+      "label": "罪名是老孙不敬权威"
+    }
+  ],
+  "beats": {
+    "bpm": 104.99,
+    "offset": 0.1,
+    "beats": [
+      0.1,
+      0.671,
+      1.243,
+      1.814,
+      2.386,
+      2.957,
+      3.529,
+      4.1,
+      4.672,
+      5.243,
+      5.815,
+      6.386,
+      6.958,
+      7.529,
+      8.101,
+      8.672,
+      9.244,
+      9.815
+    ]
+  }
+}

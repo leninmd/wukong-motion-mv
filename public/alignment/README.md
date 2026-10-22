@@ -56,3 +56,20 @@
 ```
 
 节拍时间同样是秒。分镜切点优先吸附到 `beats` 最近值，但切镜仍通过 `beats[i] * fps` 动态换算。
+
+## 已落盘文档
+
+| 文件 | 用途 |
+|---|---|
+| `climax_words.json` | 高潮复刻段（09–19 s / 30 fps / 300 帧）字级对齐，35 个汉字 + 4 个段落 + 105 BPM 节拍网格。 |
+
+`climax_words.json` 的生成与自检：
+
+```powershell
+python scripts/build_climax_assets.py   # HPSS 鼓组 + onset 对齐 + 节拍网格
+python scripts/verify_climax.py         # 独立校验：每个字起点距参考混音瞬态 <= 50 ms
+```
+
+- `units[].line` 指向 `sections[].id`（l1–l4）。
+- `units[].source` 记录该字是被 `vocal` / `low` onset 选中，还是被 `mix-snap` 收尾吸附。
+- 验证脚本退出码为 0 才算通过；它是交付门的一部分，不是可选项。

@@ -80,3 +80,20 @@ npx remotion still src/index.ts WukongPrologue out/qa-prologue.png --frame=240
 - 禁止用“能编译”替代“能渲染”。
 - 禁止把旧帧号、旧文案、旧杜甫依赖带入新场景。
 - `@remotion/media-utils` 必须与 `remotion` 精确同版本（当前 `4.0.537`），禁止 `^` 漂移。
+
+## 9. 画面与资产的刚性要求（2026-10 增补）
+
+1. **每一刀必须有可一眼识别的主体**。检查标准：把任意抽帧缩到 320×180，仍能说出"这一格在拍什么"；做不到就重设计，而不是加特效。
+2. **禁止把每个汉字拆成独立 DOM 节点再逐字做 `opacity` / `transform` / `filter` 动画**（含 SVG `<text>` 逐字节点）。逐字显现只用 `text.slice(0, n)`；逐字位移、粒子化、爆破字一律在**单个 `<canvas>` 或单个 SVG** 内绘制。
+3. **参考片只作为构图与景别参考**，成片必须能独立成立：要么有 `public/ai/*.png` 的 AI 美术板，要么是纯代码方案。AI 板必须 ≥1920×1080 PNG、需要透明时保留 alpha、文件名稳定、在 `public/ai/README.md` 登记，禁止在代码里引用 AIGC 厂商的本机会话路径。
+4. **AI 板先写清单再生图**：镜头表 + `assets.manifest.json`（id / 类型 / 用途 / 尺寸 / 提示词 / 文件）先行，生成后逐张校验尺寸与是否真正落盘；禁止先生成一堆再回头拼故事。
+5. **交付前必须出接触表**（≥12 个时间点拼图）自检；单帧好看不算数，要看镜头之间是否成立。
+6. 主时钟仍以 `public/alignment/*.json` 为准；AI 板、音频、特效都不得自带第二套时间轴。
+7. 帧率：主片 60 fps；本复刻段沿用 `src/config/theme.ts` 的 `CLIMAX`（30 fps / 300 帧）并已在此登记。
+8. 探索期放宽项：配色允许在四色基础上做明度/色相微调以贴合 AI 板，但**主视觉仍以玄黑 / 宣纸 / 朱砂 / 鎏金为准**；放宽只允许发生在复刻段，不扩散到主片。
+
+## 10. 工具与外部依赖
+
+- 环境事实、Antigravity 生图调用方式、可复用脚本、踩坑清单，统一记录在 [`docs/AGENT_TOOLING.md`](docs/AGENT_TOOLING.md)。
+- 生图只允许通过 `scripts/gen_plates.py`（读 `assets.manifest.json`）或 `scripts/agy_image.mjs`（会话保活桥）调用，禁止在场景代码里发起任何网络/AIGC 调用。
+- 新增外部能力时，必须同时更新 `docs/AGENT_TOOLING.md`，否则下一个 session 视为不存在。

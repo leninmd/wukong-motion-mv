@@ -40,6 +40,23 @@ export const CANVAS = {
   fps: 60,
 } as const;
 
+/**
+ * Reference-match delivery spec for the imitation segment (09–19 s of the
+ * reference reel).
+ *
+ * The source clip is 1920×1080 @ 30 fps and the storyboard budget is exactly
+ * 300 frames, so this composition is registered at 30 fps. `CANVAS` above stays
+ * the 60 fps master for the main film: this is an explicit, documented override
+ * rather than a silent drift, and every cue is still resolved from seconds via
+ * `frameFromSeconds()`.
+ */
+export const CLIMAX = {
+  width: 1920,
+  height: 1080,
+  fps: 30,
+  durationInSeconds: 10,
+} as const;
+
 export const FONT_STACKS = {
   song: '"Noto Serif SC", "Source Han Serif SC", "Songti SC", "SimSun", serif',
   heavy: '"Source Han Serif SC Heavy", "Noto Serif SC", "Songti SC", "SimSun", serif',

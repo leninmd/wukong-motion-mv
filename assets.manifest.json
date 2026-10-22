@@ -1,0 +1,290 @@
+{
+  "version": 1,
+  "project": "wukong-motion-mv",
+  "segment": "climax_09_19",
+  "composition": "WukongClimaxSegment",
+  "canvas": {
+    "width": 1920,
+    "height": 1080,
+    "fps": 30,
+    "frames": 300
+  },
+  "reference": "大雨还在下十方神佛在怒骂 00:09–00:19（构图/景别参考，不复制素材）",
+  "style": {
+    "look": "大正浪漫 × 中国神话木版画：扁平矢量插画 + 丝网印刷质感 + 纸张纤维 + 半调网点",
+    "palette": [
+      "#0B090A",
+      "#F4EFE6",
+      "#D93025",
+      "#FCC934"
+    ],
+    "light": "鎏金为唯一光源，暗场高对比，金色必须有明确来源",
+    "banned": [
+      "人物面部特写",
+      "水印",
+      "logo",
+      "现代元素",
+      "彩色渐变光斑",
+      "写实照片质感"
+    ]
+  },
+  "shots": [
+    {
+      "id": "01",
+      "name": "凌霄殿全景",
+      "start": 0.04,
+      "end": 0.92,
+      "subject": "长殿中轴 + 巨大金月",
+      "assets": [
+        "bg_court_wide"
+      ],
+      "camera": "缓慢推轨"
+    },
+    {
+      "id": "02",
+      "name": "天兵合围",
+      "start": 0.92,
+      "end": 1.83,
+      "subject": "幡阵与枪林形成的夹道",
+      "assets": [
+        "bg_court_wide",
+        "spr_spears"
+      ],
+      "camera": "横向平移"
+    },
+    {
+      "id": "03",
+      "name": "如意在手",
+      "start": 1.83,
+      "end": 2.66,
+      "subject": "金箍棒（竖）与月",
+      "assets": [
+        "spr_cudgel",
+        "bg_court_wide"
+      ],
+      "camera": "仰角推近"
+    },
+    {
+      "id": "04",
+      "name": "一棒破阵",
+      "start": 2.66,
+      "end": 3.19,
+      "subject": "横扫的金箍棒切开画面",
+      "assets": [
+        "spr_cudgel",
+        "bg_impact"
+      ],
+      "camera": "甩镜 + 闪白"
+    },
+    {
+      "id": "05",
+      "name": "秩序崩塌",
+      "start": 3.19,
+      "end": 3.77,
+      "subject": "碎裂的秩序方块",
+      "assets": [
+        "bg_impact"
+      ],
+      "camera": "手抖近景"
+    },
+    {
+      "id": "06",
+      "name": "横扫千军",
+      "start": 3.77,
+      "end": 4.37,
+      "subject": "二次横扫的火星",
+      "assets": [
+        "spr_cudgel",
+        "bg_impact"
+      ],
+      "camera": "快速横移"
+    },
+    {
+      "id": "07",
+      "name": "摧",
+      "start": 4.37,
+      "end": 4.87,
+      "subject": "全屏闪白 + 冲击环",
+      "assets": [
+        "bg_impact"
+      ],
+      "camera": "顿帧"
+    },
+    {
+      "id": "08",
+      "name": "五指压顶",
+      "start": 4.87,
+      "end": 6.04,
+      "subject": "五根巨岩压下的瞬间",
+      "assets": [
+        "bg_mountain"
+      ],
+      "camera": "仰角砸落"
+    },
+    {
+      "id": "09",
+      "name": "石下",
+      "start": 6.04,
+      "end": 7.19,
+      "subject": "石缝漏下的一线金光",
+      "assets": [
+        "bg_crevasse"
+      ],
+      "camera": "缓慢推近"
+    },
+    {
+      "id": "10",
+      "name": "罪状",
+      "start": 7.19,
+      "end": 8.05,
+      "subject": "三张羊皮纸告示",
+      "assets": [
+        "bg_verdict"
+      ],
+      "camera": "推轨"
+    },
+    {
+      "id": "11",
+      "name": "镇压",
+      "start": 8.05,
+      "end": 8.95,
+      "subject": "岩壁夹出的压迫感",
+      "assets": [
+        "bg_mountain",
+        "bg_crevasse"
+      ],
+      "camera": "手持抖动"
+    },
+    {
+      "id": "12",
+      "name": "罪名昭彰",
+      "start": 8.95,
+      "end": 10.0,
+      "subject": "朱砂玉玺砸落",
+      "assets": [
+        "bg_verdict"
+      ],
+      "camera": "定机 + 冲击"
+    }
+  ],
+  "assets": [
+    {
+      "id": "bg_court_wide",
+      "type": "background",
+      "usage": "镜头 01 / 02 / 03 底图",
+      "size": [
+        1920,
+        1080
+      ],
+      "alpha": false,
+      "file": "public/ai/bg_court_wide.png",
+      "prompt": "16:9 电影级插画背景，风格=大正浪漫 × 中国神话木版画/丝网印刷，扁平矢量+纸纹+半调网点。一点透视的长殿中轴：前景左右各一根巨大黑柱压边；中景两侧朱砂长幡垂下、幡面有白色篆体汉字；金色灯笼串横跨中景；尽头是一扇发光的门洞，门后一轮巨大金月；地面有金色反光与薄雾；空中金尘。配色仅 #0B090A #F4EFE6 #D93025 #FCC934，暗调高对比，金色为唯一光源。极高细节密度。禁止人物、文字乱码、水印、现代元素、写实照片。"
+    },
+    {
+      "id": "bg_impact",
+      "type": "background",
+      "usage": "镜头 04 / 05 / 06 / 07 底图",
+      "size": [
+        1920,
+        1080
+      ],
+      "alpha": false,
+      "file": "public/ai/bg_impact.png",
+      "prompt": "16:9 冲击场面背景，同一套大正浪漫版画风格。画面被一道斜向的金色冲击光带切开，光带两侧是崩碎的灰色秩序方块与飞散的碎屑，背景是深靛的殿顶与月晕，金色火星与纸屑四散，地面有放射状裂纹。配色仅 #0B090A #F4EFE6 #D93025 #FCC934，金色为唯一光源，高对比、极强动势。禁止人物、文字、水印。"
+    },
+    {
+      "id": "bg_mountain",
+      "type": "background",
+      "usage": "镜头 08 / 11 底图",
+      "size": [
+        1920,
+        1080
+      ],
+      "alpha": false,
+      "file": "public/ai/bg_mountain.png",
+      "prompt": "16:9 压迫感背景，大正浪漫版画风格。五根巨大的黑色岩柱从画面上方压下、顶端被裁切，柱体有 fBm 侵蚀的不规则边缘与横向岩层纹理，柱与柱之间是窄缝，缝里漏下鎏金的光柱与浮尘；地面是碎裂的石台与放射裂纹，前景有碎石剪影。配色仅 #0B090A #F4EFE6 #D93025 #FCC934，金色光缝是唯一光源。禁止人物、文字、水印。"
+    },
+    {
+      "id": "bg_crevasse",
+      "type": "background",
+      "usage": "镜头 09 / 11 底图",
+      "size": [
+        1920,
+        1080
+      ],
+      "alpha": false,
+      "file": "public/ai/bg_crevasse.png",
+      "prompt": "16:9 石缝特写，大正浪漫版画风格。画面被两侧巨大的黑色岩壁夹住，中间是一道竖直的裂缝，裂缝里透出鎏金的强光与贯穿的浮尘颗粒；岩壁有粗糙的雕刻感纹理与受光的金色边缘；底部有一小片被照亮的地面与积水倒影。配色仅 #0B090A #F4EFE6 #D93025 #FCC934。极简构图、强烈明暗对比。禁止人物、文字、水印。"
+    },
+    {
+      "id": "bg_verdict",
+      "type": "background",
+      "usage": "镜头 10 / 12 底图",
+      "size": [
+        1920,
+        1080
+      ],
+      "alpha": false,
+      "file": "public/ai/bg_verdict.png",
+      "prompt": "16:9 判决场景背景，大正浪漫版画风格。深色石壁前悬挂三张米白色羊皮纸告示（不需要可读文字），纸面有纤维纹理与朱砂印章的痕迹，纸上压着金色的光；背景有鎏金的云纹与细密的回纹边框；地面有金色反光。配色仅 #0B090A #F4EFE6 #D93025 #FCC934。庄重、压迫、高对比。禁止人物、可读文字、水印。"
+    },
+    {
+      "id": "spr_cudgel",
+      "type": "sprite",
+      "usage": "镜头 03 / 04 / 06 金箍棒（横置）",
+      "size": [
+        2048,
+        512
+      ],
+      "alpha": true,
+      "file": "public/ai/spr_cudgel.png",
+      "prompt": "透明背景 PNG，一根横置的如意金箍棒：两端朱砂色箍、棒身鎏金并带一道白热高光、表面有细密的金色云纹与暗部，两端略收。大正浪漫版画风格，扁平但带金属质感。只有金箍棒本体，背景完全透明。禁止投影、文字、水印。"
+    },
+    {
+      "id": "spr_spears",
+      "type": "sprite",
+      "usage": "镜头 02 前景枪林",
+      "size": [
+        1920,
+        1080
+      ],
+      "alpha": true,
+      "file": "public/ai/spr_spears.png",
+      "prompt": "透明背景 PNG，一排从画面下方向上斜伸的长枪剪影（约 20 支，长短错落），枪杆为纯黑剪影、枪尖有极细的鎏金反光。版画风格，纯剪影。背景完全透明。禁止人物、文字、水印。"
+    },
+    {
+      "id": "spr_dust",
+      "type": "sprite",
+      "usage": "镜头 04–09 浮尘/火星层",
+      "size": [
+        1920,
+        1080
+      ],
+      "alpha": true,
+      "file": "public/ai/spr_dust.png",
+      "prompt": "透明背景 PNG，一层次散落的鎏金浮尘与火星颗粒：大小不一的光点、少量细长光条、极淡的纸屑，集中在画面中下部，四周留空。版画/丝网质感。背景完全透明。禁止文字、水印。"
+    }
+  ],
+  "budget": {
+    "maxGenerations": 8,
+    "note": "一次生成一张，先验一张再批量；失败不重试超过 1 次"
+  },
+  "generation": {
+    "tool": "本机 Antigravity CLI 的 image-generator 子 agent（stream-json 保活会话）",
+    "rawOutput": "1376x768 JPEG（生成器固定输出）",
+    "postprocess": "居中裁到 16:9 → Lanczos 放大到 1920x1080 → PNG",
+    "script": "scripts/gen_plates.py（读 manifest → 调 scripts/agy_image.mjs → 规整 → 校验）",
+    "used": [
+      "bg_court_wide",
+      "bg_impact",
+      "bg_mountain",
+      "bg_crevasse",
+      "bg_verdict"
+    ],
+    "notGenerated": {
+      "spr_cudgel": "生成器不返回真 alpha；金箍棒继续用代码绘制（CudgelSlash），避免脏边",
+      "spr_spears": "可由代码前景剪影替代",
+      "spr_dust": "粒子层代码更可控"
+    }
+  }
+}
