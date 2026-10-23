@@ -1,13 +1,15 @@
 import React from 'react';
-import {AbsoluteFill, Audio, staticFile, useCurrentFrame, useVideoConfig} from 'remotion';
+import {AbsoluteFill, Audio, Sequence, staticFile, useCurrentFrame, useVideoConfig} from 'remotion';
 import {
   CLIMAX_VOCAL_REFERENCE,
   useStemEnergy,
   type StemEnergy,
 } from '../audio/spectrum';
 import {CLIMAX} from '../config/theme';
+import {frameFromSeconds} from '../utils/timing';
 import {clamp} from '../utils/math';
-import {CelestialThrone3D} from '../primitives/senbon_style/CelestialThrone3D';
+import {BlenderAlphaSequence} from '../primitives/senbon_style/BlenderAlphaSequence';
+import {BlenderPlate} from '../primitives/senbon_style/BlenderPlate';
 import {ClimaxAsset} from '../primitives/senbon_style/ClimaxAsset';
 import {ChainCurtain, MountainSmash, SlashCrack, slashLineY} from '../primitives/senbon_style/DiegeticWipes';
 import {EyeWoodblockShot} from '../primitives/senbon_style/EyeWoodblockShot';
@@ -60,7 +62,7 @@ const SlashType: React.FC<{time: number; revealAt: number; cutAt: number}> = ({t
     justifyContent: 'flex-end',
     paddingRight: 26,
     fontFamily: SERIF_STACK,
-    fontSize: 124,
+    fontSize: 96,
     fontWeight: 900,
     letterSpacing: 10,
     lineHeight: 1,
@@ -72,9 +74,9 @@ const SlashType: React.FC<{time: number; revealAt: number; cutAt: number}> = ({t
     <div
       style={{
         position: 'absolute',
-        right: 62,
-        top: 92,
-        width: 900,
+        right: 210,
+        top: 104,
+        width: 760,
         height: 300,
         zIndex: 60,
         opacity: appear,
@@ -296,9 +298,16 @@ const RushingWukong: React.FC<{time: number; switchAt: number; cutAt: number}> =
 /*  Sub2B 全景                                                                */
 /* -------------------------------------------------------------------------- */
 
-const Shot2B: React.FC<{time: number; start: number; end: number; pulse: number}> = ({time, start, end, pulse}) => (
+const Shot2B: React.FC<{
+  time: number;
+  start: number;
+  end: number;
+  pulse: number;
+  palaceLayer: React.ReactNode;
+}> = ({time, start, end, pulse, palaceLayer}) => (
   <>
-    <CelestialThrone3D time={time} start={start} end={end} cutAt={CUE.slash.cut} pulse={pulse} />
+    {/* V8：Blender 离线烘焙的凌霄殿崩裂（55 帧 H.264）替换 @remotion/three 场景 */}
+    {palaceLayer}
 
     {/* 左下角：朱砂逆光底 */}
     <div
@@ -389,6 +398,20 @@ export const WukongClimaxSegment: React.FC = () => {
   const {fps} = useVideoConfig();
   const time = frame / fps;
 
+  /* ---------------------------------------------------------------------- */
+  /*  Blender 预渲染资产的挂载点：秒 → 帧一律走 frameFromSeconds（AGENTS §1） */
+  /* ---------------------------------------------------------------------- */
+  const shieldFrom = frameFromSeconds(CUE.shield.start, fps);
+  const palaceFrom = frameFromSeconds(CUE.palace.start, fps);
+  const palaceSpan = frameFromSeconds(CUE.palace.end, fps) - palaceFrom;
+  const rockFrom = frameFromSeconds(CUE.mountain.start, fps);
+  const rockSpan = frameFromSeconds(CUE.mountain.end, fps) - rockFrom;
+  const abyssFrom = frameFromSeconds(CUE.chamber, fps);
+  const abyssSpan = frameFromSeconds(CUE.blackout, fps) - abyssFrom;
+  const jumpCuts = CUE.jumpCuts.map((seconds) => frameFromSeconds(seconds, fps));
+  /** 四连跳切每刀的第 1–2 帧：3D 签阵"破壁"插入帧（第 3 帧回到 2K 怒颜）。 */
+  const abyssInsert = jumpCuts.some((cut) => frame === cut || frame === cut + 1);
+
   const stem = useStemEnergy({
     src: staticFile('audio/climax_real_vocal.wav'),
     bandReference: CLIMAX_VOCAL_REFERENCE,
@@ -437,6 +460,53 @@ export const WukongClimaxSegment: React.FC = () => {
   const heroWindow = heroPanelWindow(expandProgress);
   const splitProgress = clamp01((time - CUE.wipe.split.start) / Math.max(0.001, CUE.wipe.split.end - CUE.wipe.split.start));
   const splitting = time >= CUE.wipe.split.start && splitProgress < 1;
+
+  /* ---------------------------------------------------------------------- */
+  /*  Blender 离线资产的四层挂载（透明 .mov 走 transparent，整屏 .mp4 走底片） */
+  /* ---------------------------------------------------------------------- */
+
+  /**
+   * 1B：真实 3D 如意金箍棒旋风盾。视频内容是"以画面中心为轴"的棍盘，
+   * 这里用 translate + scale 把它钉在 `woodblock_spin.png` 的双手位置
+   * (623, 786)，缩放 0.52 后直径约 590px，正好落在胸腹前、低于下巴。
+   */
+  const cudgelLayer = (
+    <div
+      style={{
+        position: 'absolute',
+        left: 0,
+        top: 0,
+        width: 1920,
+        height: 1080,
+        zIndex: 6,
+        transform: 'translate(-337px, 258px) scale(0.62)',
+        transformOrigin: '50% 50%',
+      }}
+    >
+      <BlenderAlphaSequence dir="shot1_frames" prefix="s1" from={shieldFrom} length={45} fit="contain" />
+    </div>
+  );
+
+  /** 2B：凌霄殿 36 柱崩裂 + 螺旋俯冲，整屏底片。 */
+  const palaceLayer = (
+    <Sequence from={palaceFrom} durationInFrames={Math.min(55, palaceSpan)} layout="none">
+      <AbsoluteFill>
+        <BlenderPlate file="b_shot2_lingxiao_collapse.mp4" />
+      </AbsoluteFill>
+    </Sequence>
+  );
+
+  /** 3A/3B：五座巨岩 + 八条实体铁索，透明层压在大圣之上、符咒之下。 */
+  const rockLayer = (
+    <BlenderAlphaSequence dir="shot3_frames" prefix="s3" from={rockFrom} length={Math.min(75, rockSpan)} />
+  );
+
+  /**
+   * 4A/4B：纯黑三维悬签阵。整层挂在 zIndex 50：
+   *   · 4A（225–256）不透明度 1，作为底片，三块 2D 主牌以 zIndex 60 压在上面；
+   *   · 4B（256–290）只在四刀的第 1–2 帧露出，做"破壁"插入，第 3 帧回到 2K 怒颜。
+   */
+  const abyssVisible = show.s4a || (show.s4b && abyssInsert);
 
   const halftone: Record<ShotId, number> = {
     s1a: 0.2,
@@ -492,10 +562,16 @@ export const WukongClimaxSegment: React.FC = () => {
             kneelAt={CUE.kneelReveal}
             chains={CHAINS}
             pulse={pulse}
+            insertLayer={rockLayer}
           />
         ) : null}
 
-        {show.s4a ? <SuspendedTags time={time} frame={frame} heroes={HERO_TAGS} pulse={pulse} /> : null}
+        {/* 4A：三块 2D 主牌压在 3D 签阵之上（背景透明，不再自带黑底） */}
+        {show.s4a ? (
+          <div style={{position: 'absolute', inset: 0, zIndex: 60, pointerEvents: 'none'}}>
+            <SuspendedTags time={time} frame={frame} heroes={HERO_TAGS} pulse={pulse} variant="hero" />
+          </div>
+        ) : null}
 
         {/* ---------- 1B ---------- */}
 
@@ -508,6 +584,7 @@ export const WukongClimaxSegment: React.FC = () => {
                 progress={shieldProgress}
                 pulse={pulse}
                 high={energy.high}
+                cudgelLayer={cudgelLayer}
               />
             </SplitStage>
           ) : (
@@ -527,6 +604,7 @@ export const WukongClimaxSegment: React.FC = () => {
                 progress={shieldProgress}
                 pulse={pulse}
                 high={energy.high}
+                cudgelLayer={cudgelLayer}
               />
             </div>
           )
@@ -545,7 +623,9 @@ export const WukongClimaxSegment: React.FC = () => {
         ) : null}
 
         {/* ---------- 2B ---------- */}
-        {show.s2b ? <Shot2B time={time} start={CUE.palace.start} end={CUE.palace.end} pulse={pulse} /> : null}
+        {show.s2b ? (
+          <Shot2B time={time} start={CUE.palace.start} end={CUE.palace.end} pulse={pulse} palaceLayer={palaceLayer} />
+        ) : null}
 
         {/* ---------- 3B ---------- */}
         {show.s3b ? (
@@ -558,7 +638,23 @@ export const WukongClimaxSegment: React.FC = () => {
             chains={CHAINS}
             ofuda={OFUDA}
             pulse={pulse}
+            insertLayer={rockLayer}
           />
+        ) : null}
+
+        {/* ---------- 4A/4B 的 3D 悬签阵底片（zIndex 50） ---------- */}
+        {show.s4a || show.s4b ? (
+          <AbsoluteFill
+            style={{
+              zIndex: 50,
+              opacity: abyssVisible ? 1 : 0,
+              pointerEvents: 'none',
+            }}
+          >
+            <Sequence from={abyssFrom} durationInFrames={Math.min(65, abyssSpan)} layout="none">
+              <BlenderPlate file="b_shot4_verdict_abyss.mp4" />
+            </Sequence>
+          </AbsoluteFill>
         ) : null}
 
         {/* ---------- 4B ---------- */}

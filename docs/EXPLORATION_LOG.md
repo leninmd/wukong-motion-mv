@@ -1344,3 +1344,124 @@ Blender 离线渲染。复用 Shot 2 的管线（EEVEE + Freestyle + 三渲二 +
 - 交付：`public/blender_renders/shot3_mountain_chains.webm`、
   `out/blender_frames/shot3/*.png`、`out/shot3_mountain_chains_alpha.mov`、
   `out/blender_qa/shot3_f30.png`、`out/shot3_contact_sheet.png`、`out/shot3_render_report.md`。
+
+---
+
+## 21. V8-Blender：四段离线 3D 镜头管线 + 多通道合成（2026-10-23）
+
+### 21.1 动机
+
+V8 之前的 2B 仍在运行时跑 `@remotion/three`，1B 的棍盘是 8 层 CSS 棍影，3A 的铁索是 2D
+`<path>`。三处都撞到同一个天花板：**没有真正的三维投影、没有真正的体积、没有真正的运动模糊**，
+所以"贴纸感"永远消不掉。本轮把《千本樱》式管线补全：Blender 无头烘焙 4 段镜头 → Remotion
+只做解码与叠合，浏览器不再承担 3D 与碎裂。
+
+### 21.2 做法
+
+1. **统一规范模块** `scripts/blender/ukiyoe_style.py`（四段共用，禁止各自复制设置）：
+   - `BLENDER_EEVEE` / 1920×1080 / 30 fps；Motion Blur `shutter 0.5–0.8`；
+   - **Bloom**：Blender 5.2 的 EEVEE Next 已删除 `use_bloom`，改由合成器
+     `CompositorNodeGlare`（Type=Bloom）+ `SetAlpha` 还原透明通道 alpha；
+   - **三渲二木刻**：`ShaderToRGB → ColorRamp(CONSTANT)` 三段锁死
+     `#120D14 / #9E1F18 或 #E8DEC8 / #F5C242`，Fresnel 并入 Fac 让轮廓自动吃金边；
+   - **Freestyle**：2.2 px、`#0A0808`、`ABSOLUTE`、只对 `Geo` 集合生效
+     （火星/铭文/拖影/碎片进 `Detail`/`Debris`，否则 2 px 墨线会把细环与碎片糊成黑团）。
+2. **b_shot1_cudgel_shield**（45 帧）：真 3D 如意金箍棒 + 12 层 alpha 拖影扇面 + 4 段断弧护盾环
+   + 96 颗解析弹道火星；35° 立体倾角、-25° 平面滚转，1.5 s 自旋 3.7 圈。
+3. **b_shot2_lingxiao_collapse**（55 帧）：24×24 真棋盘地面 + 五环二十四芒阵 + 36 根环列斗拱巨柱
+   + 中央盘龙宝座 + 80 座飞阁剪影；第 14 帧金箍棒横扫，36 柱按
+   `subdivide → bisect_plane → split_edges → separate(LOOSE)` 裂成 324 块，摄像机螺旋俯冲 + Roll。
+4. **b_shot3_mountain_chains**（75 帧，透明）：5 座棱角巨岩（贴六字真言）+ 8 条 24 段环扣铁索，
+   每段独立入场延迟，拉进来像鞭子。
+5. **b_shot4_verdict_abyss**（65 帧）：3 排 × 7 张 = 21 张 3D 白签（每张 3 块竖板）+ 体积光柱；
+   第 32 / 40 / 48 / 56 帧四连跳切 `1.0× → 1.45× → 2.0× → 1.3×`，刀光把签劈散。
+6. **Remotion 合成**：1B/3A 用逐帧 PNG `<Img>`（真 alpha），2B/4A/4B 用
+   `<OffthreadVideo />` H.264；4A 的 3D 签阵在 z50 当底片，2D 主牌升到 z60；
+   4B 只在每刀第 1–2 帧露出 3D"破壁"插入，第 3 帧回到 2K 怒颜（恰好是 AGENTS 指定的
+   258/266/274/282 验收帧）。
+
+### 21.3 结果（实测）
+
+| 项 | 数值 |
+|---|---|
+| shot1 45 帧 | 318.5 s（7.08 s/帧，含 Freestyle） |
+| shot2 55 帧 | 336.7 s（6.12 s/帧，495 objects） |
+| shot3 75 帧 | 585.8 s（7.81 s/帧，143 objects） |
+| shot4 65 帧 | 497.8 s（7.66 s/帧） |
+| 首帧着色器编译 | ~35–45 s（同进程后续帧不受影响） |
+| WebM 编码 | VP9 `yuv420p`（**alpha 被 muxer 丢弃**） |
+| ProRes 4444 | `yuva444p12le`，45 帧 = 73.7 MB，75 帧 = 189.6 MB |
+| 合成 QA | `out/v8_check_seq2_f050.png`（1B）、`f120`（2B）、`f200`（3B）、`f240`（4A） |
+
+### 21.4 踩坑（按代价排序）
+
+1. **`make_toon_material` 少连了一根线**：`ColorRamp → Emission.Color` 漏接，Emission 退回默认
+   纯白，于是所有"版画材质"渲成白模 + 黑线。连续两轮把问题误判为"灯光过曝 / bloom 洗白"，
+   直到把渲染结果的像素直方图打出来（全屏 `(1,1,1)` 与 `(1,1,0.375)`）才定位。
+   **教训**：材质异常先打印节点连线，不要靠肉眼猜灯光。
+2. **`separate(LOOSE)` 的碎块原点在柱基**：网格顶点没有按质心归零，1926 块碎片全部从殿心
+   炸开，第一帧就把镜头糊死。修法：每簇 join 后把 mesh 顶点平移 `-centroid`，质心写回对象原点。
+3. **VP9/VP8 alpha 在本机 ffmpeg 7.1 不可得**：`-pix_fmt yuva420p` 对 libvpx 有效，
+   但 webm muxer 输出仍是 `yuv420p`（`auto-alt-ref 0` 也无效）。ProRes 4444 写得出
+   `yuva444p12le`，但 Remotion 合成器解码出来是噪点/黑块。**最终透明层只能走逐帧 PNG**。
+4. **EEVEE 运动模糊在"三级空物体父级"下采不到子物体速度**：`root→tilt→rotor→staff` 时
+   旋转 45 帧仍是一根清晰的棍。改用 12 层 alpha 拖影几何做长曝光（`make_ghost_material`）。
+5. **Area 灯在 7 m 外的照度只有 ~0.2 W/m²**：罪状签整排掉进墨腔变黑剪影。改用 Sun（无距离衰减）。
+6. **自发光锥体做体积光会爆白**：锥体前后两面在 alpha 混合下叠加，且会挡住正面主光。
+   改为签阵**之后**的柔光板（`alpha 0.035`），不投影、不挡光。
+7. **Freestyle 会把细金环吃成黑圈**：2.2 px 墨线对半径 <0.05 的圆环等于全黑。能量环/速度线/碎片
+   一律进 `Detail`/`Debris` 不勾线。
+
+### 21.5 代价
+
+- 22:04 开始，23:40 出片，**约 1 小时 35 分**；4 段 Blender 全量渲染合计 **29 分钟**；
+  合成 still 校验 **7 轮**；材质/碎裂/灯光重大返工 **6 次**（其中 2 次是全量重渲）。
+- 素材体积：PNG 序列 120 帧 ≈ 120 MB，ProRes alpha 263 MB（**不进 git**，见 README）。
+
+### 21.6 影响文件
+
+- 新增：`scripts/blender/ukiyoe_style.py`、`b_shot1_cudgel_shield.py`、`b_shot2_lingxiao_collapse.py`、
+  `b_shot3_mountain_chains.py`、`b_shot4_verdict_abyss.py`、
+  `src/primitives/senbon_style/BlenderPlate.tsx`、`BlenderAlphaSequence.tsx`；
+  `public/blender_renders/{b_shot1_cudgel_shield.webm|.mov, b_shot2_lingxiao_collapse.mp4,
+  b_shot3_mountain_chains.webm|.mov, b_shot4_verdict_abyss.mp4}`、
+  `public/blender_renders/shot1_frames/`、`shot3_frames/`。
+- 修改：`src/sequences/WukongClimaxSegment.tsx`（四层挂载 + 破壁插入）、
+  `MoonSpinShot.tsx`（`cudgelLayer`）、`MountainCleft.tsx`（`insertLayer`）、
+  `SuspendedTags.tsx`（`variant="hero"`）、`VerticalCartouche.tsx`（文字 top 100 → 136）。
+
+### 21.7 第一版成片后的两处交付修正（2026-10-23 23:04）
+
+第一次全片（`senbon_v8_blender.mp4`，300 帧）回抽七帧后发现两个必须修的硬伤，
+第二版一起修掉并重渲：
+
+1. **2B【无坚不摧】右侧被画面切掉**：`SlashType` 容器 `right: 62 / width: 900 /
+   fontSize 124` 时，第四个"摧"越出右安全区。改为 `right: 210 / width: 760 /
+   fontSize 96`，四字完整落在 960–1680px 内。验收帧 `out/v8_blender_mp4_4.0.png`。
+2. **1B 的三维棍盾偏小偏淡**：0.52 缩放下护盾环只有约 590px，压在大圣胸甲上几乎
+   只剩一根细金弧。放大到 `0.62`、中心下移 12px，环径约 700px，金色断弧与速度线
+   才读得出来。验收帧 `out/v8_blender_mp4_1.8.png`。
+
+重渲命令与用户指定一致：
+
+```powershell
+npx remotion render src/index.ts WukongClimaxSegment out/senbon_v8_blender.mp4 --concurrency=2
+```
+
+最终产物：`20.99 MB` / 1920×1080 / 30 fps / 300 帧 / 10.00 s / H.264 + AAC。
+回抽 0.5、1.8、2.8、4.0、6.5、8.0、9.2 s 七帧 + 接触表
+`out/v8_blender_contact_sheet.png`；另回抽 8.53 s（第 256 帧，3D 破壁插入）与
+8.6 s（第 258 帧，2K 怒颜）确认 4B 的第 3 帧一定回到人脸。
+
+### 21.8 落库前的体积处置（2026-10-23 23:20）
+
+`git push` 前发现 1B/3A 的透明序列是 120 张 1080p RGBA PNG，共 **199 MB**
+（shot1 42.8 MB / shot3 155.9 MB），直接提交会把仓库体积翻三倍。处置：
+
+- 新增 `scripts/blender/png_to_webp.py`：PIL `lossless=True, method=6` 转**无损 WebP**，
+  **199 MB → 68 MB（≈1/3），像素完全一致**；
+- `BlenderAlphaSequence.tsx` 改读 `.webp`；用 still 复验 f050 / f200 与改前一致；
+- Blender 直出 PNG 仍留在 `out/`（gitignore），只有 WebP 落库；
+- 第三方参考片 `references/*.mp4`（51 MB，B 站下载）加入 gitignore，只提交其 README。
+
+代价：多一次 4 分钟的转码与两次 still 复验；收益是仓库可推、clone 后仍能直接渲染。

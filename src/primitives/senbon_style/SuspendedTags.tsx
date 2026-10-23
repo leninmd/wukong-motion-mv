@@ -31,6 +31,12 @@ export interface SuspendedTagsProps {
   frame: number;
   heroes: readonly HeroTagSpec[];
   pulse?: number;
+  /**
+   * `full`：完整的 2D 悬签阵（纯黑底）。
+   * `hero`：只画三块主牌 + 游走聚光 + 火星，背景透明 —— 用于把
+   *         Blender 烘焙的 3D 签阵垫在下面（V8）。
+   */
+  variant?: 'full' | 'hero';
 }
 
 const FILLER = ['罪', '名', '欺', '天', '妄', '言', '犯', '上', '狂', '徒', '逆', '天', '不', '臣', '妖', '猴', '当', '诛', '天', '条'];
@@ -347,7 +353,8 @@ const HeroTag: React.FC<{tag: HeroTagSpec; time: number; pulse: number}> = ({tag
   );
 };
 
-export const SuspendedTags: React.FC<SuspendedTagsProps> = ({time, frame, heroes, pulse = 0}) => {
+export const SuspendedTags: React.FC<SuspendedTagsProps> = ({time, frame, heroes, pulse = 0, variant = 'full'}) => {
+  const heroOnly = variant === 'hero';
   const rawId = useId().replace(/[^a-zA-Z0-9]/g, '');
   const id = (suffix: string) => `tags-${rawId}-${suffix}`;
 
@@ -402,8 +409,9 @@ export const SuspendedTags: React.FC<SuspendedTagsProps> = ({time, frame, heroes
   const spotlightX = 260 + ((time * 420) % 1520);
 
   return (
-    <AbsoluteFill style={{backgroundColor: '#050404', overflow: 'hidden'}}>
+    <AbsoluteFill style={{backgroundColor: heroOnly ? 'transparent' : '#050404', overflow: 'hidden'}}>
       {/* 顶部极轻的冷光，不能把黑场抬灰 */}
+      {heroOnly ? null : (
       <div
         style={{
           position: 'absolute',
@@ -415,8 +423,10 @@ export const SuspendedTags: React.FC<SuspendedTagsProps> = ({time, frame, heroes
           pointerEvents: 'none',
         }}
       />
+      )}
 
       {/* 三道实体铁索 */}
+      {heroOnly ? null : (
       <svg viewBox="0 0 1920 1080" width="1920" height="1080" style={{position: 'absolute', inset: 0}}>
         <defs>
           <pattern id={id('dots')} width="9" height="9" patternUnits="userSpaceOnUse" patternTransform="rotate(18)">
@@ -427,9 +437,10 @@ export const SuspendedTags: React.FC<SuspendedTagsProps> = ({time, frame, heroes
         <IronChain x1={-80} y1={104} x2={2000} y2={104} sag={62} linkLen={28} glow={0.2} runeText="唵嘛呢叭咪吽" runeStep={11} opacity={0.4} seed={7} />
         <IronChain x1={-80} y1={170} x2={2000} y2={170} sag={70} linkLen={30} glow={0.18} runeText="唵嘛呢叭咪吽" runeStep={13} opacity={0.32} seed={11} />
       </svg>
+      )}
 
       {/* 三层罪状木牌 */}
-      {tags.map((tag) => (
+      {heroOnly ? null : tags.map((tag) => (
         <Tag key={tag.id} tag={tag} time={time} pulse={pulse} />
       ))}
 
@@ -482,6 +493,7 @@ export const SuspendedTags: React.FC<SuspendedTagsProps> = ({time, frame, heroes
       </svg>
 
       {/* 暗角 */}
+      {heroOnly ? null : (
       <div
         style={{
           position: 'absolute',
@@ -490,8 +502,10 @@ export const SuspendedTags: React.FC<SuspendedTagsProps> = ({time, frame, heroes
           pointerEvents: 'none',
         }}
       />
+      )}
 
       {/* 帧驱动的极轻纸纹浮动（不改变黑底）；用 CSS 网点而不是 SVG pattern */}
+      {heroOnly ? null : (
       <div
         style={{
           position: 'absolute',
@@ -503,6 +517,7 @@ export const SuspendedTags: React.FC<SuspendedTagsProps> = ({time, frame, heroes
           mixBlendMode: 'screen',
         }}
       />
+      )}
     </AbsoluteFill>
   );
 };

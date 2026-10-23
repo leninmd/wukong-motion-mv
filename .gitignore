@@ -25,3 +25,9 @@ __pycache__/
 # Large intermediate renders
 public/renders/
 public/tmp/
+
+# Blender alpha archives (regenerable, 70-190 MB each; runtime uses shot*_frames/ PNG)
+public/blender_renders/*.mov
+
+# Third-party reference footage (downloaded, not redistributed)
+references/*.mp4

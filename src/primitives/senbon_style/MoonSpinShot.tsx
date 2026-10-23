@@ -29,6 +29,8 @@ export interface MoonSpinShotProps {
   progress: number;
   pulse?: number;
   high?: number;
+  /** V8 Blender 版：真实 3D 如意金箍棒旋风盾（透明 .mov）替换 CSS 棍盘。 */
+  cudgelLayer?: React.ReactNode;
 }
 
 const HERO_X = 644;
@@ -370,7 +372,7 @@ const InkCloudBand: React.FC<{y: number; shift: number; fill: string; opacity: n
   </svg>
 );
 
-export const MoonSpinShot: React.FC<MoonSpinShotProps> = ({time, start, progress, pulse = 0}) => {
+export const MoonSpinShot: React.FC<MoonSpinShotProps> = ({time, start, progress, pulse = 0, cudgelLayer}) => {
   const local = Math.max(0, time - start);
   const reveal = clamp01(progress * 3.2);
   const breath = Math.sin(local * 5.2) * 3.2;
@@ -476,8 +478,10 @@ export const MoonSpinShot: React.FC<MoonSpinShotProps> = ({time, start, progress
         <ClimaxAsset asset="spin" height={HERO_HEIGHT} x={HERO_X} baseline={HERO_BASELINE} echo={0.2 + pulse * 0.08} rim={0.14} />
       </div>
 
-      {/* 斜向椭圆棍盘：中心在胸腹前，最上缘 638px，严格低于下巴 */}
-      <CudgelVortex time={time} start={start} cx={HAND_X} cy={HAND_Y + 43} pulse={pulse} />
+      {/* 斜向椭圆棍盘：中心在胸腹前，最上缘 638px，严格低于下巴。
+          V8 Blender：若传入 cudgelLayer（离线烘焙的透明 3D 金箍棒旋风），
+          直接替换 CSS 棍盘；双手补片仍在其上，保证"手握棍心"的读法。 */}
+      {cudgelLayer ?? <CudgelVortex time={time} start={start} cx={HAND_X} cy={HAND_Y + 43} pulse={pulse} />}
 
       {/*
         三明治顶层：把同一张立绘的**两只手**各裁一小块，分别盖在棍盘上。

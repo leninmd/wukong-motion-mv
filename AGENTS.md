@@ -286,3 +286,35 @@ V4 用 SVG `<polygon>` 手写大圣的五官与身体，被判定为「折纸积
 10. **交付前必须回抽 258 / 266 / 274 / 282 四帧**，确认
     1.05→1.42→1.95→1.25 的构图/色彩跳变；另回抽 1.8s 确认题笺六字完整。
 
+
+## 17. V8-Blender：离线三维镜头管线（2026-10-23 增补）
+
+本节**明确收口** §14.1「2B 必须走真 WebGL」在 2B / 1B / 3A / 4A 上的适用范围：
+复杂三维与碎裂从本轮起**不在 Remotion 运行时生成**，而是 Blender 离线烘焙。
+`@remotion/three` 不再出现在 `WukongClimaxSegment` 的依赖树里。
+
+1. **唯一规范模块**：所有 `scripts/blender/b_shot*.py` 必须 `import ukiyoe_style as uk`，
+   禁止各自复制渲染/材质设置。规范内容：`BLENDER_EEVEE` / 1920×1080 / 30 fps /
+   Motion Blur / 合成器 Bloom / `ShaderToRGB → ColorRamp(CONSTANT)` 三色
+   `#120D14`、`#9E1F18` 或 `#E8DEC8`、`#F5C242` / Freestyle 2.2 px `#0A0808`。
+2. **透明层只能是 PNG 序列**：本机 ffmpeg 的 webm muxer 丢 VP9/VP8 alpha，
+   ProRes 4444 在 Remotion 合成器里解成噪点（实测，见 `docs/AGENT_TOOLING.md` §16.3）。
+   1B / 3A 的透明素材落在 `public/blender_renders/shot1_frames`、`shot3_frames`，
+   由 `BlenderAlphaSequence.tsx` 逐帧读取。**不要再写 `<OffthreadVideo transparent />`
+   指向 .webm/.mov**，会得到空层。
+3. **不透明镜头走 `BlenderPlate.tsx` + `.mp4`**：2B（55 帧）、4A/4B（65 帧）。
+4. **4B 的 3D 只出现在每刀第 1–2 帧**：`abyssInsert` 由 `CUE.jumpCuts` 换算，
+   第 3 帧必须回到 2K 怒颜，保证 258 / 266 / 274 / 282 四个验收帧仍是人脸。
+5. **挂载点全部从 `CUE` 取秒、用 `frameFromSeconds()` 换算**，禁止写死帧号；
+   1B 的 3D 盾中心必须钉在 `woodblock_spin.png` 的双手 `(623, 786)`，
+   缩放 0.52，双手补片仍在其上。
+6. **题笺文字下移 36px**（`VerticalCartouche` `top: 136`），云头与首字之间 ≥70 px 净空；
+   任何改动后必须回抽 1.8 s 确认【十万天兵合围】六字完整。
+7. **命名**：成片 `out/senbon_v8_blender.mp4`；合成自检 `out/v8_blender_check_f###.png`；
+   MP4 回抽 `out/v8_blender_mp4_<t>.png`；接触表 `out/v8_blender_contact_sheet.png`。
+8. **交付前必须从最终 MP4 回抽** 0.5 / 1.8 / 2.8 / 4.0 / 6.5 / 8.0 / 9.2 s 七帧 + 接触表，
+   逐张读图确认 3D 纵深感、题笺完整度与 4B 跳切。
+
+> 17.2 补充（2026-10-23 23:20）：逐帧位图落库前必须用
+> `scripts/blender/png_to_webp.py` 转**无损 WebP**（像素一致，120 帧 199 MB → 68 MB），
+> 运行时读 `shot1_frames/*.webp`、`shot3_frames/*.webp`；Blender 直出 PNG 留在 `out/`。

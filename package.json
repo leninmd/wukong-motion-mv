@@ -9,8 +9,12 @@
     "typecheck": "tsc --noEmit",
     "render": "remotion render src/index.ts WukongPrologue out/wukong-prologue.mp4",
     "still": "remotion still src/index.ts WukongPrologue out/wukong-poster.png",
-    "still:senbon": "remotion still src/index.ts WukongClimaxSegment out/v8_check_f085.png --frame=85",
-    "render:senbon": "remotion render src/index.ts WukongClimaxSegment out/senbon_v8_mvp.mp4",
+    "still:senbon": "remotion still src/index.ts WukongClimaxSegment out/v8_blender_check_f085.png --frame=85",
+    "render:senbon": "remotion render src/index.ts WukongClimaxSegment out/senbon_v8_blender.mp4 --concurrency=2",
+    "blender:shot1": "blender -b -P scripts/blender/b_shot1_cudgel_shield.py -- --all --frames-dir out/blender_frames/shot1",
+    "blender:shot2": "blender -b -P scripts/blender/b_shot2_lingxiao_collapse.py -- --all --frames-dir out/blender_frames/shot2",
+    "blender:shot3": "blender -b -P scripts/blender/b_shot3_mountain_chains.py -- --all --frames-dir out/blender_frames/shot3",
+    "blender:shot4": "blender -b -P scripts/blender/b_shot4_verdict_abyss.py -- --all --frames-dir out/blender_frames/shot4",
     "assets:wukong": "python scripts/build_wukong_assets.py"
   },
   "dependencies": {

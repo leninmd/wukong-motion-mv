@@ -91,13 +91,14 @@ export const VerticalCartouche: React.FC<VerticalCartoucheProps> = ({text, subti
       {/*
         竖排书法：单文本节点。
         V7 用 flex 垂直居中，6 个字的总高超过容器，首个"十"被顶到云头下面，
-        题笺变成"万天兵合围"。V8 改为**从 top 112 起排、逐字向下流**：
-        云头在 6–52px，文字从 112px 开始，法定的 60px 净空让六个字 100% 完整。
+        题笺变成"万天兵合围"。V8 改为从 top 起排；V8.1 再下移 36px（100 → 136）：
+        云头占 6–52px，52px 字号的实际字形上缘比行盒高约 10px，100px 起排时
+        "十"的顶横仍会贴住云头下缘。136px 起排后，云头与首字之间留出 ≥70px 净空。
       */}
       <div
         style={{
           position: 'absolute',
-          top: 100,
+          top: 136,
           left: '50%',
           width: 76,
           marginLeft: -38,

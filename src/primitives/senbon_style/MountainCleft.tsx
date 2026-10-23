@@ -55,6 +55,8 @@ export interface MountainCleftProps {
   chains: readonly ChainSpec[];
   ofuda?: readonly OfudaSpec[];
   pulse?: number;
+  /** V8：Blender 离线烘焙的 3D 巨岩 + 铁索层（透明 .mov），插在角色与符咒之间。 */
+  insertLayer?: React.ReactNode;
 }
 
 /* -------------------------------------------------------------------------- */
@@ -390,6 +392,7 @@ export const MountainCleft: React.FC<MountainCleftProps> = ({
   chains,
   ofuda = [],
   pulse = 0,
+  insertLayer,
 }) => {
   const local = time - start;
   const kneel = clamp01((time - (kneelAt - 0.2)) / 0.26);
@@ -506,6 +509,15 @@ export const MountainCleft: React.FC<MountainCleftProps> = ({
         >
           <ClimaxAsset asset="trapped" height={760} x={830} baseline={1092} echo={0.2} rim={0.2} />
         </div>
+
+        {/*
+          V8 Blender 层：离线烘焙的透明 3D 巨岩 + 八条实体铁索。
+          压在大圣之上、火舌/符咒之下（z 6.5）——落石与索链必须真的"从头顶砸下来"，
+          但又不能盖掉符咒与题笺。3D 构图刻意把画面中下部留空给角色。
+        */}
+        {insertLayer ? (
+          <div style={{position: 'absolute', inset: 0, zIndex: 6.5, pointerEvents: 'none'}}>{insertLayer}</div>
+        ) : null}
 
         {/* 7. 火底辉光 + 前景火舌 + 底部黑云河：压在角色脚边 */}
         <div

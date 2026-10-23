@@ -776,3 +776,80 @@ ffmpeg.exe -y -framerate 30 -start_number 1 -i shot2_%04d.png `
   脚本里在 `__main__` 末尾 `sys.stdout.flush()` 后 `os._exit(0)` 可以保住 CLI 退出码为 0。
 
 
+
+---
+
+## 16. Blender 四镜头离线管线（2026-10-23，V8-Blender）
+
+### 16.1 可执行文件与调用方式
+
+```powershell
+$B = "D:\Design\blender\blender.exe"   # Blender 5.2.3 LTS，无头可用
+& $B -b -P scripts/blender/b_shot2_lingxiao_collapse.py -- --all --frames-dir out/blender_frames/shot2
+& $B -b -P scripts/blender/b_shot2_lingxiao_collapse.py -- --still out/blender_qa/s2_f14.png --frame 14
+& $B -b -P scripts/blender/b_shot2_lingxiao_collapse.py -- --inspect
+```
+
+- 四段脚本共用 `scripts/blender/ukiyoe_style.py`（材质/渲染/Freestyle/相机/编码/CLI），
+  **不要再复制粘贴渲染设置**。
+- `bpy.app.binary_path` = `D:\Design\blender\blender.exe`；MCP 连的是同一个构建。
+- **不要在对活的 Blender 会话执行 `bpy.ops.wm.read_factory_settings()`**：会把 MCP 插件一起清掉，
+  连接直接断（本轮踩过一次）。批量渲染一律 `-b` 子进程。
+
+### 16.2 实测耗时（i5-1240P / Iris Xe，EEVEE + Freestyle 2.2px）
+
+| 镜头 | 帧数 | 总耗时 | 单帧 |
+|---|---|---|---|
+| b_shot1（45f，透明） | 45 | 318.5 s | 7.08 s |
+| b_shot2（55f） | 55 | 336.7 s | 6.12 s |
+| b_shot3（75f，透明） | 75 | 585.8 s | 7.81 s |
+| b_shot4（65f） | 65 | 497.8 s | 7.66 s |
+
+首帧含着色器编译 ~35–45 s，同进程后续帧不受影响；**不要用单帧 still 的耗时估算序列**。
+
+### 16.3 推翻 §15.5：VP9 alpha 在本机不可得
+
+§15.5 的结论（`yuva420p` + `-auto-alt-ref 0` 能保住 alpha）**不成立**。实测：
+
+| 命令 | 落盘 pix_fmt |
+|---|---|
+| `libvpx-vp9 -pix_fmt yuva420p -auto-alt-ref 0 → .webm` | `yuv420p` |
+| `libvpx -pix_fmt yuva420p -auto-alt-ref 0 → .webm`（VP8） | `yuv420p` |
+| `prores_ks -profile:v 4444 -pix_fmt yuva444p10le → .mov` | `yuva444p12le`（有 alpha） |
+
+ProRes 4444 虽然文件有 alpha，但 **Remotion 的 Rust 合成器解出来是黑块/噪点**（实测
+`pixfmt:yuva444p12le` 已识别，画面仍坏）。所以：
+
+- 透明层 = **逐帧 PNG RGBA + `<Img>`**（`BlenderAlphaSequence.tsx`）；
+- 不透明层 = `.mp4` + `<OffthreadVideo />`；
+- `.webm` / `.mov` 只作归档，不进 git。
+
+### 16.4 三条着色 / 材质铁律
+
+1. `make_toon_material` 的 `ColorRamp → Emission.Color` 必须连上；漏了就是"白模 + 黑线"。
+   排查方法：打印 `[(n.bl_idname) for n in mat.node_tree.links]`，或统计渲染像素直方图。
+2. 自发光环/速度线/碎片进 `Detail` / `Debris` 集合，**不进 `Geo`**：2.2 px 墨线会把半径 <0.05
+   的圆环整根涂黑。
+3. 体积光不要用自发光锥体：前后两面在 alpha 混合下叠加会爆白，且挡住主光；
+   用签阵之后的柔光板（alpha ≈ 0.035）。大面积正面补光用 Sun，不用 Area（7 m 外只有 ~0.2 W/m²）。
+
+### 16.5 碎裂：`separate(LOOSE)` 的两个必做修正
+
+1. 每簇 join 后把 mesh 顶点平移 `-centroid`，再把质心写回对象原点；否则所有碎片的爆炸
+   径向都指向柱基，整团从殿心炸开。
+2. 先把 44–61 个 loose parts 按方位角聚成 9 簇再实例化（36 柱 → 324 对象）。
+   直接 61×36 = 2196 对象会把 Freestyle 拖到 65 s/帧（半分辨率）。
+
+### 16.6 运动模糊的适用范围
+
+EEVEE 的 object motion blur 在 `root → tilt → rotor → 子物体` 这种三级空物体父级下
+采不到子物体速度（旋转 45 帧仍是清晰一根棍）。高速自旋道具改用
+`make_ghost_material()` 的 12 层 alpha 拖影做长曝光；相机运动模糊不受影响。
+
+### 16.7 透明序列落库：PNG → 无损 WebP
+
+Blender 直出 PNG RGBA 约 1–2.3 MB/帧，1B+3A 共 120 帧 ≈ 199 MB，直接把仓库撑爆。
+`scripts/blender/png_to_webp.py` 用 PIL `lossless=True, method=6` 转无损 WebP：
+**199 MB → 68 MB，像素完全一致**（Remotion `<Img />` 直接读 `.webp`）。
+源 PNG 留在 `out/blender_frames/`（gitignore），只把 WebP 落进
+`public/blender_renders/shot{1,3}_frames/`。
