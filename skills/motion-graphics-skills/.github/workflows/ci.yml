@@ -1,0 +1,156 @@
+name: Skills Validation CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Install Python test deps
+        run: pip install -r requirements.txt
+
+      - name: Set up Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Verify test scripts exist
+        run: |
+          for script in \
+            "landing/validate_landing.py" \
+            "skills/mix-and-match/scripts/test_mix_matrix.py" \
+            "skills/motion-director/scripts/test_work_guard.py" \
+            "skills/motion-director/scripts/browser-readiness-probe.cjs" \
+            "skills/motion-director/scripts/test_route_motion.py" \
+            "skills/motion-director/scripts/test_reference_fidelity.py" \
+            "skills/motion-director/scripts/test_gpu_policy.py" \
+            "skills/motion-director/scripts/test_browser_gpu_probe.cjs" \
+            "skills/video-review-loop/scripts/test_review_video.py" \
+            "skills/video-review-loop/scripts/test_strict_video_signals.py" \
+            "skills/video-review-loop/scripts/test_review_round.py" \
+            "skills/motion-director/scripts/test_discover_agent_skills.py"; do
+            [ -f "$script" ] || { echo "MISSING TEST SCRIPT: $script" >&2; exit 1; }
+          done
+
+      - name: Validate Skills and Prompts
+        run: bash validate-skills.sh
+
+      - name: Validate landing catalog sync
+        run: python landing/validate_landing.py
+
+      - name: Validate plugin inventory and packaging
+        run: |
+          python3 -m unittest discover -s tests -p 'test_plugin_catalog.py' -v
+          python3 -m unittest discover -s tests -p 'test_build_plugin.py' -v
+
+      - name: Test video style cloner scripts
+        env:
+          DO_NOT_TRACK: "1"
+          HYPERFRAMES_NO_TELEMETRY: "1"
+        run: |
+          node --test $(find skills/video-style-cloner -name '*.test.mjs' -type f)
+          node --test skills/media-use/audio/scripts/lib/heygen.test.mjs
+          python -m unittest discover -s skills/video-style-cloner/skills/embedded-captions/scripts/tests -v
+
+      - name: Install FFmpeg for rendering integration tests
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ffmpeg
+          ffmpeg -version
+          ffprobe -version
+
+      - name: Test Rust video style cloner engine
+        run: cargo test --locked --manifest-path skills/video-style-cloner/engine/Cargo.toml
+
+      - name: Check README video publisher CLI
+        run: |
+          python3 -m py_compile tools/embed_readme_videos.py tools/publish_readme_videos.py
+          python3 tools/publish_readme_videos.py --help
+
+      - name: Test README video embed integrity
+        run: python3 -m unittest discover -s tests -p 'test_embed_readme_videos.py' -v
+
+      - name: Check landing JavaScript syntax
+        run: node --check landing/app.js
+
+      - name: Test video editing skill planners
+        run: |
+          python -m pytest \
+            skills/jump-cut-pacing/scripts/test_cut_plan.py \
+            skills/paper-cut-motion/scripts/test_paper_builder.py \
+            skills/speaker-cutout/scripts/test_speaker_layer.py \
+            skills/video-spotlight/scripts/test_spotlight_plan.py \
+            -v
+
+      - name: Test Mix and Match helper
+        run: python skills/mix-and-match/scripts/test_mix_matrix.py
+
+      - name: Test Motion Work Guard
+        run: python skills/motion-director/scripts/test_work_guard.py
+
+      - name: Check Browser Readiness Probe
+        run: |
+          node --check skills/motion-director/scripts/browser-readiness-probe.cjs
+          node skills/motion-director/scripts/browser-readiness-probe.cjs --help
+
+      - name: Test Motion Router
+        run: python skills/motion-director/scripts/test_route_motion.py
+
+      - name: Test Reference Fidelity Gate
+        run: python skills/motion-director/scripts/test_reference_fidelity.py
+
+      - name: Test GPU Policy
+        run: python skills/motion-director/scripts/test_gpu_policy.py
+
+      - name: Test Browser GPU Probe
+        run: node skills/motion-director/scripts/test_browser_gpu_probe.cjs
+
+      - name: Test Video Review Loop
+        run: python skills/video-review-loop/scripts/test_review_video.py
+
+      - name: Test Strict Video Signals
+        run: python skills/video-review-loop/scripts/test_strict_video_signals.py
+
+      - name: Test Review Round Lifecycle
+        run: python skills/video-review-loop/scripts/test_review_round.py
+
+      - name: Test Agent Skill Discovery
+        run: python -m pytest skills/motion-director/scripts/test_discover_agent_skills.py -v
+
+      - name: Verify no local /Users/ paths
+        run: |
+          if grep -rn "/Users/" skills/ prompts/; then
+            echo "ERROR: Found local /Users/ absolute paths." >&2
+            exit 1
+          fi
+          echo "OK: no local /Users/ paths found"
+
+      - name: Scan for secrets
+        uses: trufflesecurity/trufflehog@main
+        with:
+          path: ./
+          extra_args: --results=verified,unknown,unverified
+        continue-on-error: true
+
+      # Deliberately red until the README displays six real GitHub-hosted films.
+      # This is an acceptance gate, distinct from the passing parser unit tests.
+      - name: Require six native README video players
+        run: python3 tools/embed_readme_videos.py --check-ready
