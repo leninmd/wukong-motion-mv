@@ -3,11 +3,13 @@
 > 一部以代码为笔、以鼓点为骨的填词调音 MV。
 > 视觉节奏对标《千本樱》代码生成 MV；听觉与叙事张力对标《美猴王》鬼畜调音。
 
-当前状态：**阶段三 · 纯代码重构完成**。
+当前状态：**阶段四 · V4 八微切镜完成**（2026-10-23）。
 
 阶段一建立了全新 Remotion 仓库、素材契约、工程宪法 `AGENTS.md`，并用 `WukongPrologue` 验证了「宣纸纹 × 三维金墨点云 × 火星/飞灰 × 朱砂印 × 切片打字机」的合成链路。
 
 阶段二逐镜头复刻了参考视频 `00:09–00:19`，但第一版依赖 5 张 AI 静态板与杜甫母版的展览框，被判定为“像放 PPT”。阶段三按《千本樱》的纯代码路线彻底重写：**删除全部 AI 静态背景、顶部章节框、BPM 仪表盘、常驻印章与底部 KTV 字幕条**，改由 SVG / Canvas 2D / Three.js 几何体实时绘制四镜，歌词作为战幡、符咒、罪状牌与印章进入画面。
+
+阶段四（V4）把 10 秒重构成 **8 个微切镜 + 0.3 s 黑场**：四分屏微缩画卷、侧面旋风棍盾、眼部斜切横条、左下角俯瞰 3D 崩裂、五指山巨岩铁索、五层复合符咒、纯黑悬签阵、四连跳切高精度脸谱。新增 `OrnateSealStamp` / `ComplexOfudaTalisman` / `WukongFaceCloseup` / `IronChain` 等 13 个复合图元，并把「五层复合图元」「三分法侧影」「抽帧视觉自检」写进 `AGENTS.md §12`。
 
 > 本机无独立 GPU，且本轮明确禁止调用外部生图模型；纯代码是验收要求，不是权宜之计。
 
@@ -25,22 +27,28 @@ npm run typecheck
 npm run compositions
 ```
 
-渲染高潮复刻段的五个验收静帧（30 fps / 300 帧）：
+渲染高潮复刻段的七个验收静帧（30 fps / 300 帧）：
 
 ```powershell
-npx remotion still src/index.ts WukongClimaxSegment out/senbon_v2_f045.png --frame=45
-npx remotion still src/index.ts WukongClimaxSegment out/senbon_v2_f085.png --frame=85
-npx remotion still src/index.ts WukongClimaxSegment out/senbon_v2_f120.png --frame=120
-npx remotion still src/index.ts WukongClimaxSegment out/senbon_v2_f190.png --frame=190
-npx remotion still src/index.ts WukongClimaxSegment out/senbon_v2_f280.png --frame=280
-npx remotion render src/index.ts WukongClimaxSegment out/senbon_v2_mvp.mp4 --concurrency=4
+$frames = @(22,50,85,120,195,240,278)
+foreach ($f in $frames) {
+  npx remotion still src/index.ts WukongClimaxSegment ("out/v4_check_f{0:000}.png" -f $f) --frame=$f
+}
+npx remotion render src/index.ts WukongClimaxSegment out/senbon_v4_mvp.mp4 --concurrency=4
 ```
 
-复刻段的音画自检（缺一不可）：
+抽帧后必须用 `read_image` / 看图逐项确认：① 右缘印章/文字不裁切；② 大圣不在 X=50%；
+③ 黑场无上一镜残留；④ 2.4× 脸谱仍经得起看。再看接触表：
 
 ```powershell
-python scripts/build_climax_assets.py   # 重建 drums_stem.wav + climax_words.json
-python scripts/verify_climax.py         # 每个汉字起点距参考混音瞬态 <= 50 ms，退出码 0 才通过
+& "D:\dev\runtimes\python\Python313\python.exe" scripts\contact_sheet.py out\senbon_v4_mvp.mp4 out\senbon_v4_contact_sheet.png
+```
+
+音频与对齐自检：
+
+```powershell
+python scripts/build_climax_assets.py   # 仅在需要重建对齐时运行
+python scripts/verify_climax.py         # 每个汉字起点距参考混音瞬态 <= 50 ms
 ```
 
 渲染底片静帧 / 视频：
@@ -61,16 +69,21 @@ npm run render
 
 所以本段重做时的取舍是：**往"印刷海报"靠，而不是往"夜戏特效"靠**。大色块承担构图，金线承担细节，快切承担节奏。
 
-## 高潮复刻段：四镜（纯代码）
+## 高潮复刻段：八微切镜 + 黑场（纯代码）
 
-分镜切成四刀（10 秒），每一刀的边界在 `src/sequences/senbonPlan.ts` 里由分镜秒表与对齐 JSON 共同解出：
+分镜切成八刀零九段（10 秒），每一刀的边界在 `src/sequences/senbonPlan.ts` 里由分镜秒表与对齐 JSON 共同解出：
 
-| # | 帧 | 唱词 | 主体 / 物理转场 |
+| # | 帧 | 唱词 | 主体 / 构图 / 物理 |
 |---|---|---|---|
-| 01 | 0–75 | 玉境凌霄十万天兵合围 | 南天门双扇拉门 → 满月飞檐 → 60 天兵三层合围 → 四道战幡弹簧砸落 |
-| 02 | 75–150 | 怎敌我无坚不摧 | 斜切火眼金睛横条 → Three.js 天庭棋盘：金箍棒砸地、三圈冲击波、40 柱抛物线崩飞 → 一棒劈字 + 全屏反色 |
-| 03 | 150–225 | 五指山下偿自由的罪 | 五座巨峰柱依次下砸（纵向震屏）→ 中央石缝跪姿大圣 → 六张符咒从四角钉入 |
-| 04 | 225–300 | 罪名是老孙不敬权威 | 三层罪状木牌阵 → 金猴破壁斩断所有木牌 → 四枚朱砂巨印砸满全屏 |
+| 1A | 0–30 | 玉境 | 4×480px 四分屏微缩画卷：南天门巨柱 / 凌霄殿满月 / 银戈森林 / 侧面挥棒 + 壹贰叁肆印章 |
+| 1B | 30–75 | 十万天兵合围 | 大圣侧面弓步在 X=35%；三层同心圆半调棍盾；40 天兵自右向左；前景 blur(8px) 巨戈 |
+| 2A | 75–98 | 怎敌我 | −5° 双金边横条 + 高精度眼部脸谱；【怎】【敌】【我】黑边金字依次砸落 |
+| 2B | 98–150 | 无坚不摧 | 大圣背影 X=20%/Y≈76%；3D 柱阵 Z 轴推进 + 15° 滚转；18° 半调刀光；右上描金书法 12px 错位切开 |
+| 3A | 150–175 | 五指山下 | 五道浮世绘肌理巨岩、六道实体铁索；侧面单膝跪地双臂 V 形上撑 |
+| 3B | 175–225 | 偿自由的罪 | 六张五层复合符咒弹簧钉入：【五指山下】【偿】【自】【由】【的】【罪】 |
+| 4A | 225–256 | 罪名是老孙 | `#050404` 纯黑深渊；三道铁索 + 三层白签；聚光灯下主牌依次翻面 |
+| 4B | 256–291 | 不敬权威 | 四连跳切 1.0→1.35→1.8→2.4；金色裂屏刀光；四枚裂纹巨印；290 白闪 |
+| — | 291–300 | （留白） | 纯黑 `#000000`，只剩余音 |
 
 ### 纯代码视觉原语（现在的做法）
 
@@ -78,19 +91,20 @@ npm run render
 
 | 文件 | 作用 |
 |---|---|
-| `HalftoneOverlay` | SVG `<pattern>` 半调网点 + 径向渐变光晕 + 暗金纸屑噪点 |
-| `WukongSilhouette` | 参数化大圣剪影：`stand / eyes_closeup / kneel_defiant / smash`；雉鸡翎与披风绑 `useCurrentFrame()` 正余弦，金箍棒独立旋转 |
-| `NandamenDoors` | 南天门玄黑描金双扇门、门钉、铺首衔环、门匾 |
-| `CourtSky` | 赤金满月（半调阴影）、飞檐殿宇、云带、飞鸟、浮尘 |
-| `CelestialArmy` | 左右各 30 名执戈天兵 + 前景枪林，按压力值合拢 |
-| `WarBanners` | 四分屏战幡，弹簧落幅 |
-| `EyeCut` | 斜切漫画分格 + 火眼特写 + 横向赤金闪电 + 竖排【怎敌我】 |
-| `CudgelImpact3D` | `@remotion/three`：棋盘格地面、40 根天条方柱、金箍棒、三圈冲击波、抛物线崩飞 |
-| `SplitType` | 上下互补 `clip-path` 的一棒劈字 |
-| `MountainCage` | 五峰柱下砸 + 金色等高线 + 中央 280px 深渊缝 |
-| `Talismans` | 六张朱砂符纸从四角飞入、落钉、文字揭示 |
-| `VerdictTags` | 远/中/近三层罪状木牌 + 链条 + 翻面 + 断裂纷飞 |
-| `FinalSeals` | 四枚带裂纹的朱砂巨印，印泥飞溅 |
+| `OrnateSealStamp` | 双层描金框 + 四角回纹 + 朱砂斑驳 + 八卦暗纹 + 竖排副标题 + 朱文小印 |
+| `ComplexOfudaTalisman` | 宣纸毛边 + 朱砂双框 + 云雷角花 + 八卦暗印 + 敕令符头 + 毛笔字 + 封印 + 金钉 |
+| `WukongFaceCloseup` | 京剧猴王金桃心脸谱：36 道放射虹膜、竖瞳、金火、紧箍、锁子甲、战损 |
+| `IronChain` | 面环/边环互扣、销钉、卸扣、铭文、辉光、可 sag；取代虚线 |
+| `ComicPanels` | 4×480px 四分屏微缩画卷；卡片 440px + 20px 安全距；整板不旋转 |
+| `StaffShield` | 3 圈反向弧形刀光 + 2 圈半调网点环 + 14 根棍影 + 火花 |
+| `SiegeCharge` | 40 天兵自右向左 + 弹飞箭矢 + 前景 blur(8px) 巨戈 |
+| `CrumblingPalace3D` | Z 轴推进 + 15° 滚转；36 根柱全断 + 矮桩 + 朝镜头飞溅 |
+| `GiantSlashArc` | 18° 锥形刀光 + 红/金/青残影 + 半调 + 白热刀脊 + 火星 |
+| `UnbreakableBanner` | 右上描金书法，9° 切开、12px 错位；刀光线 0.08 s 内淡出 |
+| `EyeCutBand` | −5° 双金边眼部横条 + 三枚重影金字 |
+| `SuspendedTags` | 纯黑悬签阵：铁索 + 三层白签 + 聚光灯 + 翻面 + 金火 |
+| `BoulderCage` | 五道浮世绘肌理巨岩 + 六道铁索 + 侧面跪撑 + 扬尘 |
+| `WukongRig` | 2.5D 骨骼角色；V4 新增 `side_lunge / kneel_boulder / back_overlook` 三姿态 |
 
 这些组件全部是**时间函数**：没有 `Math.random()`、没有 `Date.now()`、没有跨帧状态；随机量来自固定种子 `hash(seed, i)`。歌词文字始终是单个文本节点，不做逐字 DOM 动画。
 
@@ -101,11 +115,27 @@ npm run render
 3. **印刷层**：全片叠一层 SVG 半调网点与暗金纸纹；暗场靠局部金色光源提亮，不整屏压雾。
 4. **字景合一**：唱词只以战幡、符咒、罪状牌、印章、竖排大字出现，没有底部字幕条，也没有顶部章节框与 BPM 仪表盘。
 
-音频：**全部由代码合成**。`scripts/score.py` 用分轨总线 + 卷积混响 + 侧链 + 胶水压缩 + 前瞻限幅 + 两遍 loudnorm（-14 LUFS）产出一版 10.000 s 的配乐；旋律直接由对齐 JSON 驱动（每字一个音，五声音阶），主唱是按拼音韵母做 F1/F2/F3 共振峰合成的合成人声——这就是"填词调音"里的那条人声轨。产物 `public/audio/climax_mix.wav`（播放）与 `public/audio/drums_stem.wav`（频谱源）。
+音频：V3 起改用参考视频 **09.000–19.200 s 的真实摇滚唱段** `public/audio/climax_real_vocal.wav`（V3 §12-A 的决策，V4 沿用）。旧版 `climax_mix.wav` 的纯代码合成配乐仍保留在仓库，但正片不再使用。成片音轨与 `climax_real_vocal.wav` 的相关系数为 **0.99965**（AAC 往返）。
 
-频谱驱动：`drums_stem.wav` 经 `visualizeAudio()`（32 波段，`smoothing`，`optimizeFor: 'speed'`）拆成 low / mid / high，分别驱动**相机震动**、**闪白与冲击环**、**边缘径向辉光**。映射与参考电平见 `src/audio/spectrum.ts` 的 `useStemEnergy()`。
+频谱驱动：`visualizeAudio()`（32 波段，`smoothing`，`optimizeFor: 'speed'`）直接绑定真实唱段，按 `CLIMAX_VOCAL_REFERENCE` 重新标定 low / mid / high，驱动**相机震动**、**闪白与冲击环**、**边缘径向辉光**。与 `AGENTS.md §3` 的“必须绑鼓组 stem”冲突已在 `docs/EXPLORATION_LOG.md` §12-A 登记。
 
 > 规格说明（对应 `AGENTS.md` 第 0 条）：主片母版仍是 1920×1080 / 60 fps。复刻段因为要对齐 30 fps 的参考素材，**显式**在 `src/config/theme.ts` 的 `CLIMAX` 中声明 30 fps / 300 帧，而不是在调用点偷偷改帧率；所有 cue 仍由 `frameFromSeconds()` 从秒换算。
+
+## V4 交付物（2026-10-23）
+
+| 文件 | 说明 |
+|---|---|
+| `out/senbon_v4_mvp.mp4` | 1920×1080 / 30 fps / 10.005 s / h264 + aac 48k stereo |
+| `out/v4_check_f022.png` | 四分屏：四格落位、编号完整、右缘不裁切 |
+| `out/v4_check_f050.png` | 1B：侧面弓步 X=35%、半调棍盾、40 天兵 |
+| `out/v4_check_f085.png` | 2A：−5° 眼部横条 + 高精度脸谱 + 短金芒 |
+| `out/v4_check_f120.png` | 2B：左下背影 X=20%、3D 崩裂、18° 刀光、劈字 |
+| `out/v4_check_f195.png` | 3A/3B：五岩柱 + 六实体铁索 + 双臂上撑 + 复合符咒 |
+| `out/v4_check_f240.png` | 4A：`#050404` 纯黑悬签、无猴子残留 |
+| `out/v4_check_f278.png` | 4B：2.4× 高精度脸谱 + 裂纹巨印 |
+| `out/senbon_v4_contact_sheet.png` | 20 个时间点接触表 |
+
+外部动效先验库在 `skills/`（只读、不打包），取用点见 `skills/README.md`。
 
 ## 技术栈
 
@@ -124,9 +154,9 @@ src/
   compositions/
     WukongPrologue.tsx         阶段一视觉底片（非正片歌词）
   sequences/
-    WukongClimaxSegment.tsx    阶段三高潮复刻段（四镜 / 30 fps / 300 帧 / 纯代码）
+    WukongClimaxSegment.tsx    阶段四高潮复刻段（八微切镜 / 30 fps / 300 帧 / 纯代码）
     senbonPlan.ts              分镜秒表 + 歌词锚点 + 冲击/震屏/反色 cue 的唯一来源
-    climaxPlan.ts              对齐 JSON 的旧解析层（四镜仍复用其 fallbackEnergy）
+    climaxPlan.ts              对齐 JSON 的旧解析层（仍复用其 fallbackEnergy）
   config/
     theme.ts                   四色宪法 / 画幅 / 安全区 / CLIMAX 交付规格
     fonts.ts                   FontFace 字体加载（缺失可回落）
@@ -134,10 +164,11 @@ src/
     spectrum.ts                32-band 鼓组频谱 + useStemEnergy 三频段能量
     sfx.ts                     音效 cue → frame 调度
   primitives/
-    senbon_style/              ★ 纯代码视觉原语族（HalftoneOverlay / WukongSilhouette /
-                               NandamenDoors / CourtSky / CelestialArmy / WarBanners /
-                               EyeCut / CudgelImpact3D / SplitType / MountainCage /
-                               Talismans / VerdictTags / FinalSeals）
+    senbon_style/              ★ 纯代码视觉原语族（OrnateSealStamp / ComplexOfudaTalisman /
+                               WukongFaceCloseup / IronChain / ComicPanels / StaffShield /
+                               SiegeCharge / CrumblingPalace3D / GiantSlashArc /
+                               UnbreakableBanner / EyeCutBand / SuspendedTags / BoulderCage /
+                               WukongRig / CourtSky / HalftoneOverlay）
     paperTexture.ts / PaperSurface.tsx   宣纸/麻纸/纤维/颗粒
     Vignette.tsx               暗角 + 胶片颗粒
     Seal.tsx                   朱砂毛边印章（仅 WukongPrologue 使用）

@@ -1,10 +1,10 @@
 {
-  "version": 2,
+  "version": 3,
   "project": "wukong-motion-mv",
   "segment": "climax_09_19",
   "composition": "WukongClimaxSegment",
   "approach": "pure-code",
-  "note": "2026-10-22 起，本段不引用任何 AI 生成位图。画面 = SVG 路径 / pattern / 渐变 + Three.js 基础几何体 + CSS 3D。assets 为空是验收要求，不是漏配。",
+  "note": "V4 仍为纯代码：SVG 路径 / pattern / 渐变 + Three.js 基础几何体 + CSS 3D。没有 AI 位图；assets 为空是验收要求。八个微切镜 + 0.3 s 黑场留白。",
   "canvas": {
     "width": 1920,
     "height": 1080,
@@ -19,63 +19,88 @@
   ],
   "shots": [
     {
-      "id": "s1",
-      "name": "玉境凌霄十万天兵合围",
-      "frames": "0-75",
-      "subject": "南天门开合 + 满月飞檐 + 60 天兵合围 + 四分战幡",
-      "primitives": [
-        "NandamenDoors",
-        "CourtSky",
-        "CelestialArmy",
-        "WarBanners",
-        "ForegroundMotion",
-        "WukongSilhouette(stand)"
-      ]
+      "id": "s1a",
+      "name": "玉境 · 四分屏微缩画卷",
+      "frames": "0-30",
+      "subject": "4 × 480px 竖格：南天门巨柱 / 凌霄殿飞檐满月 / 银白长戈森林 / 大圣侧面挥棒；编号印章壹贰叁肆",
+      "primitives": ["ComicPanels", "OrnateSealStamp", "WukongRig(side_lunge)"]
     },
     {
-      "id": "s2",
-      "name": "怎敌我无坚不摧",
-      "frames": "75-150",
-      "subject": "火眼金睛斜切条 + 3D 金箍棒击碎天庭棋盘 + 一棒劈字",
-      "primitives": [
-        "EyeCut",
-        "WukongSilhouette(eyes_closeup)",
-        "CudgelImpact3D",
-        "SplitType"
-      ]
+      "id": "s1b",
+      "name": "十万天兵 · 侧面棍盾",
+      "frames": "30-75",
+      "subject": "大圣侧面弓步在 X=35%；多层同心圆半调棍盾；40 天兵自右向左冲锋；前景虚焦长戈",
+      "primitives": ["CourtSky", "SiegeFog", "SiegeCharge", "StaffShield", "WukongRig(side_lunge)"]
     },
     {
-      "id": "s3",
-      "name": "五指山下偿自由的罪",
-      "frames": "150-225",
-      "subject": "五指山铁笼下砸 + 中央缝隙里的大圣 + 六张封印符咒",
-      "primitives": [
-        "MountainCage",
-        "WukongSilhouette(kneel_defiant)",
-        "Talismans"
-      ]
+      "id": "s2a",
+      "name": "怎敌我 · 眼部横切",
+      "frames": "75-98",
+      "subject": "−5° 双金边漫画横条内嵌 WukongFaceCloseup 眼部；右侧【怎】【敌】【我】依次砸落",
+      "primitives": ["EyeCutBand", "WukongFaceCloseup(eyes)"]
     },
     {
-      "id": "s4",
-      "name": "罪名是老孙不敬权威",
-      "frames": "225-300",
-      "subject": "三层罪状木牌阵 + 斩断纷飞 + 金猴破壁 + 四枚朱砂巨印",
-      "primitives": [
-        "VerdictTags",
-        "WukongSilhouette(smash)",
-        "FinalSeals"
-      ]
+      "id": "s2b",
+      "name": "无坚不摧 · 俯瞰崩裂",
+      "frames": "98-150",
+      "subject": "X=20% 左下角背影俯瞰；Z 轴推进 + 15° 滚转的 3D 柱阵崩裂；18° 半调刀光；右上描金书法",
+      "primitives": ["CrumblingPalace3D", "GiantSlashArc", "WukongRig(back_overlook)", "UnbreakableBanner"]
+    },
+    {
+      "id": "s3a",
+      "name": "五指山下 · 巨岩铁索",
+      "frames": "150-175",
+      "subject": "五道浮世绘肌理巨岩柱下砸；侧面单膝跪地、双掌上撑、披风双翎狂舞；六道实体铁索",
+      "primitives": ["BoulderCage", "IronChain", "WukongRig(kneel_boulder)"]
+    },
+    {
+      "id": "s3b",
+      "name": "偿自由的罪 · 复合符咒",
+      "frames": "175-225",
+      "subject": "六张五层复合符咒弹簧钉入：【五指山下】【偿】【自】【由】【的】【罪】",
+      "primitives": ["ComplexOfudaTalisman", "BoulderCage"]
+    },
+    {
+      "id": "s4a",
+      "name": "罪名是老孙 · 纯黑悬签",
+      "frames": "225-256",
+      "subject": "#050404 纯黑深渊；三道铁索 + 远中近三层白签；聚光灯扫过，主牌依次翻面亮出【罪名】【是】【老孙】",
+      "primitives": ["SuspendedTags", "IronChain"]
+    },
+    {
+      "id": "s4b",
+      "name": "不敬权威 · 四连跳切",
+      "frames": "256-291",
+      "subject": "1.0→1.35→1.8→2.4 四连跳切高精度脸谱；金色裂屏刀光；四枚裂纹巨印【不】【敬】【权】【威】；290 白闪",
+      "primitives": ["WukongFaceCloseup(full)", "OrnateSealStamp", "CrackSlash"]
+    },
+    {
+      "id": "s5",
+      "name": "黑屏留白",
+      "frames": "291-300",
+      "subject": "纯黑 #000000，只剩余音",
+      "primitives": []
     }
   ],
   "assets": [],
   "audio": {
-    "mix": "public/audio/climax_mix.wav",
-    "spectrumStem": "public/audio/drums_stem.wav",
-    "alignment": "public/alignment/climax_words.json"
+    "playback": "public/audio/climax_real_vocal.wav",
+    "spectrum": "public/audio/climax_real_vocal.wav",
+    "alignment": "public/alignment/climax_words.json",
+    "note": "频谱绑定真实唱段，参考值见 src/audio/spectrum.ts 的 CLIMAX_VOCAL_REFERENCE；与 AGENTS.md §3 的冲突已在 EXPLORATION_LOG §12 登记。"
   },
   "externalDependencies": {
     "@remotion/three": "4.0.537",
     "@react-three/fiber": "9.8.2",
     "three": "0.186.1"
+  },
+  "skillsPrior": {
+    "vendored": [
+      "skills/motion-skills",
+      "skills/motion-graphics-skills",
+      "skills/webgl-animation-skills",
+      "skills/motion-design-skills"
+    ],
+    "usedFor": ["halftone", "particle sparks", "rule-of-thirds composition", "micro-beat editing", "deterministic Remotion"]
   }
 }

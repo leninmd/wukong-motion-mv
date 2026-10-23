@@ -441,3 +441,125 @@ npx remotion compositions src/index.ts            # 只剩 WukongPrologue / Wuko
 - Shot 4 跳切段整体偏灰：`snarl_closeup` 放大到 1.9× 时，半透明折面 + 网点把黑场抬成灰橄榄；
   已把折面从 0.10 降到 0.045、网点降到 0.3，仍未根治。
 - 天兵个体重复度高（40 名同一套多边形）。
+
+---
+
+## 14. V4 重构：五层复合图元 + 八微切镜 + 三分法侧影 + 高精度脸谱（2026-10-23 02:00 — 03:30）
+
+### 动机
+
+审片 `out/senbon_v3_mvp.mp4` 后收到五条「必须在本轮彻底修正」的硬伤：
+
+1. **Shot 1 战幡越界且单调**：第四面「天兵合围」右侧被裁掉一半；四面只是棕黑矩形，没有《千本樱》00:30 的四分屏微缩场景 + 壹贰叁肆印章。
+2. **中心图腾症**：V3 大圣在所有镜头里都站在 X=50% 正对镜头；参考片里角色应在左下/右侧三分之一处背对镜头俯瞰，或纯侧面大动态。
+3. **简笔画与虚线**：金色锁链是 `stroke-dasharray` 虚线；符咒只是白底红框矩形。
+4. **手与脸**：00:05 的双手像黄色小皇冠；脸部特写只有两个带感叹号的三角眼。
+5. **穿帮与分镜稀疏**：00:08 悬签时背景残留上一幕猴子剪影；10 秒只有 4 个静止镜头。
+
+### 做法
+
+**A. 五层复合图元（新增 4 个组件）**
+
+- `OrnateSealStamp.tsx`：玄黑载体 + 纸纤维 → 6.4px 外金框 / 1.5px 内金框 → 四角回纹 → 朱砂缺角印泥 + 46 枚斑驳飞白 + 八卦暗纹 → 大字 + 左侧竖排副标题 + 朱文小印。`crack` 提供战损裂纹。
+- `ComplexOfudaTalisman.tsx`：手撕毛边宣纸 + 纤维/斑点 → 8px 朱砂外框 / 2px 内框 → 四角云雷纹 → 八卦 + 雷纹暗印 → 「敕令」符头 + 毛笔字 + 「封」印 + 两枚金钉。所有 layers 都有独立 `useId` 的 pattern/clip。
+- `IronChain.tsx`：面环（椭圆厚环 + 深孔 + 左上高光弧 + 销钉）与边环（90° 侧视）互扣，端部卸扣，沿索旋转的「唵嘛呢叭咪吽」铭文，模糊金色底线 + drop-shadow。彻底替代 `stroke-dasharray`。
+- `ComicPanels.tsx`：4 × 480px 竖格；卡片 440px、左右各 20px 安全距，最右缘 = 1900；**整板不旋转**；每格含微缩场景、编号印、题签、说明与小印。V3 的 −5° 整板旋转就是右缘裁切根因。
+
+**B. 八微切镜（`senbonPlan.ts` 重写）**
+
+- 300 帧拆成 s1a 0–30 / s1b 30–75 / s2a 75–98 / s2b 98–150 / s3a 150–175 / s3b 175–225 / s4a 225–256 / s4b 256–291 / 黑 291–300。
+- 板号仍只在 `senbonPlan.ts` 出现，统一 `sb(n)=n/30`；歌词落点仍从 alignment 读取，例外（怎敌我 78/86/93、罪名是老孙 228/236/244）已在文件头登记。
+- 每个切点配 `IMPACTS` 震屏/白闪；115–116 帧反色，290 白闪，291 起纯黑。
+
+**C. 镜头语言：三分法 + 侧影 + 微切镜**
+
+- s1b：大圣 `side_lunge` 在 **X=35%（672px）**，身前是 3 圈反向弧形刀光 + 2 圈半调网点环 + 14 根棍影；40 天兵自右向左冲锋，前景 blur(8px) 巨型长戈。`WukongRig` 的 `spinDegPerFrame=0`，旋转交给 `StaffShield`，避免棒身横切脸部。
+- s2b：大圣 `back_overlook` 在 **X=20%、Y≈76%**，1.3× 前景；3D 相机沿 Z 轴 108→70 推进并 `up` 倾斜 15°；36 根柱全部断裂、只保留一圈矮桩（满足“36 根断裂”的规格，又保住地面透视）；18° 半调刀光；右上【无坚不摧】9° 切开、12px 错位 / 6px 法向，刀光线 0.08 s 内淡出。
+- s3a/3b：五道岩柱收窄到 280–360px、留 80–100px 黑缝，底缘单独 5px 金线；大圣 `kneel_boulder` 在底部，双臂大幅张成 V 形上撑；六道实体铁索；六张复合符咒弹簧钉入。
+- s4a：`#050404` 纯黑，只保留铁索、三层白签、聚光灯、金火；主牌 228/236/244 翻面。
+- s4b：1.0→1.35→1.8→2.4 四连跳切，金色裂屏刀光 + 四枚裂纹巨印。
+
+**D. 角色几何：三个新姿态**
+
+- `side_lunge`：侧视弓步、棍盾在身前、双翎缩短到 234/252px（V3 的宽翎像黑镰刀）。
+- `kneel_boulder`：侧面单膝跪地、双臂 V 形上撑；腕点从 V3 的 326/536 外移到 250/590，否则手臂会被头冠与双翎完全挡住；手是五指掌形 + 金色掌缘 + 青筋 + 朱砂掌纹，不是 `claw()` 黄色皇冠。
+- `back_overlook`：背影 + 侧脸微转 + 鬃毛/耳朵/金冠；用于左下角前景。
+
+**E. 高精度脸谱 `WukongFaceCloseup.tsx`**
+
+- 墨底头骨 + 额顶鬃毛尖刺 + 双耳 → 金色桃心脸谱（多层贝塞尔 + 朱砂压边）→ 眉心火焰 + 太阳穴云纹 + 颧骨卷草 → 黑眼窝 + 金线眼睑 + 42px 虹膜 + 36 道放射 + 竖瞳 → 紧箍云纹 + 朱砂宝珠 + 凤翅 → 锁子甲 pattern + 云纹护喉 + 山文甲肩片 → 战损裂纹 + 金火粒子。
+- `variant="eyes"` 裁 `viewBox 168 300 664 300` 供 s2a 横条；`variant="full"` 供 s4b 四连跳切。s2a 在每只眼外侧发射短金芒；s4b 不画跨脸长线，避免“交通警告标志”。
+
+**F. 外部技能库**
+
+- `git clone --depth 1` 挂载 `iart-ai/motion-skills`（索引 + 验收工具）、`imMamdouhaboammar/motion-graphics-skills`（29 个 `.agents/skills`）、`iart-ai/webgl-animation-skills`（shader/particle/three）、`iart-ai/motion-design-skills`（shot-composition / beat-sync / remotion）。
+- 只读参考，不参与打包；取用点写在 `skills/README.md`。半调网点环、粒子火花、三分法、微切镜节拍都来自这些 priors。
+
+### 结果（含证据）
+
+- `npx tsc --noEmit` 0 报错；`npx remotion compositions` 仍只有 `WukongPrologue` / `WukongClimaxSegment`。
+- 七张验收帧全部读图：
+  - `out/v4_check_f022.png`：四格全部落位；编号「其一/其二/其三/其四」完整；最右卡片右缘 1900，**无裁切**。
+  - `out/v4_check_f050.png`：大圣在 X=35%，侧面弓步；棍盾是网点环 + 弧形刀光，不再是十字棍；40 天兵与弹飞箭矢清楚。
+  - `out/v4_check_f085.png`：−5° 双金边横条；眼部高精度脸谱；每只眼向外的短金芒；【怎】已落。
+  - `out/v4_check_f120.png`：大圣在左下 X=20%；3D 柱阵 + 18° 半调刀光；【无坚不摧】四字可读，刀口是**暗缝**（12px 错位），不是亮线横切。
+  - `out/v4_check_f195.png`：五道岩柱分离、底缘金线；大圣双臂 V 形上撑；六道实体铁索；【五指山下】【偿】【自】复合符咒。
+  - `out/v4_check_f240.png`：`#050404` 纯黑；只有铁索/白签/金火/聚光灯；**没有猴子残留**；前景【罪名】【是】已翻面，第三块仍是「待判」。
+  - `out/v4_check_f278.png`：2.4× 脸谱；双层描金印章【不】【敬】【权】在四角；虹膜/竖瞳/金火/紧箍可见；无感叹号三角眼。
+- 黑场：291 帧 `getextrema()` 全为 `(0,0)`，即 291–299 纯黑。
+- 成片：`out/senbon_v4_mvp.mp4`（规格与耗时见 §14.1）。
+- 接触表：`out/senbon_v4_contact_sheet.png`。
+
+### 代价与返工
+
+- 总耗时约 3 小时（02:00–03:30），其中：图元 70 min、三姿态 40 min、八镜 50 min、抽帧返工 35 min、渲染 20 min。
+- 抽帧自检 4 轮，超过 20 张 still。真实修掉的 bug：
+  1. 第四面编号被右上回纹盖住 → header `zIndex:3` + `paddingRight:44` + 编号 `flexShrink:0`。
+  2. 五块岩柱宽度太大、只差 10–20px，读成一面墙 → 收窄、留黑缝、底缘单独受光。
+  3. 跪撑手臂被头冠/双翎挡住 → 腕点外移 80–100px，臂展成 V 形。
+  4. 眼部横条一条白线横贯全脸 → 删掉脸组件里的全宽 rect；背景速度线跳过水平角。
+  5. 脸谱像笑脸南瓜 → 嘴角下沉、3 尖牙 + 2 外翻獠牙、加深色口鼻区。
+  6. 3D 相机 z=51 太近，画面只剩金色方块 → 改为 108→70，36 根全断 + 矮桩 + 更小碎片。
+- 一次 `write` 遇到 Windows `ReplaceFileW EIO`，重试即成功；不是代码问题。
+
+### 结论（保留 / 回滚）
+
+- **保留**五层复合图元标准，并写进 `AGENTS.md §12`。印章与符咒是这轮最明显的“工业级”提升。
+- **保留**三分法侧影 + 0.6–1.2 s 微切镜；中心图腾症在 s1b/s2b 已被打破。
+- **保留** `WukongFaceCloseup` 三个变体；它同时解决 s2a 的“感叹号三角眼”与 s4b 的“脸部糊成灰”。
+- **推翻 V3 §13.2**“Shot 4 跳切段整体偏灰”：新脸谱 + 纯黑底 + 网点 0.16，已不灰。
+- **未完全解决**：
+  1. 脸谱更像“金色猴王/怒目金刚”，离 86 版《西游记》的猴脸还有距离；下一步需要更细的鼻梁/人中与毛发走向，而不是继续加金色纹样。
+  2. s3a 的“单膝跪地”在低机位下更像“宽步撑举”，后腿膝盖被裙甲与画框裁切；需要重做腿部的侧面透视。
+  3. 3D 柱阵仍然是“深色柱 + 金色碎片”，缺少真正的透视缩短；下一步需要在 Blender 里预渲染一层带 Alpha 的柱阵。
+  4. 铁索铭文用的是「唵嘛呢叭咪吽」汉字，不是梵文天城体；字体缺失风险已规避，但与“梵文”字面要求有差距。
+  5. s2b 的 3D 碎片仍偏大偏黄，读起来更像“金色纸片”而非石屑。
+
+### 影响文件
+
+- 新增：`src/primitives/senbon_style/ComicPanels.tsx`、`OrnateSealStamp.tsx`、`ComplexOfudaTalisman.tsx`、`WukongFaceCloseup.tsx`、`IronChain.tsx`、`StaffShield.tsx`、`SiegeCharge.tsx`、`CrumblingPalace3D.tsx`、`GiantSlashArc.tsx`、`UnbreakableBanner.tsx`、`EyeCutBand.tsx`、`SuspendedTags.tsx`、`BoulderCage.tsx`
+- 修改：`wukongRigGeometry.ts`（+3 姿态）、`WukongClimaxSegment.tsx`（重写）、`senbonPlan.ts`（重写）、`AGENTS.md`（§12）、`assets.manifest.json`（v3）、`docs/AGENT_TOOLING.md`（§9）、`skills/README.md`
+- 新增外部库：`skills/motion-skills`、`skills/motion-graphics-skills`、`skills/webgl-animation-skills`、`skills/motion-design-skills`
+- 未删除：V3 的 `WordPanels` / `EyeBand` / `AbyssMountain` / `VerdictChamber` / `ThronePalace3D` 仍留在仓库，但已不被正片 import；下一轮可清理。
+
+### 14.1 交付校验
+
+```text
+成片：out/senbon_v4_mvp.mp4
+规格：1920×1080 / 30 fps / 10.005 s / h264 + aac 48 kHz stereo
+体积：14.4 MB（14,428,607 bytes）
+音频：与 public/audio/climax_real_vocal.wav 的相关系数 0.99965（AAC 往返）
+黑场：9.70 / 9.95 s 抽帧 getextrema() 全为 (0,0)；291–299 帧纯黑
+渲染：300 帧，concurrency=4，本机无 GPU（SwiftShader），约 6 分钟
+接触表：out/senbon_v4_contact_sheet.png，20 个时间点 × 5 列
+抽帧：out/v4_check_f022 / f050 / f085 / f120 / f195 / f240 / f278.png
+```
+
+- 22 帧：四格落位、编号「其一~其四」完整，最右卡片右缘 1900，无裁切。
+- 50 帧：大圣在 X=35%，侧面弓步；棍盾为半调环，不再十字棍。
+- 85 帧：眼部横条内为高精度脸谱，每只眼向外的短金芒，无跨脸白线。
+- 120 帧：大圣在 X=20%/Y≈76%，36 柱全断 + 矮桩，18° 半调刀光；【无坚不摧】四字可读，刀口是暗缝。
+- 195 帧：五岩柱 + 六实体铁索 + 双臂 V 形上撑 + 六符中的三张。
+- 240 帧：`#050404` 纯黑，无猴子残留；【罪名】【是】已翻面，第三块「待判」。
+- 278 帧：2.4× 脸谱，双层描金印章【不】【敬】【权】在四角，虹膜/竖瞳/金火/紧箍可见。
+- 肉眼仍可改进的点已列在 §14「未完全解决」；本轮不再为“完美猴脸”继续加纹样。

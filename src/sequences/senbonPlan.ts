@@ -1,16 +1,19 @@
 /**
- * 10 秒复刻段（300 帧 @ 30 fps）的唯一分镜表 —— V3。
+ * 10 秒复刻段（300 帧 @ 30 fps）的唯一分镜表 —— V4。
  *
- * 两层时间，互不越界：
- *  1. `sb(n)` —— 分镜板帧号换算成秒。板号只在这一个文件出现，场景代码只看
- *     秒/帧（AGENTS.md §1）。V3 的板号取自本次重制的逐帧要求
- *     （0/7/14/21/28/75/98/112/150/170/225/256/264/272/280/290/300）。
+ * 时间只有两套，互不越界：
+ *  1. `sb(n)` —— 分镜板帧号 → 秒。板号只在本文件出现，场景代码只看秒/帧
+ *     （AGENTS.md §1）。V4 的板号：
+ *       Sub1A 0–30 / Sub1B 30–75 / Sub2A 75–98 / Sub2B 98–150 /
+ *       Sub3A 150–175 / Sub3B 175–225 / Sub4A 225–256 / Sub4B 256–291 / 黑 291–300。
  *  2. `unit()` —— 歌词字级落点，来自 `public/alignment/climax_words.json`。
  *
- * 例外说明（已登记到 docs/EXPLORATION_LOG.md）：Shot 2 的【怎】【敌】【我】
- * 三字被板号钉死在 75–98 帧的横条分格内，而这三字的字级对齐落在 87/96/105
- * 帧（最后一字超出横条）。为了既不改动歌词时钟、又保持横条分格的完整性，
- * 这三字改用板号节拍（78/86/93），其余歌词元素仍走 alignment。
+ * 例外说明（登记在 docs/EXPLORATION_LOG.md）：
+ *  - Sub2A 的【怎】【敌】【我】被板号钉死在 75–98 帧的横条分格内，而字级
+ *    对齐落在 87 / 96 / 104 帧（最后一字超出分格）。为了保证横条完整，这三字
+ *    改用板号节拍 78 / 86 / 93。
+ *  - Sub4A 的【罪名】【是】【老孙】同理用板号 228 / 236 / 244。
+ *  - Sub4B 的【不】【敬】【权】【威】严格对齐 256 / 264 / 272 / 280。
  */
 
 import {CLIMAX} from '../config/theme';
@@ -45,23 +48,29 @@ export const unit = (id: string): ClimaxUnit => {
 export const unitStart = (id: string): number => unit(id).start;
 
 /* -------------------------------------------------------------------------- */
-/*  四镜                                                                      */
+/*  八 + 一 个微切镜                                                          */
 /* -------------------------------------------------------------------------- */
 
-export type ShotId = 's1' | 's2' | 's3' | 's4';
+export type ShotId = 's1a' | 's1b' | 's2a' | 's2b' | 's3a' | 's3b' | 's4a' | 's4b' | 's5';
 
 export interface ShotSpan {
   id: ShotId;
   start: number;
   end: number;
+  label: string;
   line: string;
 }
 
 export const SHOTS: ShotSpan[] = [
-  {id: 's1', start: sb(0), end: sb(75), line: 'l1'},
-  {id: 's2', start: sb(75), end: sb(150), line: 'l2'},
-  {id: 's3', start: sb(150), end: sb(225), line: 'l3'},
-  {id: 's4', start: sb(225), end: sb(300), line: 'l4'},
+  {id: 's1a', start: sb(0), end: sb(30), label: '玉境 · 四分屏微缩画卷', line: 'l1'},
+  {id: 's1b', start: sb(30), end: sb(75), label: '十万天兵 · 侧面棍盾', line: 'l1'},
+  {id: 's2a', start: sb(75), end: sb(98), label: '怎敌我 · 眼部横切', line: 'l2'},
+  {id: 's2b', start: sb(98), end: sb(150), label: '无坚不摧 · 俯瞰崩裂', line: 'l2'},
+  {id: 's3a', start: sb(150), end: sb(175), label: '五指山下 · 巨岩铁索', line: 'l3'},
+  {id: 's3b', start: sb(175), end: sb(225), label: '偿自由的罪 · 复合符咒', line: 'l3'},
+  {id: 's4a', start: sb(225), end: sb(256), label: '罪名是老孙 · 纯黑悬签', line: 'l4'},
+  {id: 's4b', start: sb(256), end: sb(291), label: '不敬权威 · 四连跳切', line: 'l4'},
+  {id: 's5', start: sb(291), end: sb(300), label: '黑屏留白', line: 'l4'},
 ];
 
 export const shotAt = (seconds: number): ShotSpan => {
@@ -77,92 +86,158 @@ export const shotAt = (seconds: number): ShotSpan => {
 /* -------------------------------------------------------------------------- */
 
 export const CUE = {
-  /* Shot 1 —— 四分屏战幡 → 浓雾合围 + 转棍护盾 */
-  panelDrop: [sb(0), sb(7), sb(14), sb(21)],
-  panelExit: sb(28),
-  panelGone: sb(35),
-  siege: {start: sb(28), end: sb(75)},
-  armyWaves: [sb(28), sb(45), sb(60)],
-  staffWheel: {start: sb(26), end: sb(75)},
+  /* Sub1A —— 四分屏微缩画卷 */
+  panelDrop: [sb(0), sb(6), sb(12), sb(18)],
+  panelExit: sb(26),
+  panelGone: sb(30),
 
-  /* Shot 2 —— 眼部横条 → 凌霄宝殿崩裂 + 劈字 */
-  eyeBand: {start: sb(75), open: sb(80), end: sb(98)},
+  /* Sub1B —— 侧面旋风棍盾 */
+  shield: {start: sb(30), end: sb(75)},
+  armyWaves: [sb(36), sb(50), sb(64)],
+
+  /* Sub2A —— 眼部横切 */
+  eyeBand: {start: sb(75), open: sb(79), end: sb(98)},
   eyeWords: [sb(78), sb(86), sb(93)],
+
+  /* Sub2B —— 3D 崩裂 + 劈字 */
   palace: {start: sb(98), end: sb(150)},
-  staffSweep: sb(112),
-  columnsBreak: sb(113),
-  slash: {reveal: sb(100), cut: sb(112)},
-  invert: [sb(112), sb(113)],
+  slash: {reveal: sb(104), cut: sb(115)},
+  invert: [sb(115), sb(116)],
 
-  /* Shot 3 —— 高空俯视石缝 → 米字封印 */
-  rockDrops: [sb(150), sb(154), sb(158), sb(162), sb(166)],
-  trappedReveal: sb(151),
-  chains: [sb(172), sb(176), sb(180), sb(184), sb(188), sb(192)],
-  talismanText: [sb(178), sb(185), sb(192), sb(199), sb(206)],
+  /* Sub3A —— 巨岩 + 铁索 */
+  rockDrops: [sb(150), sb(151), sb(152), sb(153), sb(154)],
+  kneelReveal: sb(155),
+  chains: [sb(156), sb(160), sb(164), sb(168), sb(172), sb(176)],
 
-  /* Shot 4 —— 悬签罪状 → 四连跳切 → 黑屏留白 */
+  /* Sub3B —— 复合符咒 */
+  ofuda: [sb(178), sb(185), sb(192), sb(199), sb(206), sb(213)],
+
+  /* Sub4A —— 纯黑悬签 */
   chamber: sb(225),
   tagReveals: [sb(228), sb(236), sb(244)],
+
+  /* Sub4B —— 四连跳切 */
   jumpCuts: [sb(256), sb(264), sb(272), sb(280)],
-  sealLands: [sb(258), sb(266), sb(274), sb(282)],
+  sealLands: [sb(257), sb(265), sb(273), sb(281)],
   whiteFlash: sb(290),
   blackout: sb(291),
   end: sb(300),
 } as const;
 
 /** 四连跳切的放大倍率。 */
-export const JUMP_SCALES = [1, 1.4, 1.9, 2.6] as const;
+export const JUMP_SCALES = [1, 1.35, 1.8, 2.4] as const;
 
 /* -------------------------------------------------------------------------- */
-/*  四分战幡                                                                  */
+/*  Sub1A 四分屏                                                              */
 /* -------------------------------------------------------------------------- */
 
-export interface BannerSlot {
+export type PanelSceneKind = 'gate' | 'palace' | 'spear' | 'hero';
+
+export interface PanelSlot {
   id: string;
-  text: string;
+  seal: string;
+  subText: string;
+  indexLabel: string;
+  title: string;
+  caption: string;
+  scene: PanelSceneKind;
   dropAt: number;
-  /** 分格在倾斜条带内的列序号。 */
-  column: number;
-  /** 出画方向：-1 向左，+1 向右。 */
-  exit: -1 | 1;
-  fontSize: number;
   accent: 'gold' | 'cinnabar';
 }
 
-export const PANEL_TILT = 5;
-
-export const BANNERS: BannerSlot[] = [
-  {id: 'b1', text: '玉境', dropAt: CUE.panelDrop[0]!, column: 0, exit: -1, fontSize: 138, accent: 'cinnabar'},
-  {id: 'b2', text: '凌霄', dropAt: CUE.panelDrop[1]!, column: 1, exit: -1, fontSize: 138, accent: 'gold'},
-  {id: 'b3', text: '十万', dropAt: CUE.panelDrop[2]!, column: 2, exit: 1, fontSize: 138, accent: 'cinnabar'},
-  {id: 'b4', text: '天兵合围', dropAt: CUE.panelDrop[3]!, column: 3, exit: 1, fontSize: 96, accent: 'gold'},
+export const PANELS: PanelSlot[] = [
+  {
+    id: 'p1',
+    seal: '壹',
+    subText: '玉境',
+    indexLabel: '其一',
+    title: '南天门',
+    caption: '玉境 · 南天门巨柱',
+    scene: 'gate',
+    dropAt: CUE.panelDrop[0]!,
+    accent: 'gold',
+  },
+  {
+    id: 'p2',
+    seal: '贰',
+    subText: '凌霄',
+    indexLabel: '其二',
+    title: '凌霄殿',
+    caption: '凌霄 · 飞檐与赤金满月',
+    scene: 'palace',
+    dropAt: CUE.panelDrop[1]!,
+    accent: 'cinnabar',
+  },
+  {
+    id: 'p3',
+    seal: '叁',
+    subText: '十万',
+    indexLabel: '其三',
+    title: '银戈林',
+    caption: '十万 · 银白长戈森林',
+    scene: 'spear',
+    dropAt: CUE.panelDrop[2]!,
+    accent: 'gold',
+  },
+  {
+    id: 'p4',
+    seal: '肆',
+    subText: '合围',
+    indexLabel: '其四',
+    title: '大圣',
+    caption: '合围 · 侧面挥棒残影',
+    scene: 'hero',
+    dropAt: CUE.panelDrop[3]!,
+    accent: 'cinnabar',
+  },
 ];
 
 /* -------------------------------------------------------------------------- */
-/*  六道封印锁链 + 五张符咒                                                   */
+/*  Sub3A 五道巨岩 + 六道铁索                                                 */
 /* -------------------------------------------------------------------------- */
+
+export interface BoulderSlot {
+  id: string;
+  x: number;
+  width: number;
+  bottom: number;
+  dropAt: number;
+  seed: number;
+}
+
+export const BOULDERS: BoulderSlot[] = [
+  {id: 'r1', x: 170, width: 300, bottom: 500, dropAt: CUE.rockDrops[0]!, seed: 11},
+  {id: 'r2', x: 560, width: 280, bottom: 420, dropAt: CUE.rockDrops[1]!, seed: 23},
+  {id: 'r3', x: 960, width: 360, bottom: 520, dropAt: CUE.rockDrops[2]!, seed: 37},
+  {id: 'r4', x: 1360, width: 280, bottom: 420, dropAt: CUE.rockDrops[3]!, seed: 41},
+  {id: 'r5', x: 1750, width: 300, bottom: 500, dropAt: CUE.rockDrops[4]!, seed: 53},
+];
 
 export interface ChainSlot {
   id: string;
   arriveAt: number;
-  /** 端点（画布坐标）。 */
   x1: number;
   y1: number;
   x2: number;
   y2: number;
+  sag?: number;
 }
 
-/** 米字封印：从画面四边向中心交叉锁死。 */
+/** 六道实体铁索，交叉锁死岩壁。 */
 export const CHAINS: ChainSlot[] = [
-  {id: 'c1', arriveAt: CUE.chains[0]!, x1: 120, y1: 150, x2: 1800, y2: 930},
-  {id: 'c2', arriveAt: CUE.chains[1]!, x1: 1800, y1: 130, x2: 120, y2: 950},
-  {id: 'c3', arriveAt: CUE.chains[2]!, x1: 960, y1: -140, x2: 960, y2: 1180},
-  {id: 'c4', arriveAt: CUE.chains[3]!, x1: -140, y1: 560, x2: 2060, y2: 560},
-  {id: 'c5', arriveAt: CUE.chains[4]!, x1: 60, y1: 980, x2: 1880, y2: 180},
-  {id: 'c6', arriveAt: CUE.chains[5]!, x1: 1880, y1: 980, x2: 60, y2: 190},
+  {id: 'c1', arriveAt: CUE.chains[0]!, x1: 40, y1: 250, x2: 1880, y2: 760, sag: 20},
+  {id: 'c2', arriveAt: CUE.chains[1]!, x1: 1880, y1: 230, x2: 40, y2: 790, sag: 24},
+  {id: 'c3', arriveAt: CUE.chains[2]!, x1: 960, y1: -120, x2: 960, y2: 900, sag: 0},
+  {id: 'c4', arriveAt: CUE.chains[3]!, x1: -120, y1: 548, x2: 2040, y2: 548, sag: -14},
+  {id: 'c5', arriveAt: CUE.chains[4]!, x1: 100, y1: 1000, x2: 1820, y2: 180, sag: 18},
+  {id: 'c6', arriveAt: CUE.chains[5]!, x1: 1820, y1: 1000, x2: 100, y2: 180, sag: 18},
 ];
 
-export interface TalismanSlot {
+/* -------------------------------------------------------------------------- */
+/*  Sub3B 六张五层复合符咒                                                    */
+/* -------------------------------------------------------------------------- */
+
+export interface OfudaSlot {
   id: string;
   text: string;
   revealAt: number;
@@ -171,206 +246,39 @@ export interface TalismanSlot {
   width: number;
   height: number;
   rotate: number;
-  fontSize: number;
 }
 
-export const TALISMANS: TalismanSlot[] = [
-  {id: 't1', text: '五指山下', revealAt: CUE.talismanText[0]!, x: 356, y: 306, width: 168, height: 470, rotate: -6, fontSize: 86},
-  {id: 't2', text: '偿', revealAt: CUE.talismanText[1]!, x: 852, y: 232, width: 158, height: 300, rotate: 3.5, fontSize: 132},
-  {id: 't3', text: '自由', revealAt: CUE.talismanText[2]!, x: 1180, y: 782, width: 158, height: 400, rotate: -4, fontSize: 104},
-  {id: 't4', text: '的', revealAt: CUE.talismanText[3]!, x: 1520, y: 268, width: 150, height: 290, rotate: 6, fontSize: 132},
-  {id: 't5', text: '罪', revealAt: CUE.talismanText[4]!, x: 700, y: 858, width: 156, height: 300, rotate: -6, fontSize: 138},
+export const OFUDA: OfudaSlot[] = [
+  {id: 't1', text: '五指山下', revealAt: CUE.ofuda[0]!, x: 300, y: 336, width: 178, height: 424, rotate: -6.5},
+  {id: 't2', text: '偿', revealAt: CUE.ofuda[1]!, x: 782, y: 254, width: 150, height: 310, rotate: 4},
+  {id: 't3', text: '自', revealAt: CUE.ofuda[2]!, x: 1136, y: 254, width: 150, height: 310, rotate: -4.5},
+  {id: 't4', text: '由', revealAt: CUE.ofuda[3]!, x: 1588, y: 360, width: 168, height: 366, rotate: 6},
+  {id: 't5', text: '的', revealAt: CUE.ofuda[4]!, x: 512, y: 786, width: 144, height: 290, rotate: 5},
+  {id: 't6', text: '罪', revealAt: CUE.ofuda[5]!, x: 1402, y: 786, width: 152, height: 306, rotate: -6},
 ];
 
 /* -------------------------------------------------------------------------- */
-/*  五块玄黑巨岩                                                              */
+/*  Sub4A 前景三块主牌                                                        */
 /* -------------------------------------------------------------------------- */
 
-export type RockSide = 'left' | 'right' | 'top' | 'bottom' | 'corner';
-
-export interface RockSlot {
-  id: string;
-  side: RockSide;
-  dropAt: number;
-  /** 落位后的内缘顶点（指向画面中心的折线）。 */
-  edge: Array<[number, number]>;
-}
-
-/**
- * 五块岩石把画面挤成一条竖直石缝：左、右、上、下各一块，第五块从左下压角。
- * edge 是**落位后**的内侧锯齿边，落位前整体沿 side 方向外移 1400px。
- */
-export const ROCKS: RockSlot[] = [
-  {
-    id: 'r-left',
-    side: 'left',
-    dropAt: CUE.rockDrops[0]!,
-    edge: [
-      [0, -80],
-      [470, -80],
-      [392, 168],
-      [512, 300],
-      [404, 470],
-      [498, 640],
-      [388, 812],
-      [470, 980],
-      [0, 1180],
-    ],
-  },
-  {
-    id: 'r-right',
-    side: 'right',
-    dropAt: CUE.rockDrops[1]!,
-    edge: [
-      [1920, -80],
-      [1450, -80],
-      [1528, 168],
-      [1408, 300],
-      [1516, 470],
-      [1422, 640],
-      [1532, 812],
-      [1450, 980],
-      [1920, 1180],
-    ],
-  },
-  {
-    id: 'r-top',
-    side: 'top',
-    dropAt: CUE.rockDrops[2]!,
-    edge: [
-      [-80, 0],
-      [2000, 0],
-      [2000, 96],
-      [1524, 214],
-      [1188, 128],
-      [860, 236],
-      [560, 140],
-      [252, 236],
-      [-80, 176],
-    ],
-  },
-  {
-    id: 'r-bottom',
-    side: 'bottom',
-    dropAt: CUE.rockDrops[3]!,
-    edge: [
-      [-80, 1180],
-      [2000, 1180],
-      [2000, 1004],
-      [1500, 906],
-      [1140, 1006],
-      [840, 902],
-      [470, 1008],
-      [-80, 940],
-    ],
-  },
-  {
-    id: 'r-corner',
-    side: 'corner',
-    dropAt: CUE.rockDrops[4]!,
-    edge: [
-      [-120, 1180],
-      [520, 1180],
-      [392, 994],
-      [512, 902],
-      [300, 830],
-      [-120, 880],
-    ],
-  },
-];
-
-/* -------------------------------------------------------------------------- */
-/*  悬挂罪状木牌                                                              */
-/* -------------------------------------------------------------------------- */
-
-export interface TagSlot {
+export interface HeroTagSlot {
   id: string;
   text: string;
   x: number;
   y: number;
   width: number;
   height: number;
-  swingPhase: number;
-  swingAmp: number;
-  /** 0 = 远景, 1 = 中景, 2 = 前景. */
-  depth: 0 | 1 | 2;
-  revealAt: number | null;
-  /** 被跳切震碎的四分之一象限；null = 不碎。 */
-  shatterAt: number | null;
+  revealAt: number;
 }
 
-const FILLER = ['罪', '名', '欺', '天', '妄', '言', '犯', '上', '狂', '徒', '逆', '天', '不', '臣', '妖', '猴', '当', '诛', '天', '条'];
-
-export const TAG_SLOTS: TagSlot[] = [
-  ...Array.from({length: 11}, (_, index) => ({
-    id: `far-${index}`,
-    text: FILLER[index % FILLER.length]!,
-    x: 96 + index * 172,
-    y: 128 + (index % 3) * 24,
-    width: 62,
-    height: 250 + (index % 4) * 20,
-    swingPhase: index * 0.83,
-    swingAmp: 1.3,
-    depth: 0 as const,
-    revealAt: null,
-    shatterAt: CUE.jumpCuts[index % 4]!,
-  })),
-  ...Array.from({length: 7}, (_, index) => ({
-    id: `mid-${index}`,
-    text: FILLER[(index + 6) % FILLER.length]!,
-    x: 236 + index * 236,
-    y: 196 + (index % 2) * 34,
-    width: 96,
-    height: 366 + (index % 3) * 26,
-    swingPhase: index * 1.27 + 0.6,
-    swingAmp: 2.4,
-    depth: 1 as const,
-    revealAt: null,
-    shatterAt: CUE.jumpCuts[index % 4]!,
-  })),
-  {
-    id: 'hero-0',
-    text: '罪名',
-    x: 384,
-    y: 300,
-    width: 190,
-    height: 566,
-    swingPhase: 0.4,
-    swingAmp: 1.7,
-    depth: 2,
-    revealAt: CUE.tagReveals[0]!,
-    shatterAt: CUE.jumpCuts[0]!,
-  },
-  {
-    id: 'hero-1',
-    text: '是',
-    x: 960,
-    y: 262,
-    width: 182,
-    height: 548,
-    swingPhase: 2.1,
-    swingAmp: 1.4,
-    depth: 2,
-    revealAt: CUE.tagReveals[1]!,
-    shatterAt: CUE.jumpCuts[1]!,
-  },
-  {
-    id: 'hero-2',
-    text: '老孙',
-    x: 1536,
-    y: 310,
-    width: 190,
-    height: 566,
-    swingPhase: 3.4,
-    swingAmp: 1.9,
-    depth: 2,
-    revealAt: CUE.tagReveals[2]!,
-    shatterAt: CUE.jumpCuts[2]!,
-  },
+export const HERO_TAGS: HeroTagSlot[] = [
+  {id: 'hero-0', text: '罪名', x: 384, y: 300, width: 190, height: 566, revealAt: CUE.tagReveals[0]!},
+  {id: 'hero-1', text: '是', x: 960, y: 262, width: 182, height: 548, revealAt: CUE.tagReveals[1]!},
+  {id: 'hero-2', text: '老孙', x: 1536, y: 310, width: 190, height: 566, revealAt: CUE.tagReveals[2]!},
 ];
 
 /* -------------------------------------------------------------------------- */
-/*  终局四印                                                                  */
+/*  Sub4B 终局四印                                                            */
 /* -------------------------------------------------------------------------- */
 
 export interface SealSlot {
@@ -384,10 +292,10 @@ export interface SealSlot {
 }
 
 export const SEALS: SealSlot[] = [
-  {id: 'seal-0', text: '不', landAt: CUE.sealLands[0]!, x: 318, y: 246, size: 372, rotate: -7},
-  {id: 'seal-1', text: '敬', landAt: CUE.sealLands[1]!, x: 1602, y: 262, size: 366, rotate: 6},
-  {id: 'seal-2', text: '权', landAt: CUE.sealLands[2]!, x: 330, y: 838, size: 360, rotate: 4},
-  {id: 'seal-3', text: '威', landAt: CUE.sealLands[3]!, x: 1590, y: 832, size: 368, rotate: -5},
+  {id: 'seal-0', text: '不', landAt: CUE.sealLands[0]!, x: 302, y: 246, size: 348, rotate: -7},
+  {id: 'seal-1', text: '敬', landAt: CUE.sealLands[1]!, x: 1614, y: 258, size: 342, rotate: 6},
+  {id: 'seal-2', text: '权', landAt: CUE.sealLands[2]!, x: 312, y: 844, size: 336, rotate: 4},
+  {id: 'seal-3', text: '威', landAt: CUE.sealLands[3]!, x: 1602, y: 838, size: 342, rotate: -5},
 ];
 
 /* -------------------------------------------------------------------------- */
@@ -399,27 +307,25 @@ export interface ImpactCue {
   power: number;
   /** 震屏主轴：'x' 横向撕扯，'y' 纵向砸落，'both' 全向。 */
   axis: 'x' | 'y' | 'both';
-  /** 是否触发 1 帧黑白反色。 */
-  invert?: boolean;
 }
 
 export const IMPACTS: ImpactCue[] = [
-  ...CUE.panelDrop.map((time) => ({time, power: 0.4, axis: 'both' as const})),
-  {time: CUE.panelExit, power: 0.6, axis: 'x'},
-  {time: CUE.siege.start, power: 0.55, axis: 'both'},
-  ...CUE.armyWaves.map((time) => ({time, power: 0.3, axis: 'x' as const})),
-  {time: CUE.eyeBand.start, power: 0.8, axis: 'x'},
-  {time: CUE.eyeBand.open, power: 0.55, axis: 'x'},
+  ...CUE.panelDrop.map((time) => ({time, power: 0.34, axis: 'both' as const})),
+  {time: CUE.panelExit, power: 0.5, axis: 'x'},
+  {time: CUE.shield.start, power: 0.52, axis: 'both'},
+  ...CUE.armyWaves.map((time) => ({time, power: 0.26, axis: 'x' as const})),
+  {time: CUE.eyeBand.start, power: 0.82, axis: 'x'},
+  {time: CUE.eyeBand.open, power: 0.5, axis: 'x'},
   ...CUE.eyeWords.map((time) => ({time, power: 0.42, axis: 'both' as const})),
   {time: CUE.palace.start, power: 0.7, axis: 'both'},
-  {time: CUE.staffSweep, power: 1, axis: 'both', invert: true},
-  ...CUE.rockDrops.map((time) => ({time, power: 0.85, axis: 'y' as const})),
-  ...CUE.chains.map((time) => ({time, power: 0.26, axis: 'both' as const})),
-  ...CUE.talismanText.map((time) => ({time, power: 0.2, axis: 'both' as const})),
-  {time: CUE.chamber, power: 0.6, axis: 'x'},
+  {time: CUE.slash.cut, power: 1, axis: 'both'},
+  ...CUE.rockDrops.map((time) => ({time, power: 0.5, axis: 'y' as const})),
+  ...CUE.chains.map((time) => ({time, power: 0.24, axis: 'both' as const})),
+  ...CUE.ofuda.map((time) => ({time, power: 0.2, axis: 'both' as const})),
+  {time: CUE.chamber, power: 0.55, axis: 'x'},
   ...CUE.tagReveals.map((time) => ({time, power: 0.3, axis: 'both' as const})),
-  ...CUE.jumpCuts.map((time) => ({time, power: 1, axis: 'both' as const, invert: true})),
-  ...CUE.sealLands.map((time) => ({time, power: 0.9, axis: 'both' as const})),
+  ...CUE.jumpCuts.map((time) => ({time, power: 1, axis: 'both' as const})),
+  ...CUE.sealLands.map((time) => ({time, power: 0.92, axis: 'both' as const})),
   {time: CUE.whiteFlash, power: 1, axis: 'both'},
 ];
 
@@ -466,18 +372,11 @@ export const flashAt = (seconds: number): number => {
   return Math.min(1, value);
 };
 
-/** 第 112–113 帧的全屏黑白反色窗口；四连跳切各吃 1 帧。 */
+/** 第 115–116 帧的全屏黑白反色（Impact Frame）。 */
 export const invertAt = (frame: number, fps: number): boolean => {
   const start = atFrame(CUE.invert[0], fps);
   const end = atFrame(CUE.invert[1], fps);
-  if (frame >= start && frame <= end) return true;
-  for (const cue of IMPACTS) {
-    if (!cue.invert) continue;
-    if (cue.time >= CUE.invert[0] && cue.time <= CUE.invert[1]) continue;
-    const hit = atFrame(cue.time, fps);
-    if (frame >= hit && frame < hit + 1) return true;
-  }
-  return false;
+  return frame >= start && frame <= end;
 };
 
 /* -------------------------------------------------------------------------- */

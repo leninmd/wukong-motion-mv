@@ -214,3 +214,64 @@ public/wukong_model/wukong_<pose>_outline.svg（1–7 条闭合路径）
 
 运行时**不走 PNG**，仍由 `WukongRig.tsx` 用同一份几何实时画 SVG（要驱动翎的物理、
 金箍棒旋转与音频频谱）。PNG/SVG 是审片与后续 ComfyUI/Blender 对齐用的资产存档。
+
+## 9. V4 复合图元 / 微切镜 / 抽帧质检（2026-10-23）
+
+### 9.1 新增可复用图元（`src/primitives/senbon_style/`）
+
+| 文件 | 职责 | 关键约束 |
+|---|---|---|
+| `OrnateSealStamp.tsx` | 双层描金框 + 四角回纹 + 朱砂斑驳 + 八卦暗纹 + 竖排副标题 + 朱文小印 | 五层缺一不可；`crack` 控制战损 |
+| `ComplexOfudaTalisman.tsx` | 宣纸毛边 + 朱砂双框 + 云雷角花 + 八卦暗印 + 敕令符头 + 毛笔字 + 封印 + 金钉 | **禁止单层白框**；`reveal`/`shakeX` 用于弹簧钉入 |
+| `WukongFaceCloseup.tsx` | 京剧猴王金桃心脸谱：多层贝塞尔、36 道放射虹膜、竖瞳、金火粒子、紧箍云纹、锁子甲 pattern、战损 | `variant="eyes"` 供横条，`variant="full"` 供四连跳切；禁止感叹号三角眼 |
+| `IronChain.tsx` | 实体铁索：面环/边环互扣、销钉、卸扣、铭文、金色辉光、可 sag | **禁止 `stroke-dasharray` 虚线** |
+| `ComicPanels.tsx` | 四分屏微缩画卷：每格 480px、卡片 440px、左右各 20px 安全距 | **整板禁止旋转**；V3 的 −5° 整板旋转是右缘裁切的根因 |
+| `StaffShield.tsx` | 3 圈反向弧形刀光 + 2 圈半调网点环 + 14 根棍影 + 火花 | 中心要暗，读成“环”不是“太阳” |
+| `SiegeCharge.tsx` | 40 天兵自右向左冲锋 + 箭矢/长戈弹飞 + 前景 blur(8px) 巨戈 | 单兵共用一份 `<defs>` 符号 |
+| `CrumblingPalace3D.tsx` | Z 轴推进 + 15° 滚转的 36 柱天庭；36 根全部断裂，保留一圈矮桩，碎块朝镜头飞 | 相机 `up` 先倾斜再 `lookAt`；相机太近会只剩金色方块 |
+| `GiantSlashArc.tsx` | 18° 锥形刀光 + 三色残影 + 半调网点 + 白热刀脊 + 火星 | 青色只作第 3 层残影辅助色 |
+| `UnbreakableBanner.tsx` | 右上描金书法，9° 刀光切开，12px 错位 / 6px 法向 | 刀光线 0.08 s 内消失，否则会横切文字 |
+| `EyeCutBand.tsx` | −5° 双金边眼部横条 + 三枚重影金字 | 横条内嵌 `WukongFaceCloseup(eyes)` |
+| `SuspendedTags.tsx` | 纯黑悬签阵：三道铁索 + 三层白签 + 聚光灯 + 翻面主牌 + 金火 | 黑场禁止大渐变；不得残留上一镜角色 |
+| `BoulderCage.tsx` | 五道浮世绘肌理巨岩 + 六道铁索 + 侧面跪撑 + 落位扬尘 | 岩柱之间必须留黑缝；底缘单独受光 |
+
+### 9.2 新姿态（`wukongRigGeometry.ts`）
+
+- `side_lunge`：侧视弓步，棍盾在身前；`WukongRig` 的 `spinDegPerFrame` 在 1B 设为 0，
+  旋转交给 `StaffShield`，否则棒身会横切脸部。
+- `kneel_boulder`：单膝跪地、双臂大幅张成 V 形上撑；手是五指掌形 + 金色掌缘，
+  不是 V3 的 `claw()` 黄色皇冠。臂展必须够宽（腕点 x≈250 / 590），否则会被头/翎挡住。
+- `back_overlook`：背影 + 侧脸微转，用于 X=20% 左下角前景。
+
+### 9.3 抽帧质检命令
+
+```powershell
+$frames = @(22,50,85,120,195,240,278)
+foreach ($f in $frames) {
+  npx remotion still src/index.ts WukongClimaxSegment ("out/v4_check_f{0:000}.png" -f $f) --frame=$f
+}
+& "D:\dev\runtimes\python\Python313\python.exe" scripts/contact_sheet.py out/senbon_v4_mvp.mp4 out/senbon_v4_contact_sheet.png
+```
+
+抽帧后**必须用 `read_image` 读图**，逐项确认 AGENTS.md §12.3 的四条；不要只看文件大小。
+本机无 GPU，`remotion still` 单帧约 8–15 s，整片 300 帧约 10–14 min。
+
+### 9.4 外部动效技能库（只读）
+
+`skills/` 已挂载 `motion-skills`、`motion-graphics-skills`、`webgl-animation-skills`、
+`motion-design-skills` 四个浅克隆。它们**不参与打包**，只作为粒子/半调/构图/节拍的
+写法参考；取用点登记在 `skills/README.md`。禁止在 `src/` 里 import 这些目录。
+
+### 9.5 V4 踩坑（新增）
+
+| 现象 | 原因 | 处理 |
+|---|---|---|
+| 第四面战幡右侧被裁 | 整板 `rotate(-5deg)` 后 4×480 超出 1920 | 分格板不旋转；卡片 `440px` + 左右 `20px`，右缘 = 1900 |
+| 分格编号“其一”只剩“其” | 右上角回纹 SVG 后绘制，盖住标题；flex 空间也紧 | header `zIndex:3`、`paddingRight:44`、编号 `flexShrink:0` |
+| 侧面棍盾像一颗太阳 | 18+15+12 片刀光 + 14 根棍影 + 月亮叠加 | 刀光 opacity 0.22、中心压暗 0.52、月亮局部压暗、半径 228 |
+| 跪撑姿势手臂消失 | 手/腕点离头太近（x=326/536），被头冠与双翎挡住 | 腕点外移到 250/590，臂展成 V 形；加金色掌缘与青筋 |
+| 五块巨岩读成一面墙 | 岩柱宽度过大、彼此只差 10–20px；缺底缘光 | 收窄到 280–360、留 80–100px 黑缝；底缘单独 5px 金线 |
+| 3D 天庭只剩金色方块 | 相机推得太近（z=51），近柱占满画面 | 相机改为 z=108→70，36 根全断但保留矮桩，碎片缩小 |
+| 脸谱像笑脸南瓜 | 嘴弧向上、4 颗方牙 + 2 颗大獠牙 | 改为嘴角下沉的怒相、3 颗尖牙 + 2 颗外翻獠牙、深色口鼻区 |
+| 眼部横条有一条横贯全脸的白线 | 背景径向速度线角度=0/π + 脸组件里一条全宽 rect | 速度线跳过水平角；删除全宽线，改为每只眼向外的短金芒 |
+| 书法被刀光线长期横切 | 刀光 SVG 一直保持 opacity 1 | 切开后 0.08 s 内淡出，只保留 12px 错位 |
