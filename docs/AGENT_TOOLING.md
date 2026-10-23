@@ -450,3 +450,80 @@ foreach ($t in @('0.5','1.8','2.8','4.0','6.5','8.0','9.2')) {
 
 对应验收：1A 建筑 / 1B 天兵与大字 / 2A 眼部横切 / 2B【无坚不摧】/ 3A 跪撑 / 4A 悬签 / 4B 2K 怒颜。
 回抽图必须用视觉能力逐张读，不得只看文件大小。
+
+---
+
+## 12. V7：单武器光轮、满屏五指山与 429 兜底（2026-10-23 实测）
+
+### 12.1 生图网关 429 RESOURCE_EXHAUSTED
+
+V7 连续生成 charge / halberds / panel4 / mountain / face 时，panel4、mountain、
+face 均返回 `429 RESOURCE_EXHAUSTED`，`agy_image.mjs` 重试一次仍失败（各 420 s
+超时）。**不要**把整条渲染链路卡在生图上：
+
+- 已成功的 charge / halberds 正常烘焙。
+- panel4 先临时用 `woodblock_slash.png` 顶替 1A 第四格；等待配额恢复后已生成
+  `v7_panel4_raw.png` 并重烘 `woodblock_panel4.png`，**当前成品是生图版**。
+- 4B 面部先复核素材：V6 `face_glare_woodblock.png` 本身两只金眼完整，问题是
+  4B 用了 1.5× 裁切；改为 1.0× + `translateY(188px)` 即可，不需要重新生图。
+- 五指山先用离线兜底：`python scripts/build_mountain_fallback.py`；配额恢复后
+  已生成 `v7_mountain_wide_raw.png` 并重烘，**当前成品是生图版**。兜底脚本保留，
+  供断网/429 时使用。
+- **判断是否 429**：日志里出现 `429` / `RESOURCE_EXHAUSTED`，且目标文件未生成；
+  不要误判为路径错误或权限问题。
+
+### 12.2 1B：单棍光轮与题笺
+
+- V6 的双棍来自「静态立绘自带的斜棍 + 8 层 Trail 冻结黄棍」。V7 直接换掉立绘：
+  `woodblock_charge.png` 双手合十，无武器；旋转武器改为 `CudgelWheel`：
+  - 圆心 `HAND_X=672 / HAND_Y=652`，与双手重合；
+  - 400→520px 的同心赤金/朱砂刀光环（`repeating-conic-gradient` + 径向 mask）；
+  - 单根中心掏空的旋转棍；火星与断箭；
+  - **不要再加 Trail 冻结层**，会退化成折扇。
+- 天兵层：`top=398 / height=760 / width=1280 / objectFit=cover`，底边越过画面；
+  前方 3 层带墨线的 `InkCloudBand` 吃掉交界；后方 `palace` 顶部做远景天际线。
+- 黑字撞黑天兵：用 `VerticalCartouche`（220×704，深墨底 + 双层金框 + 朱砂云头 +
+  鎏金书法 + 底部朱印）。
+- **CSS 堆叠坑**：给云海 SVG `zIndex:1`、角色 `zIndex:5`、光轮 `zIndex:6`、
+  题笺 `zIndex:10`。即使 DOM 顺序正确，带 `opacity` 的 SVG 与带 `transform` 的
+  角色 div 也可能产生意料外的堆叠；显式 z-index 是 V7 实测有效的修法。
+
+### 12.3 4B：脸没有“无眼”，是取景
+
+`face_glare_woodblock.png` 的双眼在图像高度 ~30–38%，V6 的 `SCALES[3]=1.5`
+只显示图像中央 35%，把眼睛裁掉了。V7：
+
+```
+SCALES = [1.0, 1.02, 1.04, 1.0]
+FACE_SHIFT = [84, 120, 156, 188]  // 像素，向下平移
+```
+
+1.0× 时画面可见图像 52.7%，再加 188px 下移，9.2s 的眼睛、紧箍、獠牙同时入画。
+**先量再裁**，不要先怪生图。
+
+### 12.4 2B：过曝的修法
+
+V7 首版 2B 的白色汉白玉柱 + emissive 2.5 金环 + 2.0 环境光在 SwiftShader 下
+直接过曝成白管。最终参数：
+
+- 柱色 `#8E1A13` / `#C9BBA2`（不是纯白 `#E8DEC8`）；
+- 金环 `emissiveIntensity 1.6`；
+- ambient 0.35 / key 1.2 / red fill 0.55 / spot 140 / points 20/20；
+- 保留 Bloom 2.0 与 `mipmapBlur`，否则丢了“璀璨”；
+- 背景用 ShaderMaterial 竖向渐变 `#1E0E24 → #6E2218`，地面加暗金网格 + 汉白玉台阶。
+
+### 12.5 V7 验收命令
+
+```powershell
+python scripts/build_mountain_fallback.py
+python scripts/build_wukong_assets.py
+npm run typecheck
+npx remotion render src/index.ts WukongClimaxSegment out/senbon_v7_mvp.mp4 --concurrency=2
+$ff='node_modules\@remotion\compositor-win32-x64-msvc\ffmpeg.exe'
+foreach($t in @('0.5','1.8','2.8','4.0','6.5','8.0','9.2')){ & $ff -y -v error -ss $t -i out/senbon_v7_mvp.mp4 -frames:v 1 ("out/v7_mp4_{0}.png" -f $t) }
+python scripts/contact_sheet.py out/senbon_v7_mvp.mp4 out/senbon_v7_contact_sheet.png
+```
+
+重点读图：1.8s 无第二根棍、题笺清晰；4.0s 柱体金红但有明暗；6.5s 满屏山体；
+9.2s 双眼完整 + 四角实心印。
+

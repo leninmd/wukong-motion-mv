@@ -15,6 +15,7 @@ import {HalftoneOverlay} from '../primitives/senbon_style/HalftoneOverlay';
 import {MoonSpinShot} from '../primitives/senbon_style/MoonSpinShot';
 import {MountainCleft} from '../primitives/senbon_style/MountainCleft';
 import {SuspendedTags} from '../primitives/senbon_style/SuspendedTags';
+import {SenbonStageFrame} from '../primitives/senbon_style/SenbonStageFrame';
 import {WASHI} from '../primitives/senbon_style/PaperStage';
 import {WoodblockJumpCuts} from '../primitives/senbon_style/WoodblockJumpCuts';
 import {SENBON, SERIF_STACK, clamp01, f, overshoot} from '../primitives/senbon_style/style';
@@ -150,6 +151,78 @@ const SlashType: React.FC<{time: number; revealAt: number; cutAt: number}> = ({t
 };
 
 /* -------------------------------------------------------------------------- */
+/*  Sub2B 左前景：随刀光爆发的活化大圣                                          */
+/* -------------------------------------------------------------------------- */
+
+const RushingWukong: React.FC<{time: number; cutAt: number}> = ({time, cutAt}) => {
+  const burst = clamp01((time - cutAt + 0.12) / 0.3);
+  const scale = 1.15 + 0.3 * (1 - (1 - burst) ** 3);
+  const swing = Math.sin(time * 21) * 2.6;
+  const wind = 4.5 + Math.sin(time * 17) * 3.2;
+  return (
+    <>
+      <svg width={0} height={0} style={{position: 'absolute'}}>
+        <defs>
+          <filter id="v7-wind" x="-14%" y="-14%" width="128%" height="128%">
+            <feTurbulence type="fractalNoise" baseFrequency="0.008 0.016" numOctaves="2" seed="7" result="noise" />
+            <feDisplacementMap in="SourceGraphic" in2="noise" scale={wind} xChannelSelector="R" yChannelSelector="G" />
+          </filter>
+        </defs>
+      </svg>
+
+      {/* 披风 / 雉鸡翎的正弦波：画在角色之后，作为风的可读形状 */}
+      <svg viewBox="0 0 1920 1080" width="1920" height="1080" style={{position: 'absolute', inset: 0, pointerEvents: 'none'}}>
+        {Array.from({length: 10}, (_, index) => {
+          const phase = time * 13 + index * 1.7;
+          const baseX = 390 + (index - 5) * 26;
+          const baseY = 610 + (index % 3) * 58;
+          const dx = 120 + (index % 4) * 70;
+          const dy = 40 + Math.sin(phase) * 44;
+          const colour = index % 3 === 0 ? '#C8281E' : index % 3 === 1 ? '#F5C242' : '#2E5F63';
+          return (
+            <path
+              key={`wind-${index}`}
+              d={`M ${baseX} ${baseY} C ${baseX - dx * 0.4} ${baseY - dy} ${baseX - dx * 0.8} ${baseY + dy * 0.8} ${baseX - dx} ${baseY + Math.sin(phase * 1.4) * 34}`}
+              fill="none"
+              stroke={colour}
+              strokeWidth={5 + (index % 3) * 4}
+              strokeLinecap="round"
+              opacity={0.28 + (index % 4) * 0.08}
+            />
+          );
+        })}
+        {Array.from({length: 5}, (_, index) => {
+          const phase = time * 17 + index * 2.2;
+          return (
+            <path
+              key={`feather-${index}`}
+              d={`M ${402 + index * 9} ${520} Q ${330 - index * 12} ${420 + Math.sin(phase) * 26} ${250 - index * 14} ${350 + Math.cos(phase) * 34}`}
+              fill="none"
+              stroke={index % 2 === 0 ? '#C8281E' : '#F5C242'}
+              strokeWidth={7 - index * 0.7}
+              strokeLinecap="round"
+              opacity={0.42}
+            />
+          );
+        })}
+      </svg>
+
+      <div
+        style={{
+          position: 'absolute',
+          inset: 0,
+          transform: `translate(${f(Math.sin(time * 17) * 7)}px, ${f(Math.cos(time * 19) * 9)}px) scale(${f(scale)}) rotate(${f(swing)}deg)`,
+          transformOrigin: '22% 86%',
+          filter: 'url(#v7-wind)',
+        }}
+      >
+        <ClimaxAsset asset="slash" height={700} x={344} baseline={1128} echo={0.36} rim={0} />
+      </div>
+    </>
+  );
+};
+
+/* -------------------------------------------------------------------------- */
 /*  Sub2B 全景                                                                */
 /* -------------------------------------------------------------------------- */
 
@@ -167,17 +240,7 @@ const Shot2B: React.FC<{time: number; start: number; end: number; pulse: number}
       }}
     />
 
-    <div style={{position: 'absolute', inset: 0, opacity: 0.98}}>
-      <ClimaxAsset
-        asset="slash"
-        height={700}
-        x={344}
-        baseline={1128}
-        echo={0.28}
-        rotate={-2}
-        rim={0}
-      />
-    </div>
+    <RushingWukong time={time} cutAt={CUE.slash.cut} />
 
     {/* 右下角：刀光落点的余烬 */}
     <svg viewBox="0 0 1920 1080" width="1920" height="1080" style={{position: 'absolute', inset: 0, mixBlendMode: 'screen', pointerEvents: 'none'}}>
@@ -404,6 +467,9 @@ export const WukongClimaxSegment: React.FC = () => {
           }}
         />
       ) : null}
+
+      {/* V7 全片统一画框 + 金火 / 残旗粒子，把八个微切镜粘成一部片 */}
+      <SenbonStageFrame time={time} />
 
       {/*
         【无坚不摧】必须画在所有叠加层之后。

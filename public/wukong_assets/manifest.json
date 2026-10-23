@@ -1,5 +1,5 @@
 {
-  "version": "v6",
+  "version": "v7",
   "pipeline": "image-gateway 2K → rembg / OpenCV 四色套版 → vtracer + resvg",
   "palette": {
     "ink": "#120D14",
@@ -57,7 +57,7 @@
       "file": "face_glare_woodblock.png",
       "width": 2048,
       "height": 2048,
-      "source": "生图网关 v6_face_raw.png（1024×1024，2K 怒颜木刻）",
+      "source": "生图网关 v6_face_raw.png（2K 怒颜木刻，双眼居中）",
       "pipeline": "中心方形裁切 → LANCZOS 2048×2048 → unsharp + 反差 1.08 + 纸纹 + 暗角",
       "bytes": 6835482,
       "sha": "b24ded9738d0"
@@ -88,6 +88,42 @@
       "pipeline": "LANCZOS 2400 → vtracer SVG → resvg → 白底软抠 + 白边去污染 → 墨/朱砂/金套色",
       "bytes": 1579992,
       "sha": "4fcd9a1e089c"
+    },
+    "woodblock_charge": {
+      "file": "woodblock_charge.png",
+      "width": 1355,
+      "height": 1800,
+      "source": "生图网关 v7_charge_raw.png",
+      "pipeline": "rembg u2net → 白边剥离（外轮廓填洞 + erode 3px）→ HSV 四色套版 #120D14/#C8281E/#F5C242/#EAE0CE",
+      "bytes": 1862200,
+      "sha": "81f4fafbd0fa"
+    },
+    "woodblock_panel4": {
+      "file": "woodblock_panel4.png",
+      "width": 1355,
+      "height": 1800,
+      "source": "生图网关 v7_panel4_raw.png",
+      "pipeline": "rembg u2net → 白边剥离（外轮廓填洞 + erode 3px）→ HSV 四色套版 #120D14/#C8281E/#F5C242/#EAE0CE",
+      "bytes": 2020043,
+      "sha": "7c1f164f6d31"
+    },
+    "halberds_woodblock": {
+      "file": "halberds_woodblock.png",
+      "width": 1400,
+      "height": 2110,
+      "source": "生图网关 v7_halberds_raw.png（漫天朱砂战旗与银白长戈）",
+      "pipeline": "裁纸边 → LANCZOS 2K → vtracer 多层 SVG → resvg 栅格 → 纸纹 + 暗角",
+      "bytes": 2757128,
+      "sha": "d0e072ed5458"
+    },
+    "five_finger_mountain_woodblock": {
+      "file": "five_finger_mountain_woodblock.png",
+      "width": 2048,
+      "height": 1130,
+      "source": "生图网关 v7_mountain_wide_raw.png（五指山巨岩 + 金色梵文 + 暖金裂谷）",
+      "pipeline": "裁纸边 → LANCZOS 2K → vtracer SVG → resvg 栅格 → 纸纹 + 暗角",
+      "bytes": 2062443,
+      "sha": "64c344f5b501"
     }
   }
 }

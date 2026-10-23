@@ -61,3 +61,27 @@ V5 的剪影把角色内部**填死成 #120D14**，在 1B/3A 暗底上就是一�
 4. 建筑/天兵必须走 vtracer + resvg；禁止 `<rect>` 搭南天门。
 5. 生图原图只落 `out/gen/`（gitignore）；本目录只放成品。
 6. `manifest.json` 记录尺寸、来源、sha 前缀；`assets.manifest.json` 记录完整提示词。
+
+## V7 追加（2026-10-23）
+
+V7 新增 3 张，并修正 1 张的取景：
+
+| 文件 | 尺寸 | 用途 | 来源 / 状态 |
+|---|---|---|---|
+| `woodblock_charge.png` | 1355×1800 | 1B 双手胸前结印（静态棍从源头消失） | 生图网关 `v7_charge_raw.png`；下半身宣纸色压成暖灰，避免与纸底同色 |
+| `woodblock_panel4.png` | 1355×1800 | 1A 第四格 腾空劈棒 | 生图网关 `v7_panel4_raw.png`（配额恢复后生成）→ 四色套版 |
+| `halberds_woodblock.png` | 1400×2110 | 1A 第三格 银戈林 | 生图网关 `v7_halberds_raw.png` → vtracer + resvg |
+| `five_finger_mountain_woodblock.png` | 2048×1130 | 3A/3B 满屏五指山 | 生图网关 `v7_mountain_wide_raw.png`（配额恢复后生成）→ vtracer + resvg；`build_mountain_fallback.py` 仅作断网/429 备用 |
+| `face_glare_woodblock.png` | 2048×2048 | 4B 怒颜 | 沿用 V6 的 2048² 图；**图本身双眼完整**，V7 只把 4B 取景从 1.5× 改为 1.0×+下移 188px，让双眼/紧箍/獠牙同时入画。网关恢复后仍建议重生成一版更居中的脸 |
+
+V7 生成过程（如实记录）：
+
+- 第一轮 charge / halberds 成功后，panel4 / mountain / face 连续
+  `429 RESOURCE_EXHAUSTED`；panel4 曾临时用 `woodblock_slash.png` 顶替，mountain
+  用 `scripts/build_mountain_fallback.py` 兜底。
+- 等待配额恢复后，panel4 与 mountain 已重新生成并替换；**当前目录里的成品是生图版**。
+- `face_glare_woodblock.png` 仍是 V6 图；V7 通过取景修正让双眼完整入画（见 4B），
+  没有为了“重新生成”而牺牲已可用的素材。
+
+
+

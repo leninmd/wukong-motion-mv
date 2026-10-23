@@ -1,10 +1,10 @@
 {
-  "version": 6,
+  "version": 7,
   "project": "wukong-motion-mv",
   "segment": "climax_09_19",
   "composition": "WukongClimaxSegment",
   "approach": "2K-image-gateway + rembg/vtracer + real WebGL (three.js)",
-  "note": "V6 不再从 480p 参考片截图，也不再手写 2D 透视。所有角色/面部/眼部/建筑/天兵来自生图网关的 2K 素材，经 rembg + OpenCV 四色套版或 vtracer + resvg 矢量化；2B 改用 @remotion/three + @react-three/postprocessing 真 WebGL。八个微切镜 + 0.3 s 黑场。",
+  "note": "V7 在 V6 基础上重做六处穿帮：1B 换成双手结印立绘 + 单根旋转刀光轮 + 2K 天兵压底 + 云海 + 竖幅题笺；1A 第3格改 halberds 木刻、第4格改 slash 动态姿态；2A 改暗金放射场 + 三块斜切牌匾；2B 改朱砂/汉白玉柱 + 金环 + 紫红天幕 + 强运镜 + 角色活化；3A 换满屏五指山（生图网关 429，使用离线兜底）；4B 重新取景让双眼完整、四角改实心重印。全片挂 SenbonStageFrame 画框与 80 颗金火/残旗粒子。",
   "canvas": {
     "width": 1920,
     "height": 1080,
@@ -26,57 +26,101 @@
       "id": "s1a",
       "name": "玉境 · 四色和纸画格",
       "frames": "0-30",
-      "subject": "南天门盘龙阙楼 2K 版画 / 凌霄殿重檐飞阁与满月 2K 版画 / 银戈林（天兵反相银甲） / 四色套版举棒大圣；壹贰叁肆编号印跨框砸下",
-      "primitives": ["FourPaperPanels", "gate_woodblock", "palace_woodblock", "army_silhouette", "ClimaxAsset(raise)"]
+      "subject": "2K 南天门盘龙阙楼 / 凌霄殿重檐飞阁 / 银白长戈与朱砂战旗木刻 / 腾空单手劈棒的大圣；壹贰叁肆编号印跨框砸下",
+      "primitives": [
+        "FourPaperPanels",
+        "gate_woodblock",
+        "palace_woodblock",
+        "halberds_woodblock",
+        "ClimaxAsset(panel4)"
+      ]
     },
     {
       "id": "s1b",
       "name": "十万天兵 · 满月逆光旋棍",
       "frames": "30-75",
-      "subject": "780px 暖白满月；云海压底；四色套版旋棍大圣在 X=35%；右侧 2K 天兵压境层；8 层 Trail + 2.4px 光学模糊的旋转金箍棒残影；右侧 74px 竖排浓墨大字【十万天兵合围】",
-      "primitives": ["MoonSpinShot", "MoonDisc", "CloudBank", "Trail", "ClimaxAsset(spin)", "army_silhouette"]
+      "subject": "满月逆光；双手胸前结印的四色套版大圣；圆心对齐双手的赤金/朱砂刀光轮 + 火星 + 弹飞断箭；2K 天兵压到画面底部、由三层带墨线的云海吃掉交界；远景凌霄殿天际线；右侧 220×704 竖幅题笺【十万天兵合围】",
+      "primitives": [
+        "MoonSpinShot",
+        "MoonDisc",
+        "CloudBank",
+        "CudgelWheel",
+        "ClimaxAsset(charge)",
+        "VerticalCartouche",
+        "army_silhouette"
+      ]
     },
     {
       "id": "s2a",
       "name": "怎敌我 · 宣纸白底眼部横切",
       "frames": "75-98",
-      "subject": "整屏暖白宣纸；−5° 玄黑金边横条内嵌 2200×356 的 2K 生图眼部木刻；金色横向闪电；右侧【怎】【敌】【我】。open=帧 76，0.16 s 内展开，杜绝“横条没出现”",
-      "primitives": ["EyeWoodblockShot", "PaperField", "InkSpecks", "eyes_closeup_woodblock"]
+      "subject": "暗金/墨黑放射速度线与飞溅墨点；−5° 眼部横条 + 上下 14px 鎏金刀锋带；【怎】【敌】【我】三块黑底金边斜切牌匾随 75/82/89 帧重拍砸下",
+      "primitives": [
+        "EyeWoodblockShot",
+        "SpeedField",
+        "WordPlacard",
+        "eyes_closeup_woodblock"
+      ]
     },
     {
       "id": "s2b",
       "name": "无坚不摧 · 真 WebGL 凌霄崩裂",
       "frames": "98-150",
-      "subject": "36 根组合几何体殿柱（柱础 + 柱身 + 斗拱）、meshToonMaterial + Outlines/Edges、EffectComposer Bloom(0.25/2.0/mipmapBlur)；112 帧斜向弧形刀光 + 400 颗确定性 Sparkles；断裂碎块解析弹道 + 发光裂口；右上【无坚不摧】双层斜切大字（父容器有确定高度，禁用零高 clip）",
-      "primitives": ["CelestialThrone3D", "EffectComposer", "Bloom", "Outlines", "Edges", "Sparkles", "SlashBlade", "ClimaxAsset(slash)", "SlashType"]
+      "subject": "深绛紫→赤金天幕；36 根朱砂/汉白玉柱 + 鎏金盘龙环 + 汉白玉台阶 + 发光阵法网格；Bloom + Outlines/Edges；112 帧弧形刀光 + 400 颗确定性粒子；左下随刀光 1.15→1.45 放大、披风/翎正弦波狂舞的大圣",
+      "primitives": [
+        "CelestialThrone3D",
+        "Bloom",
+        "Outlines",
+        "Edges",
+        "Sparkles",
+        "SlashBlade",
+        "RushingWukong",
+        "ClimaxAsset(slash)",
+        "SlashType"
+      ]
     },
     {
       "id": "s3a",
       "name": "五指山下 · 明暗裂谷",
       "frames": "150-175",
-      "subject": "整块黑山压下；山体下缘一线赭金受光；四色套版跪撑大圣在 X=40%；六道铁索",
-      "primitives": ["MountainCleft", "IronChain", "ClimaxAsset(trapped)"]
+      "subject": "满屏 2K 五指山巨岩：左右/顶部 75% 墨黑赭石，狭窄暖金裂谷；六道大倾角 X 铁索；四色套版跪撑大圣",
+      "primitives": [
+        "MountainCleft",
+        "IronChain",
+        "ClimaxAsset(trapped)",
+        "five_finger_mountain_woodblock"
+      ]
     },
     {
       "id": "s3b",
       "name": "偿自由的罪 · 复合符咒",
       "frames": "175-225",
-      "subject": "六张五层复合符咒弹簧钉入两侧山体：【五指山下】【偿】【自】【由】【的】【罪】",
-      "primitives": ["ComplexOfudaTalisman", "MountainCleft"]
+      "subject": "六张五层复合符咒沿铁索交叉点钉入【五指山下】【偿】【自】【由】【的】【罪】",
+      "primitives": [
+        "ComplexOfudaTalisman",
+        "MountainCleft"
+      ]
     },
     {
       "id": "s4a",
       "name": "罪名是老孙 · 纯黑悬签",
       "frames": "225-256",
       "subject": "#050404 纯黑深渊；三道铁索 + 远中近三层白签；聚光灯依次亮出【罪名】【是】【老孙】",
-      "primitives": ["SuspendedTags", "IronChain"]
+      "primitives": [
+        "SuspendedTags",
+        "IronChain"
+      ]
     },
     {
       "id": "s4b",
       "name": "不敬权威 · 红黑版画四连跳切",
       "frames": "256-291",
-      "subject": "2048² 生图怒颜木刻；白底墨版 / 朱砂红底反白墨线交替四次跳切；四枚裂纹朱印【不】【敬】【权】【威】；290 白闪",
-      "primitives": ["WoodblockJumpCuts", "ClimaxAsset(face)"]
+      "subject": "2048² 木刻怒颜（取景下移，双眼与紧箍完整）；白底墨版 / 朱砂红底反白交替；四角 270×270 实心墨黑/朱砂重印【不】【敬】【权】【威】+ 8px 鎏金外框 + 刀劈裂纹；落地各反色 2 帧",
+      "primitives": [
+        "WoodblockJumpCuts",
+        "HeavySeal",
+        "ClimaxAsset(face)"
+      ]
     },
     {
       "id": "s5",
@@ -91,95 +135,214 @@
       "id": "eyes_closeup_woodblock",
       "type": "png",
       "file": "public/wukong_assets/eyes_closeup_woodblock.png",
-      "size": [2200, 356],
+      "size": [
+        2200,
+        356
+      ],
       "source": "生图网关 v6_eyes_raw.png（1376×768 JPEG）",
       "prompt": "Ukiyo-e woodblock print, extreme close-up of Sun Wukong's furious golden eyes, ultra-wide horizontal eye-band composition, sharp black ink brush lines, crimson and gold leaf accents, engraved fur and ornate golden headband, high contrast, flat graphic illustration, aged washi paper texture, no text, no watermark, no border, wide 16:9 banner.",
       "pipeline": "按 6.18:1 取双眼带 → LANCZOS 2200×356 → unsharp + 反差 1.12 + 纸纹",
-      "usedBy": ["s2a"]
+      "usedBy": [
+        "s2a"
+      ]
     },
     {
       "id": "face_glare_woodblock",
       "type": "png",
       "file": "public/wukong_assets/face_glare_woodblock.png",
-      "size": [2048, 2048],
+      "size": [
+        2048,
+        2048
+      ],
       "source": "生图网关 v6_face_raw.png（1024×1024）",
       "prompt": "Square 1:1 ukiyo-e woodblock print, extreme close-up of Sun Wukong snarling in rage, bared fangs, fiery golden eyes, ornate golden headband, stark black ink shadows, crimson and aged washi background, masterwork printmaking, centered face fills the frame, no text.",
       "pipeline": "中心方形裁切 → LANCZOS 2048×2048 → unsharp + 反差 1.08 + 纸纹 + 暗角",
-      "usedBy": ["s4b"]
+      "usedBy": [
+        "s4b"
+      ],
+      "note": "V6 的 2048² 面部本身两只金眼完整；4B 在 V7 只改取景（1.0× + 下移 188px），9.2s 双眼/紧箍/獠牙同时入画。网关 429，未重新生图。"
     },
     {
       "id": "gate_woodblock",
       "type": "png",
       "file": "public/wukong_assets/gate_woodblock.png",
-      "size": [1400, 2087],
+      "size": [
+        1400,
+        2087
+      ],
       "source": "生图网关 v6_gate_raw.png（848×1264）",
       "prompt": "Vertical portrait ukiyo-e woodblock print of the Southern Heavenly Gate of the celestial court: a towering gate tower with two coiled dragons wrapping its black pillars, triple layered upturned eaves, vermilion beams, gold leaf ornaments, swirling auspicious clouds, tiny celestial guards, monumental and intricate, no text, no watermark, no border.",
       "pipeline": "LANCZOS 2K → vtracer 多层 SVG → resvg 栅格 → 纸纹 + 暗角",
-      "usedBy": ["s1a-p1"]
+      "usedBy": [
+        "s1a-p1"
+      ]
     },
     {
       "id": "palace_woodblock",
       "type": "png",
       "file": "public/wukong_assets/palace_woodblock.png",
-      "size": [1400, 2100],
+      "size": [
+        1400,
+        2100
+      ],
       "source": "生图网关 v6_palace_raw.png（848×1264）",
       "prompt": "Vertical portrait ukiyo-e woodblock print of Lingxiao Palace: vast multi-tiered palace roofs with sweeping upturned eaves, carved dragon columns receding in perspective, a huge pale-gold moon behind the highest roof, sea of auspicious clouds, no text, no border.",
       "pipeline": "去印刷框 → LANCZOS 2K → vtracer SVG → resvg 栅格 → 纸纹 + 暗角",
-      "usedBy": ["s1a-p2"]
+      "usedBy": [
+        "s1a-p2"
+      ]
     },
     {
       "id": "army_silhouette",
       "type": "png(alpha)",
       "file": "public/wukong_assets/army_silhouette.png",
-      "size": [2390, 1102],
+      "size": [
+        2390,
+        1102
+      ],
       "source": "生图网关 v6_army_raw.png（1376×768）",
       "prompt": "Horizontal 16:9 ukiyo-e woodblock print, one hundred thousand celestial soldiers massing in dense ranks: silhouetted helmets, spears, tall war banners and armored war horses, ink-black silhouettes with cinnabar banners and gold accents, isolated on a pure flat white background, stark black brush linework, epic scale, no text.",
       "pipeline": "裁黑框 → LANCZOS 2400 → vtracer SVG → resvg → 亮度/饱和度联合软抠 + 米白背景去污染 → 墨/朱砂/金套色",
-      "usedBy": ["s1a-p3", "s1b"]
+      "usedBy": [
+        "s1a-p3",
+        "s1b"
+      ]
     },
     {
       "id": "woodblock_spin",
       "type": "png(alpha)",
       "file": "public/wukong_assets/woodblock_spin.png",
-      "size": [1240, 1800],
+      "size": [
+        1240,
+        1800
+      ],
       "source": "生图网关 hero_spin_raw.png（896×1200，纯白底立绘）",
       "prompt": "Ukiyo-e woodblock full-body Sun Wukong spinning the golden cudgel, scale armor, crimson cape, pheasant feathers, isolated on pure white, no text.",
       "pipeline": "rembg u2net → 白边剥离（外轮廓填洞 + erode 3px）→ 硬边 alpha → HSV 四色套版 #120D14/#C8281E/#F5C242/#EAE0CE",
-      "usedBy": ["s1b"]
+      "usedBy": [
+        "s1b"
+      ]
     },
     {
       "id": "woodblock_slash",
       "type": "png(alpha)",
       "file": "public/wukong_assets/woodblock_slash.png",
-      "size": [1876, 2048],
+      "size": [
+        1876,
+        2048
+      ],
       "source": "生图网关 hero_slash_clean_raw.png（896×1200，重新生成，明确排除速度线）",
       "prompt": "ukiyo-e woodblock print, full body Sun Wukong in a low horizontal lunge, wielding a long golden cudgel, ornate golden scale armor, flowing crimson cape, long pheasant feathers, isolated single character centered on a pure flat white background, clean sharp black contour line, NO speed lines, NO motion streaks, NO wind swirls, NO halo, NO background elements, NO text, portrait 3:4.",
       "pipeline": "裁 30px 纸边 → rembg → 白边剥离 + erode → HSV 四色套版",
-      "usedBy": ["s2b"]
+      "usedBy": [
+        "s2b"
+      ]
     },
     {
       "id": "woodblock_trapped",
       "type": "png(alpha)",
       "file": "public/wukong_assets/woodblock_trapped.png",
-      "size": [1239, 1800],
+      "size": [
+        1239,
+        1800
+      ],
       "source": "生图网关 hero_trapped_raw.png（896×1200）",
       "pipeline": "rembg → 白边剥离 + erode → HSV 四色套版",
-      "usedBy": ["s3a", "s3b"]
+      "usedBy": [
+        "s3a",
+        "s3b"
+      ]
     },
     {
       "id": "woodblock_raise",
       "type": "png(alpha)",
       "file": "public/wukong_assets/woodblock_raise.png",
-      "size": [1463, 1800],
+      "size": [
+        1463,
+        1800
+      ],
       "source": "生图网关 hero_raise_raw.png（896×1200）",
       "pipeline": "rembg → 白边剥离 + erode → HSV 四色套版",
-      "usedBy": ["s1a-p4"]
+      "usedBy": [
+        "s1a-p4"
+      ]
+    },
+    {
+      "id": "woodblock_charge",
+      "type": "png(alpha)",
+      "file": "public/wukong_assets/woodblock_charge.png",
+      "size": [
+        1355,
+        1800
+      ],
+      "source": "生图网关 v7_charge_raw.png（896×1200）",
+      "prompt": "Portrait 3:4 ukiyo-e woodblock print, full body Sun Wukong in a low crouched stance, BOTH fists held together in front of his chest gathering power, NO weapon, NO staff, NO cudgel, ornate golden scale armor, flowing crimson cape, long pheasant feathers, isolated on pure flat white, clean sharp black contour, no speed lines, no text.",
+      "pipeline": "rembg → 白边剥离 + erode → 四色套版；下半身宣纸色压成暖灰，避免与 1B 米白纸底同色消失",
+      "usedBy": [
+        "s1b"
+      ]
+    },
+    {
+      "id": "halberds_woodblock",
+      "type": "png",
+      "file": "public/wukong_assets/halberds_woodblock.png",
+      "size": [
+        1400,
+        2110
+      ],
+      "source": "生图网关 v7_halberds_raw.png（848×1264）",
+      "prompt": "Vertical portrait 2:3 ukiyo-e woodblock print, dense forest of silver-white halberds and long spears crossing, countless crimson war banners, cold steel glints, ink-black shadows, gold accents, aged washi, no people, full-bleed.",
+      "pipeline": "裁纸边 → LANCZOS 2K → vtracer SVG → resvg 栅格 → 纸纹 + 暗角",
+      "usedBy": [
+        "s1a-p3"
+      ]
+    },
+    {
+      "id": "five_finger_mountain_woodblock",
+      "type": "png",
+      "file": "public/wukong_assets/five_finger_mountain_woodblock.png",
+      "size": [
+        2048,
+        1130
+      ],
+      "source": "生图网关 v7_mountain_wide_raw.png（1376×768，配额恢复后生成）",
+      "prompt": "Horizontal 16:9 ukiyo-e woodblock print, The Five Finger Mountain: colossal jagged ink-black and ochre cliffs filling the top 75 percent and both sides, carved golden Sanskrit sutras, a narrow warm golden light rift in the lower center, swirling dark ink clouds, no figures, full-bleed.",
+      "pipeline": "裁纸边 → LANCZOS 2K → vtracer SVG → resvg 栅格 → 纸纹 + 暗角",
+      "usedBy": [
+        "s3a",
+        "s3b"
+      ],
+      "note": "生图网关配额恢复后成功出图；build_mountain_fallback.py 仅作为断网/429 时的备用。"
+    },
+    {
+      "id": "woodblock_panel4",
+      "type": "png(alpha)",
+      "file": "public/wukong_assets/woodblock_panel4.png",
+      "size": [
+        1355,
+        1800
+      ],
+      "source": "生图网关 v7_panel4_raw.png（896×1200，配额恢复后生成）",
+      "prompt": "Portrait 3:4 ukiyo-e woodblock print, full body Sun Wukong leaping high in mid-air, one hand raising the golden cudgel high above his head about to smash down toward the viewer, extreme dynamic foreshortened pose, billowing crimson cape, long pheasant feathers, golden scale armor, isolated on pure flat white, clean sharp black contour, no speed lines, no text.",
+      "pipeline": "rembg → 白边剥离 + erode → 四色套版",
+      "usedBy": [
+        "s1a-p4"
+      ]
     }
   ],
   "timelineFixes": {
     "s2a": "eyeBand.open 从 79 帧提前到 76 帧；横条在 75–98 帧内一定出现，成片回抽 2.8 s 验证。",
     "s2b": "V5 的 SlashType 父容器只有绝对定位子节点，height=0；clip-path: inset(0 0 51% 0) 把两层字全裁掉，只剩 bottom:-18 的金线。V6 改为显式 height + 两半互补 polygon，并将文字画在所有叠加层之后（zIndex 60）。",
-    "s1b": "十万天兵合围从 30px 左上角小字改为右侧 74px 竖排；虚线椭圆删除，替换为 8 层 Trail + blur。"
+    "s1b": "V7：charge 双手结印立绘 + CudgelWheel（520px 赤金/朱砂刀光环）；天兵压底 + 云海 + 题笺；不再使用 Trail。",
+    "v7": {
+      "s1b": "删除 8 层 Trail 与静态棍立绘，改为双手结印 + 单根旋转刀光轮；天兵压底 + 云海遮交界；题笺保证黑字可读。",
+      "s1a": "第3格 halberds 木刻；第4格 panel4 生图（配额恢复后生成）腾空劈棒。",
+      "s2a": "eyeWords 改为 75/82/89；背景改暗金放射场 + 牌匾。",
+      "s2b": "3D 朱砂/汉白玉柱 + 金环 + 紫红天幕 + 强运镜；角色 1.15→1.45 + 风场位移。",
+      "s3a": "五指山使用生图网关 2K 满屏资产（v7_mountain_wide_raw）；六道 X 铁索在角色之后；删除灰色小字幕。",
+      "s4b": "SCALES 改 1.0/1.02/1.04/1.0 + FACE_SHIFT 84/120/156/188，双眼完整；四角 HeavySeal 实心重印；第四枚 seal-3 提前到 273 帧（9.2s 四角完整），280 帧仍触发反色/震屏。",
+      "global": "SenbonStageFrame 贯穿 0–290 帧。"
+    }
   },
   "audio": {
     "playback": "public/audio/climax_real_vocal.wav",
@@ -197,6 +360,8 @@
     "three": "0.186.1",
     "python": "3.13 / rembg 2.0.86 / vtracer 0.6.15 / opencv-python 5.0.0",
     "resvg": "@resvg/resvg-js 2.6.2"
-  }
+  },
+  "globalLayers": [
+    "SenbonStageFrame（12px 乌木描金画框 + 四角回纹 + 80 颗金火/残旗粒子）"
+  ]
 }
-

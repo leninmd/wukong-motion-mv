@@ -2,6 +2,7 @@ import React from 'react';
 import {AbsoluteFill, Img, staticFile} from 'remotion';
 import {CLIMAX_ASSETS} from './ClimaxAsset';
 import {InkSpecks, PaperField, WASHI} from './PaperStage';
+import {HeavySeal} from './HeavySeal';
 import {SERIF_STACK, SENBON, clamp01, easeOutCubic, f, overshoot} from './style';
 
 /**
@@ -34,7 +35,8 @@ export interface WoodblockJumpCutsProps {
 }
 
 const WORD_FOR_CUT = ['不', '敬', '权', '威'];
-const SCALES = [1.02, 1.16, 1.32, 1.5];
+const SCALES = [1.0, 1.02, 1.04, 1.0];
+const FACE_SHIFT = [84, 120, 156, 188];
 
 export const WoodblockJumpCuts: React.FC<WoodblockJumpCutsProps> = ({time, cuts, seals, whiteFlash, pulse = 0, high = 0}) => {
   let index = -1;
@@ -81,7 +83,7 @@ export const WoodblockJumpCuts: React.FC<WoodblockJumpCutsProps> = ({time, cuts,
             marginLeft: -1024 * scale,
             marginTop: -1024 * scale,
             objectFit: 'cover',
-            transform: `translate(${(index % 2 === 0 ? -1 : 1) * (1 - slam) * 26}px, ${(index % 3 === 0 ? 1 : -1) * (1 - slam) * 18}px) rotate(${index % 2 === 0 ? -2 : 2}deg)`,
+            transform: `translate(${(index % 2 === 0 ? -1 : 1) * (1 - slam) * 26}px, ${(index % 3 === 0 ? 1 : -1) * (1 - slam) * 18 + FACE_SHIFT[index]}px) rotate(${index % 2 === 0 ? -2 : 2}deg)`,
             filter: inverted
               ? 'grayscale(1) invert(1) contrast(1.45) brightness(1.08)'
               : `contrast(1.08) saturate(1.05) brightness(${1 + pulse * 0.05})`,
@@ -171,10 +173,10 @@ export const WoodblockJumpCuts: React.FC<WoodblockJumpCutsProps> = ({time, cuts,
         {WORD_FOR_CUT[index] ?? '威'}
       </div>
 
-      {/* 四角朱砂巨印：每切一次落一枚 */}
+      {/* 四角实心破壁巨印：每切一次落一枚 */}
       {seals.map((seal, sealIndex) => {
         const sealAge = time - seal.landAt;
-        if (sealAge < 0 || sealIndex > index) return null;
+        if (sealAge < 0) return null;
         const drop = overshoot(clamp01(sealAge / 0.14), 9, 8);
         const factor = 2.1 - drop * 1.1;
         return (
@@ -182,32 +184,17 @@ export const WoodblockJumpCuts: React.FC<WoodblockJumpCutsProps> = ({time, cuts,
             key={seal.id}
             style={{
               position: 'absolute',
-              left: seal.x - (seal.size * factor) / 2,
-              top: seal.y - (seal.size * factor) / 2,
-              width: seal.size * factor,
-              height: seal.size * factor,
-              transform: `rotate(${seal.rotate}deg)`,
-              opacity: clamp01(sealAge / 0.04) * 0.96,
+              left: seal.x - seal.size / 2,
+              top: seal.y - seal.size / 2,
+              width: seal.size,
+              height: seal.size,
+              transform: `rotate(${seal.rotate}deg) scale(${f(factor)})`,
+              transformOrigin: '50% 50%',
+              opacity: clamp01(sealAge / 0.04) * 0.97,
               zIndex: 6,
             }}
           >
-            <svg viewBox="0 0 200 200" width="100%" height="100%">
-              <rect x="8" y="8" width="184" height="184" fill="none" stroke="#D93025" strokeWidth="10" />
-              <rect x="22" y="22" width="156" height="156" fill="none" stroke="#D93025" strokeWidth="3" />
-              <text
-                x="100"
-                y="100"
-                textAnchor="middle"
-                dominantBaseline="central"
-                fontFamily={SERIF_STACK}
-                fontSize="128"
-                fontWeight="900"
-                fill="#D93025"
-                opacity="0.94"
-              >
-                {seal.text}
-              </text>
-            </svg>
+            <HeavySeal text={seal.text} size={seal.size} tone={sealIndex % 2 === 0 ? 'ink' : 'cinnabar'} />
           </div>
         );
       })}

@@ -868,3 +868,140 @@ t=4.0 s 的大字确实丢失；V6 仍把 open 提前并把横条换成 2K 生�
   `senbonPlan.ts`、`package.json`、`assets.manifest.json`、`AGENTS.md`（§14）、
   `docs/AGENT_TOOLING.md`（§11）、`README.md`。
 
+---
+
+## 17. V7：单武器光轮、满屏五指山与四角重印（2026-10-23）
+
+### 17.1 动机
+
+V6 成片复审确认 00:01–00:09.5 有六处穿帮：
+
+1. 1B 静态立绘自带一根斜棍，上面又叠了 8 层 Trail 黄棍 → 双棍；天兵悬空成黑条；
+   【十万天兵合围】黑字撞黑兵。
+2. 1A 第 3 格下半死黑、第 4 格正面举棒像举重。
+3. 2A 横条上下空白，右侧三字无气势。
+4. 2B 3D 背景纯黑、柱子暗棕，左下纸片人罚站。
+5. 3A 山顶像薄窗帘，大圣举着一根晾衣绳。
+6. 4B 怒颜只剩鼻梁和牙，四角空心红框看不清。
+
+### 17.2 做法
+
+**1B**
+
+- 生图重生成 `v7_charge_raw.png`：双手胸前结印、无棍；rembg + 四色套版成
+  `woodblock_charge.png`；下半身宣纸色压成暖灰，避免与纸底同色消失。
+- 删除 `<Trail>` 与 8 层冻结黄棍；新 `CudgelWheel`（放在角色之后，圆环从身体两侧露出，避免棍身穿脸）：
+  - 圆心 `(672, 652)` 严格对齐双手；
+  - 520px 同心赤金/朱砂刀光轮（conic 辐条 + 径向 mask）+ 单根中心掏空旋转棍；
+  - 30 颗火星 + 8 支弹飞断箭。
+- 天兵层放大到 1280×760，顶边 398、底边越过画面；前置三层带墨线的
+  `InkCloudBand`，后置 `palace` 顶部作远景天际线。
+- 黑字改成 `VerticalCartouche`：220×704，深墨底 + 双层鎏金框 + 朱砂云头 +
+  四角金云纹 + 74px 竖排鎏金书法 + 底部朱印。
+- **堆叠 bug**：带 `opacity` 的云海 SVG 覆盖了带 `transform` 的角色 div；显式
+  `zIndex`（云 1 / 角色 5 / 光轮 6 / 题笺 10）后修复。
+
+**1A**
+
+- 生图 `v7_halberds_raw.png` → vtracer + resvg → `halberds_woodblock.png`
+  （1400×2110），替换第 3 格天兵反相。
+- 生图 `v7_panel4_raw.png`（配额恢复后）→ `woodblock_panel4.png`
+  （1355×1800），腾空单手劈棒，替换正面举棒。
+
+**2A**
+
+- 背景从空白宣纸改为暗金/墨黑放射速度线 + 飞溅墨点。
+- 横条上下各 14px 鎏金刀锋发光带。
+- 【怎】【敌】【我】改为黑底金边斜切牌匾，重拍改为 75 / 82 / 89 帧。
+
+**2B**
+
+- 柱色改 `#8E1A13` / `#C9BBA2`（不再纯白），金环 `emissiveIntensity 1.6`；
+  ambient 0.35 / key 1.2 / spot 140；保留 Bloom 2.0。
+- 紫红渐变天幕（ShaderMaterial `#1E0E24 → #6E2218`）、暗金阵纹、汉白玉台阶。
+- 相机 31→13.5 半径、17.2→8.8 高、FOV 52→72、roll −8°→+6°。
+- 左下角色随刀光 1.15→1.45 放大 + 风场位移 + `feDisplacementMap` 披风扭曲 +
+  10 条红/金/青风带 + 弦波翎羽 + `echo` 三层错位残影。
+
+**3A/3B**
+
+- 生图网关先 429；用 `scripts/build_mountain_fallback.py` 离线兜底验证构图。
+- 配额恢复后生成 `v7_mountain_wide_raw.png` → vtracer/resvg →
+  `five_finger_mountain_woodblock.png`（2048×1130），满屏巨岩 + 金色梵文 +
+  狭窄暖金裂谷。
+- 六道铁索改成大倾角 X 网，**画在角色之前**；删除晾衣绳效果与左下灰色字幕。
+
+**4B**
+
+- 复核发现 V6 的 2048² 脸本身两只金眼完整，问题是 4B 的 1.5× 裁切。V7 改
+  `SCALES [1.0,1.02,1.04,1.0] + FACE_SHIFT [84,120,156,188]`，9.2s 双眼/紧箍/獠牙
+  同时入画（未重新生图）。
+- 第四枚印提前到 273 帧（9.2s 四角完整），280 帧的冲击/反色仍保留。四角空心框改 `HeavySeal`：270×270 实心墨/朱砂底 + 8px 鎏金外框 + 160px
+  白/金大字 + 刀劈裂纹；每枚落地 `invertAt` 反色 2 帧，`IMPACTS` 已有震屏。
+
+**全片**
+
+- `SenbonStageFrame`：12px 乌木描金画框 + 四角回纹 + 80 颗确定性金火/残旗粒子，
+  0–290 帧常驻；最后 9 帧黑场不挂。
+
+### 17.3 结果（证据）
+
+- `out/v7_check_f022b.png`：1A 四格统一，3 格银戈林、4 格腾空劈棒。
+- `out/v7_check_f050c.png`：1B 单棍、520px 光轮、天兵落地、题笺满格可读。
+- `out/v7_check_f085.png`：2A 暗金放射场 + 金刀锋横条 + 两块牌匾。
+- `out/v7_check_f120b.png`：2B 紫红天幕、朱砂/汉白玉柱、金环、发光阵纹、角色放大。
+- `out/v7_check_f160b.png`：3A 满屏五指山，角色在暖金裂谷。
+- `out/v7_check_f195.png`：3B 三张符咒 + 六道 X 铁索。
+- `out/v7_check_f270.png`：4B 双眼完整 + 实心【不】【敬】巨印。
+- 成片 `out/senbon_v7_mvp.mp4` 与回抽 `out/v7_mp4_*.png`、接触表
+  `out/senbon_v7_contact_sheet.png`。
+
+### 17.4 代价
+
+- 生图：charge 70 s、halberds 60 s；panel4 / mountain / face 首次连续 429，
+  等待约 35–40 min 后 panel4 与 mountain 成功（各 70 s / 61 s）。face 未重生。
+- 离线兜底脚本 1 个（两版迭代），在 429 期间先保证镜头可看。
+- 资产全量重烘 2 次（145 s / 167 s）；still 约 16 张；每张 15–30 s（3D 帧更慢）。
+- 成片 300 帧 @ concurrency=2，约 5 min。
+
+### 17.5 结论（保留 / 回滚 / 未解决）
+
+**保留**
+
+- 1B 单武器 + 题笺 + 落地天兵；双棍/黑字/悬空三处穿帮消失。
+- 2A 暗金放射场与牌匾；2B 金红天幕 + 角色活化；3A 满屏生图五指山；4B 双眼
+  + 实心重印；全片画框。
+- 4B 的问题先查裁切而不是怪素材：`SCALES/FACE_SHIFT` 是可复用的经验。
+
+**回滚 / 推翻**
+
+- 推翻 V6 §16“1B 的 8 层 Trail 是真实残影”：V7 删除 Trail，改为单根光轮。
+- 推翻 V6 §16“角色是 #120D14 木刻”中“白裤子也可保留宣纸色”的隐含假设：
+  1B 的纸底会把白裤子吃掉，必须压暖灰或加墨底。
+- 推翻 V6 §16“4B 需要重新生图”：实际是 1.5× 裁切问题，先量后裁。
+
+**未解决（诚实记录）**
+
+1. 1B 光轮在 1.8s 仍更像“金色光环”而不是清晰的旋转棍；圆心/半径与角色比例
+   还可以再调。
+2. 2B 近景柱体仍是低模组合几何，虽然有朱砂/汉白玉/金环，仍不是《千本樱》的
+   高模雕花。
+3. 1B 的天兵层仍是 2D 地平线军队带，不是真 3D 阵列。
+4. 4B 脸没有重新生图；双眼完整是靠取景，眼睛位置仍略高（约 30–38%），未到
+   用户要求的 40–55% 正中心。
+5. 无 GPU 的 SwiftShader 下 Bloom 仍会压掉部分金环细节。
+
+### 17.6 影响文件
+
+- 新增：`SenbonStageFrame.tsx`、`VerticalCartouche.tsx`、`HeavySeal.tsx`、
+  `scripts/build_mountain_fallback.py`、`out/gen/v7_*`（忽略）、
+  `public/wukong_assets/{woodblock_charge,woodblock_panel4,halberds_woodblock,
+  five_finger_mountain_woodblock}.png`。
+- 修改：`MoonSpinShot.tsx`、`FourPaperPanels.tsx`、`EyeWoodblockShot.tsx`、
+  `MountainCleft.tsx`、`WoodblockJumpCuts.tsx`、`CelestialThrone3D.tsx`、
+  `WukongClimaxSegment.tsx`、`senbonPlan.ts`、`ClimaxAsset.tsx`、
+  `build_wukong_assets.py`、`package.json`、`assets.manifest.json`、
+  `AGENTS.md`（§15）、`docs/AGENT_TOOLING.md`（§12）、`README.md`、
+  `public/wukong_assets/README.md`。
+
+

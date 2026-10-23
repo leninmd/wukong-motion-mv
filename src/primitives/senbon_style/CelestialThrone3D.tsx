@@ -60,7 +60,7 @@ interface ChunkSpec {
 const SIDE = 6;
 const GAP = 5.6;
 const GRAVITY = -26;
-const COLUMN_TONES = ['#262630', '#1E1E26', '#2E2C36'];
+const COLUMN_TONES = ['#8E1A13', '#C9BBA2'];
 
 const buildColumns = (): ColumnSpec[] => {
   const list: ColumnSpec[] = [];
@@ -109,19 +109,19 @@ const cameraAt = (time: number, start: number, cutAt: number, end: number) => {
   const duration = Math.max(0.001, end - start);
   const local = clamp((time - start) / duration);
   const age = Math.max(0, time - cutAt);
-  const angle = -1.22 + local * 1.66;
-  const radius = 30.5 - local * 12.5;
-  const height = 16.2 - local * 6.0;
+  const angle = -1.18 + local * 1.95;
+  const radius = 31 - local * 17.5;
+  const height = 17.2 - local * 8.4;
   const shake = age > 0 ? Math.exp(-age * 4.6) * 0.5 : 0;
   return {
     x: Math.cos(angle) * radius + Math.sin(time * 31) * shake * 0.5,
     y: height + Math.sin(time * 24) * shake * 0.32,
     z: Math.sin(angle) * radius + Math.cos(time * 27) * shake * 0.5,
     tx: 0,
-    ty: 8.6 - local * 0.4,
+    ty: 8.5 - local * 0.6,
     tz: 0,
-    fov: 54 + local * 8,
-    roll: -0.12 + local * 0.24 + (age > 0 ? Math.exp(-age * 5.4) * 0.07 : 0),
+    fov: 52 + local * 20,
+    roll: -0.14 + local * 0.245 + (age > 0 ? Math.exp(-age * 5.4) * 0.07 : 0),
   };
 };
 
@@ -148,12 +148,12 @@ const ColumnBase: React.FC<{radius: number; offsetY: number}> = ({radius, offset
   <group position={[0, offsetY, 0]}>
     <mesh position={[0, 0.16, 0]}>
       <cylinderGeometry args={[radius * 1.75, radius * 1.9, 0.32, 8]} />
-      <meshToonMaterial color="#2A2227" />
+      <meshToonMaterial color="#3A2A20" />
       <Outlines thickness={0.03} color="#0A0808" />
     </mesh>
     <mesh position={[0, 0.42, 0]}>
       <cylinderGeometry args={[radius * 1.38, radius * 1.48, 0.26, 8]} />
-      <meshToonMaterial color="#352A2E" />
+      <meshToonMaterial color="#4A3630" />
       <Outlines thickness={0.028} color="#0A0808" />
     </mesh>
   </group>
@@ -192,21 +192,46 @@ const ColumnCapital: React.FC<{radius: number; offsetY: number}> = ({radius, off
 );
 
 const GoldBands: React.FC<{radius: number; height: number}> = ({radius, height}) => {
+  const goldMaterial = useMemo(
+    () =>
+      new THREE.MeshStandardMaterial({
+        color: new THREE.Color('#FFD54F'),
+        emissive: new THREE.Color('#FFD54F'),
+        emissiveIntensity: 1.6,
+        metalness: 0.35,
+        roughness: 0.28,
+        toneMapped: false,
+      }),
+    [],
+  );
+  const helix = useMemo(() => {
+    const points: THREE.Vector3[] = [];
+    for (let index = 0; index <= 36; index += 1) {
+      const p = index / 36;
+      const angle = p * Math.PI * 5.0;
+      points.push(
+        new THREE.Vector3(
+          Math.cos(angle) * radius * 1.025,
+          -height / 2 + height * (0.08 + p * 0.84),
+          Math.sin(angle) * radius * 1.025,
+        ),
+      );
+    }
+    return new THREE.CatmullRomCurve3(points);
+  }, [height, radius]);
+
   return (
     <group>
-      {[0.34, 0.68].map((position, index) => (
-        <mesh key={`band-${index}`} position={[0, -height / 2 + height * position, 0]} rotation={[Math.PI / 2, 0, 0]}>
-          <torusGeometry args={[radius * 1.035, 0.019, 5, 28]} />
-          <meshBasicMaterial color={index === 0 ? '#B8860B' : '#FCC934'} toneMapped={false} transparent opacity={0.82} />
+      {[0.22, 0.46, 0.7].map((position) => (
+        <mesh key={`band-${position}`} position={[0, -height / 2 + height * position, 0]} rotation={[Math.PI / 2, 0, 0]}>
+          <torusGeometry args={[radius * 1.045, 0.032, 6, 32]} />
+          <primitive object={goldMaterial} attach="material" />
         </mesh>
       ))}
-      {/* 两条鎏金盘龙脊线，只存在于两道金环之间 */}
-      {[-1, 1].map((side) => (
-        <mesh key={`spine-${side}`} position={[0, 0, side * radius * 1.015]}>
-          <boxGeometry args={[radius * 0.055, height * 0.28, radius * 0.022]} />
-          <meshBasicMaterial color="#8A5A20" toneMapped={false} transparent opacity={0.5} />
-        </mesh>
-      ))}
+      <mesh>
+        <tubeGeometry args={[helix, 72, radius * 0.055, 7, false]} />
+        <primitive object={goldMaterial} attach="material" />
+      </mesh>
     </group>
   );
 };
@@ -239,7 +264,13 @@ const ColumnChunk: React.FC<{
     >
       <mesh>
         <cylinderGeometry args={[column.radius, column.radius * 1.02, height, 8, 1]} />
-        <meshToonMaterial color={COLUMN_TONES[column.tone]} emissive={broken ? '#2A0B08' : '#140A0C'} emissiveIntensity={broken ? 0.9 : 0.35} transparent opacity={0.35 + fade * 0.65} />
+        <meshToonMaterial
+          color={COLUMN_TONES[column.index % 2] ?? '#8E1A13'}
+          emissive={column.index % 2 === 0 ? '#3A0A06' : '#2A2214'}
+          emissiveIntensity={column.index % 2 === 0 ? 0.55 : 0.3}
+          transparent
+          opacity={0.35 + fade * 0.65}
+        />
         <Outlines thickness={0.03} color="#0A0808" />
         <Edges threshold={18} scale={1.001} color="#4A3218" />
       </mesh>
@@ -444,30 +475,107 @@ const PerimeterFrame: React.FC = () => (
   </group>
 );
 
+const Backdrop: React.FC = () => {
+  const material = useMemo(
+    () =>
+      new THREE.ShaderMaterial({
+        uniforms: {
+          topColour: {value: new THREE.Color('#1E0E24')},
+          bottomColour: {value: new THREE.Color('#6E2218')},
+          glowColour: {value: new THREE.Color('#F5C242')},
+        },
+        vertexShader: 'varying vec2 vUv; void main(){ vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }',
+        fragmentShader: `
+          varying vec2 vUv;
+          uniform vec3 topColour;
+          uniform vec3 bottomColour;
+          uniform vec3 glowColour;
+          void main(){
+            float t = smoothstep(0.0, 1.0, vUv.y);
+            vec3 colour = mix(bottomColour, topColour, t);
+            float horizon = smoothstep(0.2, 0.0, abs(vUv.y - 0.3));
+            float veil = smoothstep(0.55, 1.0, vUv.y) * 0.18;
+            colour += glowColour * horizon * 0.32 + vec3(veil * 0.6, veil * 0.18, veil * 0.06);
+            gl_FragColor = vec4(colour, 1.0);
+          }
+        `,
+        depthWrite: false,
+        side: THREE.DoubleSide,
+      }),
+    [],
+  );
+  return (
+    <mesh position={[0, 14, -48]}>
+      <planeGeometry args={[180, 96]} />
+      <primitive object={material} attach="material" />
+    </mesh>
+  );
+};
+
+/** 汉白玉台阶：五级，中央通向御座。 */
+const MarbleStair: React.FC = () => (
+  <group position={[0, 0, -8]}>
+    {Array.from({length: 6}, (_, index) => (
+      <group key={`step-${index}`}>
+        <mesh position={[0, 0.15 + index * 0.26, -index * 0.72]}>
+          <boxGeometry args={[12.4 - index * 0.7, 0.26, 1.12]} />
+          <meshToonMaterial color="#C9BBA2" emissive="#3A2E1A" emissiveIntensity={0.14} />
+          <Outlines thickness={0.03} color="#0A0808" />
+        </mesh>
+        <mesh position={[0, 0.29 + index * 0.26, -index * 0.72 - 0.57]}>
+          <boxGeometry args={[12.2 - index * 0.7, 0.035, 0.07]} />
+          <meshBasicMaterial color="#F5C242" toneMapped={false} />
+        </mesh>
+      </group>
+    ))}
+    <mesh position={[0, 1.9, -5.6]}>
+      <boxGeometry args={[9.6, 2.5, 0.8]} />
+      <meshToonMaterial color="#2A1218" emissive="#3A120C" emissiveIntensity={0.5} />
+      <Outlines thickness={0.04} color="#0A0808" />
+    </mesh>
+  </group>
+);
+
 const Floor: React.FC = () => (
   <group>
     <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.03, 0]}>
-      <circleGeometry args={[36, 72]} />
-      <meshStandardMaterial color="#150C10" roughness={0.86} metalness={0.08} />
+      <circleGeometry args={[38, 72]} />
+      <meshStandardMaterial color="#1A0E16" roughness={0.78} metalness={0.12} />
     </mesh>
+    {/* 发光暗金阵法网格 */}
+    {Array.from({length: 15}, (_, index) => {
+      const p = (index - 7) * 2.6;
+      return (
+        <group key={`grid-${p}`}>
+          <mesh position={[p, 0.006, 0]}>
+            <boxGeometry args={[0.028, 0.01, 32]} />
+            <meshBasicMaterial color="#C89A32" toneMapped={false} transparent opacity={0.44} />
+          </mesh>
+          <mesh position={[0, 0.006, p]}>
+            <boxGeometry args={[32, 0.01, 0.028]} />
+            <meshBasicMaterial color="#C89A32" toneMapped={false} transparent opacity={0.44} />
+          </mesh>
+        </group>
+      );
+    })}
     {[7, 13.5, 20, 26.5].map((radius) => (
-      <mesh key={`ring-${radius}`} rotation={[Math.PI / 2, 0, 0]} position={[0, 0.01, 0]}>
-        <torusGeometry args={[radius, 0.014, 4, 96]} />
-        <meshBasicMaterial color="#8A5A20" toneMapped={false} transparent opacity={0.55} />
+      <mesh key={`ring-${radius}`} rotation={[Math.PI / 2, 0, 0]} position={[0, 0.018, 0]}>
+        <torusGeometry args={[radius, 0.018, 4, 96]} />
+        <meshBasicMaterial color="#F5C242" toneMapped={false} transparent opacity={0.62} />
       </mesh>
     ))}
     {Array.from({length: 16}, (_, index) => {
       const angle = (index / 16) * Math.PI * 2;
       return (
-        <mesh key={`spoke-${index}`} position={[Math.cos(angle) * 16, 0.005, Math.sin(angle) * 16]} rotation={[0, -angle, 0]}>
-          <boxGeometry args={[16, 0.008, 0.03]} />
-          <meshBasicMaterial color="#6A4218" toneMapped={false} transparent opacity={0.32} />
+        <mesh key={`spoke-${index}`} position={[Math.cos(angle) * 16, 0.012, Math.sin(angle) * 16]} rotation={[0, -angle, 0]}>
+          <boxGeometry args={[16, 0.01, 0.04]} />
+          <meshBasicMaterial color="#8A5A20" toneMapped={false} transparent opacity={0.42} />
         </mesh>
       );
     })}
-    <mesh position={[11, 15.5, -27]}>
-      <circleGeometry args={[8.2, 64]} />
-      <meshBasicMaterial color="#5E1712" toneMapped={false} transparent opacity={0.82} />
+    <mesh position={[11, 17.5, -32]}>
+      <circleGeometry args={[7.4, 64]} />
+      <meshBasicMaterial color="#8A2A16" toneMapped={false} transparent opacity={0.85} />
     </mesh>
   </group>
 );
@@ -508,18 +616,20 @@ const Scene: React.FC<{
   const age = time - cutAt;
   return (
     <>
-      <color attach="background" args={['#0B0609']} />
-      <fog attach="fog" args={['#0B0609', 20, 74]} />
-      <ambientLight intensity={0.42} color="#7C8798" />
-      <directionalLight position={[8, 14, 12]} intensity={1.15} color="#DCE6F2" />
-      <directionalLight position={[-10, 9, -12]} intensity={0.85} color="#FFB86B" />
-      <spotLight position={[0, 21, 1]} angle={0.66} penumbra={0.86} intensity={150} distance={42} decay={2} color="#FFE0B0" />
-      <pointLight position={[0, 7.5, 3]} intensity={16} distance={26} decay={2} color="#D9A15C" />
-      <pointLight position={[0, 3.4, -9]} intensity={24} distance={17} decay={2} color="#C8281E" />
-      <pointLight position={[0, 4.5, 0]} intensity={8 + pulse * 6} distance={22} decay={2} color="#8E1A13" />
+      <color attach="background" args={['#1E0E24']} />
+      <fog attach="fog" args={['#2A1018', 22, 90]} />
+      <Backdrop />
+      <ambientLight intensity={0.35} color="#E8C9A0" />
+      <directionalLight position={[8, 16, 12]} intensity={1.2} color="#FFE0B0" />
+      <directionalLight position={[-12, 10, -14]} intensity={0.55} color="#C8281E" />
+      <spotLight position={[0, 22, 2]} angle={0.7} penumbra={0.82} intensity={140} distance={48} decay={2} color="#FFE0B0" />
+      <pointLight position={[0, 8, 4]} intensity={20} distance={30} decay={2} color="#FFB86B" />
+      <pointLight position={[0, 4, -10]} intensity={20} distance={20} decay={2} color="#F5C242" />
+      <pointLight position={[0, 4.5, 0]} intensity={12 + pulse * 8} distance={22} decay={2} color="#8E1A13" />
 
       <CameraRig time={time} start={start} cutAt={cutAt} end={end} />
       <Floor />
+      <MarbleStair />
       <Throne />
       <PerimeterFrame />
 

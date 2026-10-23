@@ -24,14 +24,18 @@ export interface ClimaxAssetInfo {
 
 export const CLIMAX_ASSETS = {
   spin: {file: 'wukong_assets/woodblock_spin.png', width: 1240, height: 1800, kind: 'woodblock'},
+  charge: {file: 'wukong_assets/woodblock_charge.png', width: 1355, height: 1800, kind: 'woodblock'},
   slash: {file: 'wukong_assets/woodblock_slash.png', width: 1876, height: 2048, kind: 'woodblock'},
   trapped: {file: 'wukong_assets/woodblock_trapped.png', width: 1239, height: 1800, kind: 'woodblock'},
   raise: {file: 'wukong_assets/woodblock_raise.png', width: 1463, height: 1800, kind: 'woodblock'},
+  panel4: {file: 'wukong_assets/woodblock_panel4.png', width: 1355, height: 1800, kind: 'woodblock'},
   face: {file: 'wukong_assets/face_glare_woodblock.png', width: 2048, height: 2048, kind: 'print'},
   eyes: {file: 'wukong_assets/eyes_closeup_woodblock.png', width: 2200, height: 356, kind: 'print'},
   gate: {file: 'wukong_assets/gate_woodblock.png', width: 1400, height: 2087, kind: 'print'},
   palace: {file: 'wukong_assets/palace_woodblock.png', width: 1400, height: 2100, kind: 'print'},
   army: {file: 'wukong_assets/army_silhouette.png', width: 2390, height: 1102, kind: 'print'},
+  halberds: {file: 'wukong_assets/halberds_woodblock.png', width: 1400, height: 2110, kind: 'print'},
+  mountain: {file: 'wukong_assets/five_finger_mountain_woodblock.png', width: 2048, height: 1130, kind: 'print'},
 } as const satisfies Record<string, ClimaxAssetInfo>;
 
 export type ClimaxAssetKey = keyof typeof CLIMAX_ASSETS;
@@ -153,3 +157,4 @@ export const ClimaxAsset: React.FC<ClimaxAssetProps> = ({
     </div>
   );
 };
+

@@ -62,39 +62,23 @@ const PanelPlate: React.FC<{
 
 const SpearScene: React.FC = () => (
   <>
-    <div
-      style={{
-        position: 'absolute',
-        left: '50%',
-        top: 230,
-        width: 300,
-        height: 300,
-        marginLeft: -150,
-        borderRadius: '50%',
-        background: 'radial-gradient(circle, rgba(194,149,38,0.38) 0%, rgba(194,149,38,0.12) 55%, rgba(194,149,38,0) 100%)',
-      }}
-    />
     <Img
-      src={staticFile(CLIMAX_ASSETS.army.file)}
+      src={staticFile(CLIMAX_ASSETS.halberds.file)}
       style={{
         position: 'absolute',
-        left: '50%',
-        top: '54%',
-        width: 560,
-        height: 600,
-        marginLeft: -280,
-        marginTop: -300,
+        inset: 0,
+        width: '100%',
+        height: '100%',
         objectFit: 'cover',
-        objectPosition: '35% 62%',
-        filter: 'grayscale(0.92) brightness(1.24) contrast(1.08)',
-        opacity: 0.94,
+        objectPosition: '50% 46%',
+        transform: 'scale(1.03)',
       }}
     />
     <div
       style={{
         position: 'absolute',
         inset: 0,
-        background: 'linear-gradient(180deg, rgba(27,21,33,0.18) 0%, rgba(27,21,33,0) 44%, rgba(18,13,20,0.62) 100%)',
+        background: 'linear-gradient(180deg, rgba(18,13,20,0.12) 0%, rgba(18,13,20,0) 36%, rgba(18,13,20,0.58) 100%)',
       }}
     />
   </>
@@ -111,7 +95,7 @@ const HeroScene: React.FC = () => (
       </g>
       <path d="M -20 700 Q 110 640 212 690 Q 320 742 444 676 L 444 880 L -20 880 Z" fill={WASHI.ink} opacity="0.18" />
     </svg>
-    <ClimaxAsset asset="raise" height={620} x={212} baseline={866} echo={0.16} rotate={-1} rim={0} />
+    <ClimaxAsset asset="panel4" height={660} x={212} baseline={864} echo={0.2} rotate={-1} rim={0} />
   </>
 );
 

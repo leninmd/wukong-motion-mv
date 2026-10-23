@@ -9,8 +9,8 @@
     "typecheck": "tsc --noEmit",
     "render": "remotion render src/index.ts WukongPrologue out/wukong-prologue.mp4",
     "still": "remotion still src/index.ts WukongPrologue out/wukong-poster.png",
-    "still:senbon": "remotion still src/index.ts WukongClimaxSegment out/v6_check_f085.png --frame=85",
-    "render:senbon": "remotion render src/index.ts WukongClimaxSegment out/senbon_v6_mvp.mp4",
+    "still:senbon": "remotion still src/index.ts WukongClimaxSegment out/v7_check_f085.png --frame=85",
+    "render:senbon": "remotion render src/index.ts WukongClimaxSegment out/senbon_v7_mvp.mp4",
     "assets:wukong": "python scripts/build_wukong_assets.py"
   },
   "dependencies": {

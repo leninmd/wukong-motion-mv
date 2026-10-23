@@ -97,7 +97,7 @@ export const CUE = {
 
   /* Sub2A —— 眼部横切 */
   eyeBand: {start: sb(75), open: sb(76), end: sb(98)},
-  eyeWords: [sb(78), sb(86), sb(93)],
+  eyeWords: [sb(75), sb(82), sb(89)],
 
   /* Sub2B —— 3D 崩裂 + 劈字 */
   palace: {start: sb(98), end: sb(150)},
@@ -229,14 +229,14 @@ export interface ChainSlot {
   sag?: number;
 }
 
-/** 六道实体铁索，交叉锁死岩壁。 */
+/** 六道实体铁索，交叉锁死岩壁。V7 改为大倾角 X 网，且全部画在角色之后。 */
 export const CHAINS: ChainSlot[] = [
-  {id: 'c1', arriveAt: CUE.chains[0]!, x1: -40, y1: 300, x2: 1960, y2: 470, sag: 26},
-  {id: 'c2', arriveAt: CUE.chains[1]!, x1: 1960, y1: 250, x2: -40, y2: 410, sag: 30},
-  {id: 'c3', arriveAt: CUE.chains[2]!, x1: -40, y1: 690, x2: 1960, y2: 860, sag: -22},
-  {id: 'c4', arriveAt: CUE.chains[3]!, x1: 1960, y1: 720, x2: -40, y2: 900, sag: -26},
-  {id: 'c5', arriveAt: CUE.chains[4]!, x1: 120, y1: 1010, x2: 1800, y2: 640, sag: 18},
-  {id: 'c6', arriveAt: CUE.chains[5]!, x1: 1800, y1: 1010, x2: 120, y2: 640, sag: 18},
+  {id: 'c1', arriveAt: CUE.chains[0]!, x1: -60, y1: 180, x2: 1980, y2: 760, sag: 22},
+  {id: 'c2', arriveAt: CUE.chains[1]!, x1: 1980, y1: 160, x2: -60, y2: 780, sag: 26},
+  {id: 'c3', arriveAt: CUE.chains[2]!, x1: -60, y1: 520, x2: 1980, y2: 1040, sag: 18},
+  {id: 'c4', arriveAt: CUE.chains[3]!, x1: 1980, y1: 500, x2: -60, y2: 1060, sag: 20},
+  {id: 'c5', arriveAt: CUE.chains[4]!, x1: 120, y1: 1040, x2: 900, y2: 260, sag: 14},
+  {id: 'c6', arriveAt: CUE.chains[5]!, x1: 1800, y1: 1040, x2: 1020, y2: 260, sag: 14},
 ];
 
 /* -------------------------------------------------------------------------- */
@@ -298,10 +298,10 @@ export interface SealSlot {
 }
 
 export const SEALS: SealSlot[] = [
-  {id: 'seal-0', text: '不', landAt: CUE.sealLands[0]!, x: 302, y: 246, size: 348, rotate: -7},
-  {id: 'seal-1', text: '敬', landAt: CUE.sealLands[1]!, x: 1614, y: 258, size: 342, rotate: 6},
-  {id: 'seal-2', text: '权', landAt: CUE.sealLands[2]!, x: 312, y: 844, size: 336, rotate: 4},
-  {id: 'seal-3', text: '威', landAt: CUE.sealLands[3]!, x: 1602, y: 838, size: 342, rotate: -5},
+  {id: 'seal-0', text: '不', landAt: CUE.sealLands[0]!, x: 302, y: 246, size: 270, rotate: -7},
+  {id: 'seal-1', text: '敬', landAt: CUE.sealLands[1]!, x: 1614, y: 258, size: 270, rotate: 6},
+  {id: 'seal-2', text: '权', landAt: CUE.sealLands[2]!, x: 312, y: 844, size: 270, rotate: 4},
+  {id: 'seal-3', text: '威', landAt: sb(273), x: 1602, y: 838, size: 270, rotate: -5},
 ];
 
 /* -------------------------------------------------------------------------- */
@@ -378,11 +378,15 @@ export const flashAt = (seconds: number): number => {
   return Math.min(1, value);
 };
 
-/** 第 115–116 帧的全屏黑白反色（Impact Frame）。 */
+/** 第 115–116 帧的全屏黑白反色（Impact Frame）；V7 起四枚巨印落地各反色 2 帧。 */
 export const invertAt = (frame: number, fps: number): boolean => {
   const start = atFrame(CUE.invert[0], fps);
   const end = atFrame(CUE.invert[1], fps);
-  return frame >= start && frame <= end;
+  if (frame >= start && frame <= end) return true;
+  return CUE.sealLands.some((time) => {
+    const sealFrame = atFrame(time, fps);
+    return frame >= sealFrame && frame <= sealFrame + 1;
+  });
 };
 
 /* -------------------------------------------------------------------------- */

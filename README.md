@@ -296,3 +296,29 @@ V6 针对 V5 成片的五处工程偏差重做：
 工程约束见 [AGENTS.md](AGENTS.md) §14；完整资产清单与提示词见
 [`assets.manifest.json`](assets.manifest.json) 与
 [`public/wukong_assets/README.md`](public/wukong_assets/README.md)。
+
+## V7 交付（2026-10-23）
+
+V7 针对 V6 成片 00:01–00:09.5 的六处穿帮重做：
+
+| V6 缺陷 | V7 处理 |
+|---|---|
+| 1B 双金箍棒 + 黑字撞黑天兵 | 换双手结印无棍立绘；单根 `CudgelWheel`（圆心对齐双手，520px 赤金/朱砂刀光环 + 火星 + 断箭）；右侧 220×704 `VerticalCartouche` 题笺 |
+| 1B 天兵悬空黑条 | 天兵层 1280×760 压到画面底部；三层带墨线云海吃交界；远景凌霄殿天际线 |
+| 1A 第3格死黑 / 第4格举重 | 生图 `halberds_woodblock.png`（银戈林）+ `woodblock_panel4.png`（腾空劈棒） |
+| 2A 空白宣纸 / 三字散 | 暗金放射速度线 + 墨点；横条上下 14px 鎏金刀锋带；黑底金边斜切牌匾，75/82/89 帧重拍 |
+| 2B 棕黑香肠管 / 角色罚站 | 紫红天幕 + 朱砂/汉白玉柱 + 鎏金盘龙环 + 暗金阵纹 + 汉白玉台阶；Bloom/Outlines/Edges；相机强推/滚转；角色 1.15→1.45 放大 + 风场 + 三层残影 |
+| 3A 窗帘五指山 / 晾衣绳 | 生图 2K 满屏五指山（金色梵文 + 窄暖金裂谷）；六道大倾角 X 铁索画在角色之后；删除灰色小字幕 |
+| 4B 无眼怒颜 / 空心印 | 取景改 1.0× + 下移 188px，双眼/紧箍/獠牙完整；四角 270×270 实心 `HeavySeal` + 8px 金框 + 刀劈裂纹 + 落地反色 2 帧 |
+| 八镜各自为战 | 全片 `SenbonStageFrame`：12px 乌木描金框 + 四角回纹 + 80 颗金火/残旗粒子 |
+
+交付物：
+
+- 成片：`out/senbon_v7_mvp.mp4`（1920×1080 / 30 fps / 300 帧 / 10.005 s）
+- 单帧自检：`out/v7_check_f###.png`
+- 成片回抽 7 帧：`out/v7_mp4_{0.5,1.8,2.8,4.0,6.5,8.0,9.2}.png`
+- 接触表：`out/senbon_v7_contact_sheet.png`（20 个时间点）
+
+工程约束见 [AGENTS.md](AGENTS.md) §15；网关 429 / 离线兜底 / 裁切经验见
+[docs/AGENT_TOOLING.md](docs/AGENT_TOOLING.md) §12 与
+[docs/EXPLORATION_LOG.md](docs/EXPLORATION_LOG.md) §17。

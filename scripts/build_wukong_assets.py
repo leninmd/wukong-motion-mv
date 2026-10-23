@@ -60,6 +60,12 @@ CHARACTERS = [
     ("hero_raise_raw.png", "woodblock_raise.png", 1800, 6104, 0),
 ]
 
+# V7 追加：1B 结印蓄力、1A 第四格腾空劈棒。
+V7_CHARACTERS = [
+    ("v7_charge_raw.png", "woodblock_charge.png", 1800, 7101, 0),
+    ("v7_panel4_raw.png", "woodblock_panel4.png", 1800, 7102, 0),
+]
+
 
 # --------------------------------------------------------------------------- #
 #  I/O
@@ -262,6 +268,17 @@ def build_character(raw_name: str, out_name: str, target_height: int, seed: int,
     alpha = cv2.GaussianBlur(alpha, (0, 0), 0.55)
     print(f"[char] {out_name} {target_width}x{target_height} → 四色套版 …")
     rgb, alpha = posterize_character(rgb, alpha, seed)
+    if out_name == "woodblock_charge.png":
+        # 这一姿的裤子是生图的米白大色块，与 1B 的宣纸底同色会“消失”。
+        # 只把下半身的宣纸色压成暖灰，保留脸部/袖子留白。
+        paper = (
+            (np.abs(rgb[..., 0] - 234) < 12)
+            & (np.abs(rgb[..., 1] - 224) < 12)
+            & (np.abs(rgb[..., 2] - 206) < 14)
+        )
+        lower = np.zeros_like(paper)
+        lower[int(target_height * 0.4) :, :] = True
+        rgb[paper & lower] = rgb[paper & lower] * 0.35 + np.array([200, 184, 154], np.float32) * 0.65
     write_rgba(OUT / out_name, rgb, alpha)
     print(f"[char] {out_name} done in {time.time() - started:.0f}s")
     return {
@@ -300,7 +317,10 @@ def build_eyes() -> dict:
 
 
 def build_face() -> dict:
-    raw = imread_rgb(GEN / "v6_face_raw.png")
+    raw_path = GEN / "v7_face_raw.png"
+    if not raw_path.exists():
+        raw_path = GEN / "v6_face_raw.png"
+    raw = imread_rgb(raw_path)
     h, w = raw.shape[:2]
     side = min(h, w)
     y0 = (h - side) // 2
@@ -316,8 +336,49 @@ def build_face() -> dict:
         "file": "face_glare_woodblock.png",
         "width": 2048,
         "height": 2048,
-        "source": "生图网关 v6_face_raw.png（1024×1024，2K 怒颜木刻）",
+        "source": f"生图网关 {raw_path.name}（2K 怒颜木刻，双眼居中）",
         "pipeline": "中心方形裁切 → LANCZOS 2048×2048 → unsharp + 反差 1.08 + 纸纹 + 暗角",
+    }
+
+
+def build_halberds() -> dict:
+    raw = imread_rgb(GEN / "v7_halberds_raw.png")
+    h, w = raw.shape[:2]
+    raw = raw[14 : h - 14, 14 : w - 14]
+    vec = vectorize(raw, "v7_halberds", 1400, speckle=5, layer=20, length=3.5)
+    vec = np.clip(vec.astype(np.float32) * 0.99 + PAPER * 0.01, 0, 255)
+    vec = apply_grain(vec, 6401, 0.028)
+    vec = vignette(vec, 0.16)
+    write_rgb(OUT / "halberds_woodblock.png", vec)
+    h, w = vec.shape[:2]
+    return {
+        "file": "halberds_woodblock.png",
+        "width": w,
+        "height": h,
+        "source": "生图网关 v7_halberds_raw.png（漫天朱砂战旗与银白长戈）",
+        "pipeline": "裁纸边 → LANCZOS 2K → vtracer 多层 SVG → resvg 栅格 → 纸纹 + 暗角",
+    }
+
+
+def build_mountain() -> dict:
+    raw_path = GEN / "v7_mountain_wide_raw.png"
+    if not raw_path.exists():
+        raw_path = GEN / "v7_mountain_raw.png"
+    raw = imread_rgb(raw_path)
+    h, w = raw.shape[:2]
+    raw = raw[10 : h - 10, 10 : w - 10]
+    vec = vectorize(raw, "v7_mountain_wide", 2048, speckle=6, layer=22, length=4.0)
+    vec = np.clip(vec.astype(np.float32) * 0.97 + PAPER * 0.015, 0, 255)
+    vec = apply_grain(vec, 6402, 0.03)
+    vec = vignette(vec, 0.2)
+    write_rgb(OUT / "five_finger_mountain_woodblock.png", vec)
+    h, w = vec.shape[:2]
+    return {
+        "file": "five_finger_mountain_woodblock.png",
+        "width": w,
+        "height": h,
+        "source": f"生图网关 {raw_path.name}（五指山巨岩 + 金色梵文 + 暖金裂谷）",
+        "pipeline": "裁纸边 → LANCZOS 2K → vtracer SVG → resvg 栅格 → 纸纹 + 暗角",
     }
 
 
@@ -467,8 +528,8 @@ def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "--only",
-        default="characters,prints,buildings",
-        help="逗号分隔：characters / prints / buildings",
+        default="characters,prints,buildings,v7extras",
+        help="逗号分隔：characters / prints / buildings / v7extras / v7face",
     )
     args = parser.parse_args()
     picked = {item.strip() for item in args.only.split(",") if item.strip()}
@@ -476,7 +537,7 @@ def main() -> int:
     GEN.mkdir(parents=True, exist_ok=True)
 
     manifest: dict = {
-        "version": "v6",
+        "version": "v7",
         "pipeline": "image-gateway 2K → rembg / OpenCV 四色套版 → vtracer + resvg",
         "palette": {
             "ink": "#120D14",
@@ -500,6 +561,25 @@ def main() -> int:
             manifest["assets"]["gate_woodblock"] = build_gate()
             manifest["assets"]["palace_woodblock"] = build_palace()
             manifest["assets"]["army_silhouette"] = build_army()
+        if "v7extras" in picked:
+            for raw, out_name, height, seed, crop in V7_CHARACTERS:
+                if (GEN / raw).exists():
+                    info = build_character(raw, out_name, height, seed, crop)
+                    manifest["assets"][out_name.replace(".png", "")] = info
+            if (GEN / "v7_halberds_raw.png").exists():
+                manifest["assets"]["halberds_woodblock"] = build_halberds()
+            if (GEN / "v7_mountain_wide_raw.png").exists():
+                manifest["assets"]["five_finger_mountain_woodblock"] = build_mountain()
+            elif (OUT / "five_finger_mountain_woodblock.png").exists():
+                manifest["assets"]["five_finger_mountain_woodblock"] = {
+                    "file": "five_finger_mountain_woodblock.png",
+                    "width": 2048,
+                    "height": 1152,
+                    "source": "离线兜底：已有 2K 木刻纹理 + PIL 巨岩/梵文/裂谷（生图网关 429 RESOURCE_EXHAUSTED）",
+                    "pipeline": "scripts/build_mountain_fallback.py；网关恢复后优先用 v7_mountain_wide_raw.png 重烘",
+                }
+        if "v7face" in picked:
+            manifest["assets"]["face_glare_woodblock"] = build_face()
     except SystemExit as exc:
         print(exc)
         return 1
