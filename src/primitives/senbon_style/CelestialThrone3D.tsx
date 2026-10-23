@@ -1,4 +1,4 @@
-import React, {useEffect, useLayoutEffect, useMemo} from 'react';
+import React, {useEffect, useLayoutEffect, useMemo, useRef} from 'react';
 import {AbsoluteFill, continueRender, delayRender, useCurrentFrame, useVideoConfig} from 'remotion';
 import {ThreeCanvas} from '@remotion/three';
 import {Edges, Outlines} from '@react-three/drei';
@@ -105,24 +105,41 @@ const buildChunks = (columns: ColumnSpec[]): ChunkSpec[] =>
     }),
   );
 
+/**
+ * V8 运镜：先在高空/远处绕着殿顶缓慢横移，刀光落下后 0.45 秒内**沿 Z 轴
+ * 俯冲进柱阵内部**（半径 38→10、高度 21→6、FOV 48→84、roll −11°→+7°），
+ * 再以极近距离横甩。V7 的 31→13.5 只是"轻推"，读不出空间跨度。
+ */
 const cameraAt = (time: number, start: number, cutAt: number, end: number) => {
   const duration = Math.max(0.001, end - start);
   const local = clamp((time - start) / duration);
   const age = Math.max(0, time - cutAt);
-  const angle = -1.18 + local * 1.95;
-  const radius = 31 - local * 17.5;
-  const height = 17.2 - local * 8.4;
-  const shake = age > 0 ? Math.exp(-age * 4.6) * 0.5 : 0;
+  const dive = easeInOutCubic(clamp(age / 0.45));
+  /*
+   * 相机从殿前右上方起手（z>0），而不是从殿后穿过新加的天际线。
+   * V8 第一版沿用 V7 的 -1.32 起手角，相机正好落在 z=-37 的天际线内部，
+   * 整段 98–112 帧只看到几座楼的背面。现在从 +z 侧绕到左侧再俯冲，
+   * 70 座天际线始终在御座背后当背景。
+   */
+  const angle = 0.62 + local * 2.35 + dive * 0.5;
+  const radius = 38 - dive * 28;
+  const height = 21 - dive * 15;
+  const shake = age > 0 ? Math.exp(-age * 4.6) * 0.8 : 0;
   return {
-    x: Math.cos(angle) * radius + Math.sin(time * 31) * shake * 0.5,
-    y: height + Math.sin(time * 24) * shake * 0.32,
-    z: Math.sin(angle) * radius + Math.cos(time * 27) * shake * 0.5,
+    x: Math.cos(angle) * radius + Math.sin(time * 31) * shake * 0.55,
+    y: height + Math.sin(time * 24) * shake * 0.36,
+    z: Math.sin(angle) * radius + Math.cos(time * 27) * shake * 0.55,
     tx: 0,
-    ty: 8.5 - local * 0.6,
+    ty: 8.6 - dive * 4.9,
     tz: 0,
-    fov: 52 + local * 20,
-    roll: -0.14 + local * 0.245 + (age > 0 ? Math.exp(-age * 5.4) * 0.07 : 0),
+    fov: 48 + dive * 36 + local * 4,
+    roll: -0.2 + dive * 0.32 + local * 0.12 + (age > 0 ? Math.exp(-age * 5.4) * 0.09 : 0),
   };
+};
+
+const easeInOutCubic = (t: number): number => {
+  const v = clamp(t);
+  return v < 0.5 ? 4 * v * v * v : 1 - (-2 * v + 2) ** 3 / 2;
 };
 
 const CameraRig: React.FC<{time: number; start: number; cutAt: number; end: number}> = ({
@@ -512,6 +529,245 @@ const Backdrop: React.FC = () => {
   );
 };
 
+/* -------------------------------------------------------------------------- */
+/*  V8：120 座实例化天宫阙楼                                                    */
+/* -------------------------------------------------------------------------- */
+
+interface BuildingSpec {
+  x: number;
+  z: number;
+  w: number;
+  d: number;
+  h: number;
+  rot: number;
+  seed: number;
+  face: 'x' | 'z';
+  sign: number;
+}
+
+const BUILDING_COUNT = 120;
+const SKYLINE_COUNT = 120;
+const WINDOWS_PER_BUILDING = 4;
+
+const buildBuildings = (): BuildingSpec[] =>
+  Array.from({length: BUILDING_COUNT}, (_, index) => {
+    const angle = (index / BUILDING_COUNT) * Math.PI * 2 + (hash(9500, index) - 0.5) * 0.14;
+    const ring = 20 + hash(9501, index) * 22;
+    const x = Math.cos(angle) * ring;
+    const z = Math.sin(angle) * ring;
+    const face = Math.abs(x) > Math.abs(z) ? 'x' : 'z';
+    return {
+      x,
+      z,
+      w: 2.2 + hash(9503, index) * 2.8,
+      d: 2.2 + hash(9504, index) * 2.8,
+      h: 6 + hash(9502, index) ** 1.35 * 16,
+      rot: (hash(9505, index) - 0.5) * 0.5,
+      seed: 9600 + index * 7,
+      face,
+      sign: face === 'x' ? Math.sign(x) : Math.sign(z),
+    };
+  });
+
+/**
+ * 御座之后的 70 座天际线。相机在 112 帧后俯冲进殿内，视线正对御座，
+ * 这批楼正好填满御座背后的空隙；全部在 backdrop（z=-48）之前，不会被吃掉。
+ */
+const buildSkyline = (): BuildingSpec[] =>
+  Array.from({length: SKYLINE_COUNT}, (_, index) => {
+    const col = index % 14;
+    const row = Math.floor(index / 14);
+    return {
+      x: -45 + col * 6.9 + (hash(9700, index) - 0.5) * 3.4,
+      z: -16 - row * 3.2 + (hash(9701, index) - 0.5) * 1.3,
+      w: 2.0 + hash(9702, index) * 2.0,
+      d: 2.0 + hash(9703, index) * 2.0,
+      h: 4 + hash(9704, index) ** 1.2 * 13.5,
+      rot: (hash(9705, index) - 0.5) * 0.3,
+      seed: 9800 + index * 5,
+      face: 'z',
+      sign: -1,
+    };
+  });
+
+/**
+ * 120 座阙楼：柱阵之外每隔 3° 一座，最高 22 单位，越远越暗（fog 吃掉）。
+ * 全部用 `THREE.InstancedMesh`：
+ *   · 楼身 1 个 instancedMesh（暗朱砂/暗金随机实例色）；
+ *   · 重檐 1 个（四棱锥，压扁后读成中式攒尖顶）；
+ *   · 檐口金线 1 个（发光 Basic，Bloom 会把它拖成一条金线）；
+ *   · 窗格 480 个（每楼 4 扇，朝向殿心的一面）。
+ *
+ * 只使用 `hash(seed, i)`，不碰 Math.random；任意帧可复现。
+ */
+const InstancedPalace: React.FC<{time: number; pulse: number; kind?: 'ring' | 'skyline'}> = ({
+  time,
+  pulse,
+  kind = 'ring',
+}) => {
+  const buildings = useMemo(() => (kind === 'skyline' ? buildSkyline() : buildBuildings()), [kind]);
+  const count = buildings.length;
+  const bodyRef = useRef<THREE.InstancedMesh>(null);
+  const roofRef = useRef<THREE.InstancedMesh>(null);
+  const eaveRef = useRef<THREE.InstancedMesh>(null);
+  const windowRef = useRef<THREE.InstancedMesh>(null);
+
+  useLayoutEffect(() => {
+    const dummy = new THREE.Object3D();
+    const body = bodyRef.current;
+    const roof = roofRef.current;
+    const eave = eaveRef.current;
+    const windowMesh = windowRef.current;
+    if (!body || !roof || !eave || !windowMesh) return;
+
+    buildings.forEach((building, index) => {
+      dummy.position.set(building.x, building.h / 2, building.z);
+      dummy.rotation.set(0, building.rot, 0);
+      dummy.scale.set(building.w, building.h, building.d);
+      dummy.updateMatrix();
+      body.setMatrixAt(index, dummy.matrix);
+      const tone = index % 3;
+      body.setColorAt(
+        index,
+        new THREE.Color(tone === 0 ? '#3A1C18' : tone === 1 ? '#2A1A22' : '#241A14'),
+      );
+
+      dummy.position.set(building.x, building.h + 0.5, building.z);
+      dummy.rotation.set(0, Math.PI / 4 + building.rot, 0);
+      dummy.scale.set(building.w * 0.98, 1.15, building.d * 0.98);
+      dummy.updateMatrix();
+      roof.setMatrixAt(index, dummy.matrix);
+
+      dummy.position.set(building.x, building.h + 0.06, building.z);
+      dummy.rotation.set(0, building.rot, 0);
+      dummy.scale.set(building.w * 1.16, 0.07, building.d * 1.16);
+      dummy.updateMatrix();
+      eave.setMatrixAt(index, dummy.matrix);
+
+      for (let slot = 0; slot < WINDOWS_PER_BUILDING; slot += 1) {
+        const windowIndex = index * WINDOWS_PER_BUILDING + slot;
+        const y = building.h * (0.22 + slot * 0.19);
+        const jitter = (hash(building.seed, slot) - 0.5) * 0.5;
+        let px = building.x;
+        let pz = building.z;
+        let ry = 0;
+        if (building.face === 'x') {
+          px = building.x - building.sign * (building.w / 2 + 0.04);
+          pz = building.z + jitter * building.d;
+          ry = building.sign > 0 ? Math.PI / 2 : -Math.PI / 2;
+        } else {
+          pz = building.z - building.sign * (building.d / 2 + 0.04);
+          px = building.x + jitter * building.w;
+          ry = building.sign > 0 ? Math.PI : 0;
+        }
+        dummy.position.set(px, y, pz);
+        dummy.rotation.set(0, ry, 0);
+        dummy.scale.set(building.w * (kind === 'skyline' ? 0.58 : 0.4), 0.24 + (slot % 2) * 0.1, 0.04);
+        dummy.updateMatrix();
+        windowMesh.setMatrixAt(windowIndex, dummy.matrix);
+      }
+    });
+
+    body.instanceMatrix.needsUpdate = true;
+    if (body.instanceColor) body.instanceColor.needsUpdate = true;
+    roof.instanceMatrix.needsUpdate = true;
+    eave.instanceMatrix.needsUpdate = true;
+    windowMesh.instanceMatrix.needsUpdate = true;
+  }, [buildings]);
+
+  const windowMaterial = useMemo(
+    () =>
+      new THREE.MeshBasicMaterial({
+        color: new THREE.Color('#F5C242'),
+        toneMapped: false,
+        transparent: true,
+        opacity: 0.62 + pulse * 0.3,
+        blending: THREE.AdditiveBlending,
+        depthWrite: false,
+      }),
+    // 只在 mount 建一次；亮度用下面的 material ref 逐帧改，避免每帧新材质
+    [],
+  );
+
+  const windowMaterialRef = useRef(windowMaterial);
+  windowMaterialRef.current.opacity =
+    (kind === 'skyline' ? 0.92 : 0.56) + pulse * 0.28 + Math.sin(time * 5.1) * 0.05;
+
+  return (
+    <group>
+      <instancedMesh ref={bodyRef} args={[undefined, undefined, count]} frustumCulled={false}>
+        <boxGeometry args={[1, 1, 1]} />
+        <meshToonMaterial
+          color="#FFFFFF"
+          emissive="#3A140C"
+          emissiveIntensity={kind === 'skyline' ? 0.9 : 0.5}
+        />
+      </instancedMesh>
+
+      <instancedMesh ref={roofRef} args={[undefined, undefined, count]} frustumCulled={false}>
+        <cylinderGeometry args={[0.04, 1, 1, 4]} />
+        <meshToonMaterial color="#1A1014" emissive="#4A180E" emissiveIntensity={kind === 'skyline' ? 0.6 : 0.35} />
+      </instancedMesh>
+
+      <instancedMesh ref={eaveRef} args={[undefined, undefined, count]} frustumCulled={false}>
+        <boxGeometry args={[1, 1, 1]} />
+        <meshBasicMaterial color="#C89A32" toneMapped={false} transparent opacity={kind === 'skyline' ? 0.92 : 0.72} />
+      </instancedMesh>
+
+      <instancedMesh
+        ref={windowRef}
+        args={[undefined, undefined, count * WINDOWS_PER_BUILDING]}
+        frustumCulled={false}
+      >
+        <boxGeometry args={[1, 1, 1]} />
+        <primitive object={windowMaterialRef.current} attach="material" />
+      </instancedMesh>
+    </group>
+  );
+};
+
+/** 刀光落点后的三重冲击波：赤金 + 绯红，厚管渐薄。 */
+const ImpactShockwaves: React.FC<{age: number}> = ({age}) => {
+  if (age < 0) return null;
+  return (
+    <group>
+      {[0, 0.055, 0.11].map((delay, index) => {
+        const ringAge = age - delay;
+        if (ringAge <= 0 || ringAge > 0.92) return null;
+        const radius = 2.4 + ringAge * 30;
+        const fade = clamp(1 - ringAge / 0.92);
+        return (
+          <group key={`shock-${index}`}>
+            <mesh rotation={[Math.PI / 2, 0, 0]} position={[0, 0.08 + index * 0.02, 0]}>
+              <torusGeometry args={[radius, 0.06 + fade * 0.16, 6, 96]} />
+              <meshBasicMaterial
+                color={index === 2 ? '#C8281E' : '#FFE8B0'}
+                toneMapped={false}
+                transparent
+                opacity={fade * 0.8}
+                blending={THREE.AdditiveBlending}
+                depthWrite={false}
+              />
+            </mesh>
+            <mesh rotation={[Math.PI / 2, 0, 0]} position={[0, 0.1 + index * 0.02, 0]}>
+              <ringGeometry args={[radius * 0.72, radius * 0.76, 96]} />
+              <meshBasicMaterial
+                color="#F5C242"
+                toneMapped={false}
+                transparent
+                opacity={fade * 0.26}
+                blending={THREE.AdditiveBlending}
+                depthWrite={false}
+                side={THREE.DoubleSide}
+              />
+            </mesh>
+          </group>
+        );
+      })}
+    </group>
+  );
+};
+
 /** 汉白玉台阶：五级，中央通向御座。 */
 const MarbleStair: React.FC = () => (
   <group position={[0, 0, -8]}>
@@ -628,6 +884,12 @@ const Scene: React.FC<{
       <pointLight position={[0, 4.5, 0]} intensity={12 + pulse * 8} distance={22} decay={2} color="#8E1A13" />
 
       <CameraRig time={time} start={start} cutAt={cutAt} end={end} />
+      {/*
+        120 座天际线全部放在御座背后（z −16…−32），不再绕成包围相机的
+        "环城"：V8 第一版把 120 座楼放在半径 20–42 的环上，相机起手正好
+        在楼群中间，2B 前 14 帧只看见一排挡在镜头前的黑方块。
+      */}
+      <InstancedPalace time={time} pulse={pulse} kind="skyline" />
       <Floor />
       <MarbleStair />
       <Throne />
@@ -639,21 +901,7 @@ const Scene: React.FC<{
 
       <SlashBlade age={age} />
       <Sparkles age={age} count={400} scale={15} size={6} color="#FFF3D1" />
-
-      {/* 刀光落点后的地面冲击环 */}
-      {age > 0
-        ? [0, 0.07, 0.14].map((delay, index) => {
-            const ringAge = age - delay;
-            if (ringAge <= 0 || ringAge > 0.9) return null;
-            const radius = 2 + ringAge * 22;
-            return (
-              <mesh key={`impact-${index}`} rotation={[Math.PI / 2, 0, 0]} position={[0, 0.06, 0]}>
-                <torusGeometry args={[radius, 0.035 + (1 - ringAge) * 0.03, 4, 96]} />
-                <meshBasicMaterial color="#FFE8B0" toneMapped={false} transparent opacity={clamp(0.9 - ringAge) * 0.7} />
-              </mesh>
-            );
-          })
-        : null}
+      <ImpactShockwaves age={age} />
 
       <EffectComposer>
         <Bloom luminanceThreshold={0.25} intensity={2.0} mipmapBlur />

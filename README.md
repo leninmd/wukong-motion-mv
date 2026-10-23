@@ -322,3 +322,25 @@ V7 针对 V6 成片 00:01–00:09.5 的六处穿帮重做：
 工程约束见 [AGENTS.md](AGENTS.md) §15；网关 429 / 离线兜底 / 裁切经验见
 [docs/AGENT_TOOLING.md](docs/AGENT_TOOLING.md) §12 与
 [docs/EXPLORATION_LOG.md](docs/EXPLORATION_LOG.md) §17。
+
+## V8 交付（2026-10-23）
+
+V8 不再改画风，只把 V7 的「七张高清静态壁纸」变成「一部连续的电影」：
+
+| V7 缺陷 | V8 处理 |
+|---|---|
+| 1B 大圣双手合十罚站；题笺【十】被云头挡住 | 换 `woodblock_spin.png` 侧身握棍战姿；`CudgelVortex` 斜向椭圆棍盘（中心 619,786，`rotate(-25deg) scaleY(.5)`）+ 两块手部裁剪补片；题笺文字从 top 100 起排、52px，六字 100% 完整 |
+| 全片七处硬切像 PPT 翻页 | 五处物理遮罩：`ShojiGate` 障子门（0–9）、第 4 格撑满（26–34）、`SlashCrack` 刀光裂屏（70–76）、`MountainSmash` 黑山云海对撞（144–156）、`ChainCurtain` 铁索黑幕（220–228） |
+| 2B 36 根光秃圆柱、左下静态贴纸 | `THREE.InstancedMesh` 120 座天际线阙楼（楼身/重檐/檐口金线/480 扇窗）；98–111 帧 `spin` 蓄力 → 112 帧硬切 `panel4` 腾空劈斩；18 块近景碎石 + 三重冲击波；相机从殿前高空沿 Z 轴俯冲进柱阵 |
+| 3A/3B 一张静止壁纸 | 七层：山体 1.24×/−120px 压降、12 列流动鎏金经文、左右前景岩挤压、六道 X 铁索、黑云河、分叉火舌 + 逆流落石、大圣每 2 帧 ±3px 发力震颤 |
+| 4B `1.0→1.04` 蚊子腿缩放 | 1.05 / 1.42 / 1.95 / 1.25 四连跳切 + 0°/−6°/+5°/0°；以实测双眼中心 `(836,714)` 为 `transform-origin`，双眼钉在画面 45%；宣纸 / 黑金红 / 红黑 Impact 三套色调，取消整屏反色 |
+
+交付物：
+
+- 成片：`out/senbon_v8_mvp.mp4`（1920×1080 / 30 fps / 300 帧 / 10.005 s）
+- 单帧自检：`out/v8_check_f###.png`、`out/v8_mp4_<t>.png`
+- 四连跳切验收：`out/v8_mp4_258/266/274/282.png`
+- 接触表：`out/senbon_v8_contact_sheet.png`（20 个时间点）
+
+工程约束见 [AGENTS.md](AGENTS.md) §16；V8 的返工与代价见
+[docs/EXPLORATION_LOG.md](docs/EXPLORATION_LOG.md) §18。

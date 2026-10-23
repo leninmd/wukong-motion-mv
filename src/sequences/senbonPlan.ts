@@ -1,17 +1,21 @@
 /**
- * 10 秒复刻段（300 帧 @ 30 fps）的唯一分镜表 —— V4。
+ * 10 秒复刻段（300 帧 @ 30 fps）的唯一分镜表 —— V8。
  *
  * 时间只有两套，互不越界：
  *  1. `sb(n)` —— 分镜板帧号 → 秒。板号只在本文件出现，场景代码只看秒/帧
- *     （AGENTS.md §1）。V4 的板号：
+ *     （AGENTS.md §1）。V8 的板号：
  *       Sub1A 0–30 / Sub1B 30–75 / Sub2A 75–98 / Sub2B 98–150 /
  *       Sub3A 150–175 / Sub3B 175–225 / Sub4A 225–256 / Sub4B 256–291 / 黑 291–300。
  *  2. `unit()` —— 歌词字级落点，来自 `public/alignment/climax_words.json`。
  *
+ * V8 新增 `CUE.wipe`：五处"物理遮罩转场"横跨相邻两镜，渲染窗口因此比
+ * `SHOTS` 的硬边界更宽（例如 1A 画格撑开一直画到 34 帧，1B 从 26 帧
+ * 就在后面待命）。场景代码只读 `CUE.wipe`，不得再写另一套转场帧号。
+ *
  * 例外说明（登记在 docs/EXPLORATION_LOG.md）：
  *  - Sub2A 的【怎】【敌】【我】被板号钉死在 75–98 帧的横条分格内，而字级
  *    对齐落在 87 / 96 / 104 帧（最后一字超出分格）。为了保证横条完整，这三字
- *    改用板号节拍 78 / 86 / 93。
+ *    改用板号节拍 75 / 82 / 89。
  *  - Sub4A 的【罪名】【是】【老孙】同理用板号 228 / 236 / 244。
  *  - Sub4B 的【不】【敬】【权】【威】严格对齐 256 / 264 / 272 / 280。
  */
@@ -86,28 +90,33 @@ export const shotAt = (seconds: number): ShotSpan => {
 /* -------------------------------------------------------------------------- */
 
 export const CUE = {
-  /* Sub1A —— 四分屏微缩画卷 */
-  panelDrop: [sb(0), sb(2), sb(4), sb(6)],
+  /* Sub1A —— 四分屏微缩画卷。V8：等障子门拉开一半，四格才依次砸入。 */
+  panelDrop: [sb(0), sb(0.5), sb(1), sb(1.5)],
   panelExit: sb(26),
-  panelGone: sb(30),
+  panelGone: sb(34),
 
   /* Sub1B —— 侧面旋风棍盾 */
   shield: {start: sb(30), end: sb(75)},
   armyWaves: [sb(36), sb(50), sb(64)],
 
   /* Sub2A —— 眼部横切 */
-  eyeBand: {start: sb(75), open: sb(76), end: sb(98)},
+  eyeBand: {start: sb(75), open: sb(73), end: sb(98)},
   eyeWords: [sb(75), sb(82), sb(89)],
 
   /* Sub2B —— 3D 崩裂 + 劈字 */
   palace: {start: sb(98), end: sb(150)},
-  slash: {reveal: sb(102), cut: sb(112)},
+  slash: {reveal: sb(104), cut: sb(112)},
   invert: [sb(112), sb(113)],
+  /** V8：左下角大圣从"后拉蓄力"硬切到"腾空劈斩"的动作帧。 */
+  actionSwitch: sb(112),
 
-  /* Sub3A —— 巨岩 + 铁索 */
+  /* Sub3A/3B —— 巨岩 + 铁索 */
+  mountain: {start: sb(150), mid: sb(175), end: sb(225)},
   rockDrops: [sb(150), sb(151), sb(152), sb(153), sb(154)],
   kneelReveal: sb(155),
   chains: [sb(156), sb(160), sb(164), sb(168), sb(172), sb(176)],
+  /** V8：五指山 1.25×/-120px 压降至 1.0/0 的时间窗。 */
+  mountainPress: {start: sb(150), end: sb(158)},
 
   /* Sub3B —— 复合符咒 */
   ofuda: [sb(178), sb(185), sb(192), sb(199), sb(206), sb(213)],
@@ -122,10 +131,44 @@ export const CUE = {
   whiteFlash: sb(290),
   blackout: sb(291),
   end: sb(300),
+
+  /* V8 —— 五处无缝物理遮罩转场。跨镜重叠窗口，全部由场景读取。 */
+  wipe: {
+    /** 0–9 帧：玄黑描金障子门向两侧猛烈拉开，露出 1A 四分屏。 */
+    doors: {start: sb(0), end: sb(9)},
+    /** 26–34 帧：第 4 格（大圣格）向左右撑满 1920px，前 3 格被推出左侧。 */
+    expand: {start: sb(26), end: sb(34)},
+    /** 70–76 帧：金箍棒刀光把 1B 上下劈开，从裂缝里撑开 2A。 */
+    split: {start: sb(70), end: sb(76)},
+    /** 144–156 帧：黑山与浮世绘云海从两侧对撞合拢，掩埋 2B 后拉开 3A。 */
+    smash: {start: sb(144), end: sb(156)},
+    /** 220–228 帧：密集铁索与黑幡从顶部拉下遮满全屏，再裂开垂落 4A。 */
+    chain: {start: sb(220), end: sb(228)},
+  },
 } as const;
 
-/** 四连跳切的放大倍率。 */
-export const JUMP_SCALES = [1, 1.35, 1.8, 2.4] as const;
+/**
+ * V8 四连跳切：每一次都是跨量级的构图/色彩跳变，不再允许 1.0→1.04 的
+ * "蚊子腿缩放"。`eye` 是把素材双眼对齐到画面 45% 的取景锚点。
+ */
+export const JUMP_CUTS = [
+  {scale: 1.05, rotate: 0, tone: 'paper', text: '不', sealIndex: 0},
+  {scale: 1.42, rotate: -6, tone: 'duotone', text: '敬', sealIndex: 1},
+  {scale: 1.95, rotate: 5, tone: 'impact', text: '权', sealIndex: 2},
+  {scale: 1.25, rotate: 0, tone: 'paper', text: '威', sealIndex: 3},
+] as const;
+
+export type JumpCutTone = (typeof JUMP_CUTS)[number]['tone'];
+
+/** `face_glare_woodblock.png` 的双眼中心（像素）与对齐目标（屏幕比例）。 */
+export const FACE_FOCUS = {
+  /** 由橙色虹膜连通域量出的双眼中心（不是肉眼估的 678/612）。 */
+  eyeX: 836,
+  eyeY: 714,
+  size: 2048,
+  targetX: 0.5,
+  targetY: 0.45,
+} as const;
 
 /* -------------------------------------------------------------------------- */
 /*  Sub1A 四分屏                                                              */
@@ -301,7 +344,7 @@ export const SEALS: SealSlot[] = [
   {id: 'seal-0', text: '不', landAt: CUE.sealLands[0]!, x: 302, y: 246, size: 270, rotate: -7},
   {id: 'seal-1', text: '敬', landAt: CUE.sealLands[1]!, x: 1614, y: 258, size: 270, rotate: 6},
   {id: 'seal-2', text: '权', landAt: CUE.sealLands[2]!, x: 312, y: 844, size: 270, rotate: 4},
-  {id: 'seal-3', text: '威', landAt: sb(273), x: 1602, y: 838, size: 270, rotate: -5},
+  {id: 'seal-3', text: '威', landAt: CUE.sealLands[3]!, x: 1602, y: 838, size: 270, rotate: -5},
 ];
 
 /* -------------------------------------------------------------------------- */
@@ -318,16 +361,21 @@ export interface ImpactCue {
 export const IMPACTS: ImpactCue[] = [
   ...CUE.panelDrop.map((time) => ({time, power: 0.34, axis: 'both' as const})),
   {time: CUE.panelExit, power: 0.5, axis: 'x'},
+  {time: CUE.wipe.expand.end, power: 0.62, axis: 'both'},
   {time: CUE.shield.start, power: 0.52, axis: 'both'},
   ...CUE.armyWaves.map((time) => ({time, power: 0.26, axis: 'x' as const})),
+  {time: CUE.wipe.split.start, power: 0.9, axis: 'both'},
   {time: CUE.eyeBand.start, power: 0.82, axis: 'x'},
   {time: CUE.eyeBand.open, power: 0.5, axis: 'x'},
   ...CUE.eyeWords.map((time) => ({time, power: 0.42, axis: 'both' as const})),
   {time: CUE.palace.start, power: 0.7, axis: 'both'},
   {time: CUE.slash.cut, power: 1, axis: 'both'},
   ...CUE.rockDrops.map((time) => ({time, power: 0.5, axis: 'y' as const})),
+  {time: CUE.wipe.smash.start + 0.2, power: 0.85, axis: 'both'},
   ...CUE.chains.map((time) => ({time, power: 0.24, axis: 'both' as const})),
   ...CUE.ofuda.map((time) => ({time, power: 0.2, axis: 'both' as const})),
+  {time: CUE.wipe.chain.start, power: 0.55, axis: 'y'},
+  {time: CUE.wipe.chain.start + 0.13, power: 0.9, axis: 'both'},
   {time: CUE.chamber, power: 0.55, axis: 'x'},
   ...CUE.tagReveals.map((time) => ({time, power: 0.3, axis: 'both' as const})),
   ...CUE.jumpCuts.map((time) => ({time, power: 1, axis: 'both' as const})),
@@ -378,15 +426,18 @@ export const flashAt = (seconds: number): number => {
   return Math.min(1, value);
 };
 
-/** 第 115–116 帧的全屏黑白反色（Impact Frame）；V7 起四枚巨印落地各反色 2 帧。 */
+/**
+ * 第 115–116 帧的全屏黑白反色（2B 刀光 Impact Frame）。
+ *
+ * V8 删掉了 V7"四枚巨印落地各反色 2 帧"的规则：4B 的四次跳切本来就有
+ * 宣纸 / 黑金红 / 红黑三套色彩，再整屏反色会把它们全部翻成青蓝色，
+ * 258 / 266 / 274 / 282 四个验收帧全部作废。跳切的冲击改由局部刀光与
+ * 巨印本身承担。
+ */
 export const invertAt = (frame: number, fps: number): boolean => {
   const start = atFrame(CUE.invert[0], fps);
   const end = atFrame(CUE.invert[1], fps);
-  if (frame >= start && frame <= end) return true;
-  return CUE.sealLands.some((time) => {
-    const sealFrame = atFrame(time, fps);
-    return frame >= sealFrame && frame <= sealFrame + 1;
-  });
+  return frame >= start && frame <= end;
 };
 
 /* -------------------------------------------------------------------------- */

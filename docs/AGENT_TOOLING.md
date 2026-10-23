@@ -527,3 +527,65 @@ python scripts/contact_sheet.py out/senbon_v7_mvp.mp4 out/senbon_v7_contact_shee
 重点读图：1.8s 无第二根棍、题笺清晰；4.0s 柱体金红但有明暗；6.5s 满屏山体；
 9.2s 双眼完整 + 四角实心印。
 
+---
+
+## 13. V8：物理转场、实例化城市、眼睛锚点（2026-10-23 实测）
+
+### 13.1 眼睛锚点不要靠肉眼估 —— 用虹膜连通域量
+
+V7 凭肉眼把 `face_glare_woodblock.png` 的双眼中心写成 `(678,612)`，V8 首版
+继续用这个值，结果整张脸偏右下 160px、嘴被裁掉。正确值是 `(836,714)`：
+
+```python
+from PIL import Image
+import numpy as np
+from scipy import ndimage
+im = np.array(Image.open('public/wukong_assets/face_glare_woodblock.png').convert('RGB')).astype(int)
+r, g, b = im[:, :, 0], im[:, :, 1], im[:, :, 2]
+mask = (r > 190) & (g > 60) & (g < 200) & (b < 80) & (r - g > 60) & (g - b > 30)
+lab, n = ndimage.label(mask)
+sizes = ndimage.sum(mask, lab, range(1, n + 1))
+for i in np.argsort(sizes)[-12:]:
+    ys, xs = np.where(lab == i + 1)
+    print(int(sizes[i]), int(xs.mean()), int(ys.mean()))
+```
+
+两个最大且左右分布的块是 `(548,756)` 与 `(1124,672)`，中点 `(836,714)`。
+把该点设为 `transform-origin`，`scale/rotate` 都绕眼睛发生，任意倍率下双眼
+都钉在同一点；1.05× 时嘴/牙也能入画。
+
+### 13.2 跨镜窗口只留一份公式
+
+1A 第 4 格撑开时，1B 需要被裁进同一个窗口。窗口公式在
+`FourPaperPanels.tsx` 的 `heroPanelWindow(expand)` 里只写一次，主序列用它
+生成 `clip-path: inset(...)`。不要在 `WukongClimaxSegment` 里再抄一份
+`PANEL_W/GAP/TOP/PANEL_H`，否则改布局时两边会漂移。
+
+### 13.3 实例化城市的坑
+
+- 120 座楼**不要绕成环**。V8 首版把楼放在半径 20–42 的环上，相机起手正好
+  在楼群内部，2B 前 14 帧只看见楼的背面。最终全部改到御座背后
+  `z −16…−42`，相机从 +z 侧起手（角度 0.62）。
+- 4 个 `InstancedMesh`（楼身 / 四棱顶 / 檐口金线 / 窗格）共 840 个实例，
+  SwiftShader 下仍可接受；窗格用 `MeshBasicMaterial + AdditiveBlending`，
+  Bloom 会把它拖成金线。
+- 楼身用 `setColorAt` 做暗朱砂/暗金随机色；`instanceColor.needsUpdate` 必须
+  在 `useLayoutEffect` 里置 true，否则首帧全白。
+
+### 13.4 V8 验收命令
+
+```powershell
+npm run typecheck
+npx remotion still src/index.ts WukongClimaxSegment out/v8_check_f050.png --frame=50
+npx remotion still src/index.ts WukongClimaxSegment out/v8_check_f120.png --frame=120
+npx remotion render src/index.ts WukongClimaxSegment out/senbon_v8_mvp.mp4 --concurrency=2
+$ff='node_modules\@remotion\compositor-win32-x64-msvc\ffmpeg.exe'
+foreach($t in @('0.0','0.15','0.5','1.8','2.8','4.0','6.5','8.0','9.2')){ & $ff -y -v error -ss $t -i out/senbon_v8_mvp.mp4 -frames:v 1 ("out/v8_mp4_{0}.png" -f $t) }
+python scripts/contact_sheet.py out/senbon_v8_mvp.mp4 out/senbon_v8_contact_sheet.png
+```
+
+- `ffmpeg -ss` 会向关键帧取整，验收 258/266/274/282 这种**精确帧**必须用
+  `npx remotion still --frame=...`，不要拿 ffmpeg 回抽当唯一证据。
+- 4B 的四帧验收：258（全脸+不）、266（黑金红双色+敬）、274（红黑 Impact+权）、
+  282（回弹+四印）。
+

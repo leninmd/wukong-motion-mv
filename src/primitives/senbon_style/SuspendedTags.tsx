@@ -363,8 +363,8 @@ export const SuspendedTags: React.FC<SuspendedTagsProps> = ({time, frame, heroes
       phase: index * 0.83,
       amp: 1.2,
       cordY: 108 + (index % 3) * 26,
-      opacity: 0.22,
-      blur: 1.8,
+      opacity: 0.34,
+      blur: 1.6,
     }));
     const mid: TagData[] = Array.from({length: 8}, (_, index) => ({
       id: `mid-${index}`,
@@ -377,8 +377,8 @@ export const SuspendedTags: React.FC<SuspendedTagsProps> = ({time, frame, heroes
       phase: index * 1.27 + 0.6,
       amp: 2.3,
       cordY: 176 + (index % 2) * 32,
-      opacity: 0.48,
-      blur: 0.8,
+      opacity: 0.64,
+      blur: 0.7,
     }));
     const edges: TagData[] = [
       {id: 'edge-l', text: '天条', x: 52, top: 236, width: 132, height: 470, depth: 2, phase: 1.8, amp: 2.8, cordY: 236, opacity: 0.78, blur: 2.6},

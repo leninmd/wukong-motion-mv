@@ -88,28 +88,30 @@ export const VerticalCartouche: React.FC<VerticalCartoucheProps> = ({text, subti
         ))}
       </svg>
 
-      {/* 竖排书法：单文本节点 */}
+      {/*
+        竖排书法：单文本节点。
+        V7 用 flex 垂直居中，6 个字的总高超过容器，首个"十"被顶到云头下面，
+        题笺变成"万天兵合围"。V8 改为**从 top 112 起排、逐字向下流**：
+        云头在 6–52px，文字从 112px 开始，法定的 60px 净空让六个字 100% 完整。
+      */}
       <div
         style={{
           position: 'absolute',
-          top: 72,
-          left: 26,
-          right: 26,
-          height: 522,
+          top: 100,
+          left: '50%',
+          width: 76,
+          marginLeft: -38,
           writingMode: 'vertical-rl',
           fontFamily: SERIF_STACK,
-          fontSize: 72,
+          fontSize: 52,
           fontWeight: 900,
-          lineHeight: 1.08,
-          letterSpacing: 12,
+          lineHeight: 1,
+          letterSpacing: 2,
           color: '#F5C242',
           whiteSpace: 'nowrap',
           textAlign: 'center',
           textShadow: '0 0 22px rgba(245,194,66,0.34), 0 3px 0 rgba(0,0,0,0.85)',
           WebkitTextStroke: '1px #0B0709',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
         }}
       >
         {text}
@@ -119,18 +121,18 @@ export const VerticalCartouche: React.FC<VerticalCartoucheProps> = ({text, subti
       <div
         style={{
           position: 'absolute',
-          bottom: 22,
+          bottom: 10,
           left: '50%',
-          marginLeft: -25,
-          width: 50,
-          height: 50,
+          marginLeft: -21,
+          width: 42,
+          height: 42,
           backgroundColor: '#C8281E',
           border: '2px solid #F5C242',
           color: '#FFF3D1',
           fontFamily: SERIF_STACK,
-          fontSize: 16,
+          fontSize: 13,
           fontWeight: 800,
-          lineHeight: '23px',
+          lineHeight: '19px',
           textAlign: 'center',
           letterSpacing: 0,
           boxShadow: '0 0 0 1px #4A2A0A',

@@ -159,6 +159,9 @@ export const EyeWoodblockShot: React.FC<EyeWoodblockShotProps> = ({time, openAt,
   const height = BAND_H * (open > 0 ? Math.max(0, slam) : 0);
   const imageScale = 1.02 + Math.max(0, time - openAt) * 0.045;
   const flicker = Math.sin(time * 44) * 0.02;
+  /* 横条未开之前只允许速度场出现，字幕/说明必须等 openAt 之后才亮，
+     否则 70–76 帧的裂屏转场会提前泄露 2A 的排版。 */
+  const chrome = clamp01((time - openAt) * 5);
 
   return (
     <AbsoluteFill style={{overflow: 'hidden', backgroundColor: '#0B0606'}}>
@@ -240,16 +243,16 @@ export const EyeWoodblockShot: React.FC<EyeWoodblockShotProps> = ({time, openAt,
       ))}
 
       {/* 左上说明 */}
-      <div style={{position: 'absolute', left: 96, top: 104, fontFamily: SERIF_STACK, fontSize: 22, letterSpacing: 8, color: SENBON.gold, opacity: 0.82 * clamp01((time - openAt) * 3)}}>
+      <div style={{position: 'absolute', left: 96, top: 104, fontFamily: SERIF_STACK, fontSize: 22, letterSpacing: 8, color: SENBON.gold, opacity: 0.82 * chrome}}>
         火眼金睛 · 木刻套色
       </div>
-      <div style={{position: 'absolute', left: 96, top: 144, fontFamily: SERIF_STACK, fontSize: 14, letterSpacing: 6, color: '#C8A45A', opacity: 0.6}}>
+      <div style={{position: 'absolute', left: 96, top: 144, fontFamily: SERIF_STACK, fontSize: 14, letterSpacing: 6, color: '#C8A45A', opacity: 0.6 * chrome}}>
         第二幕 · 怎敌我
       </div>
 
       {/* 底部朱砂规矩线 */}
-      <div style={{position: 'absolute', left: 96, right: 96, bottom: 74, height: 3, background: 'linear-gradient(90deg, rgba(200,40,30,0), #C8281E 22%, #F5C242 50%, #C8281E 78%, rgba(200,40,30,0))', opacity: 0.7}} />
-      <div style={{position: 'absolute', right: 96, bottom: 50, fontFamily: SERIF_STACK, fontSize: 15, letterSpacing: 6, color: '#C8A45A', opacity: 0.55}}>
+      <div style={{position: 'absolute', left: 96, right: 96, bottom: 74, height: 3, background: 'linear-gradient(90deg, rgba(200,40,30,0), #C8281E 22%, #F5C242 50%, #C8281E 78%, rgba(200,40,30,0))', opacity: 0.7 * chrome}} />
+      <div style={{position: 'absolute', right: 96, bottom: 50, fontFamily: SERIF_STACK, fontSize: 15, letterSpacing: 6, color: '#C8A45A', opacity: 0.55 * chrome}}>
         木刻套色 · 朱砂与墨
       </div>
 

@@ -83,5 +83,20 @@ V7 生成过程（如实记录）：
 - `face_glare_woodblock.png` 仍是 V6 图；V7 通过取景修正让双眼完整入画（见 4B），
   没有为了“重新生成”而牺牲已可用的素材。
 
+## V8 追加（2026-10-23）
+
+V8 **没有新增生图资产**，全部复用本目录已有 2K 成品；改的是用法：
+
+| 文件 | V8 用途 |
+|---|---|
+| `woodblock_spin.png` | s1b 侧身握棍战姿（取代 `woodblock_charge`）；s2b 98–111 帧蓄力 |
+| `woodblock_panel4.png` | s2b 112 帧起的腾空劈斩动作帧 |
+| `woodblock_charge.png` | 不再被 s1b 使用；保留作历史资产，勿删 |
+| `face_glare_woodblock.png` | s4b 四连跳切；**双眼锚点实测为 `(836,714)`**（左眼 548,756 / 右眼 1124,672），不是 V7 的 `(678,612)` |
+
+如果将来重新生成脸，必须重新量双眼锚点，不能沿用 `(836,714)`：
+量法见 [`docs/AGENT_TOOLING.md`](../../docs/AGENT_TOOLING.md) §13.1（橙色虹膜连通域）。
+`ClimaxAsset.tsx` 的四色套版/抠图规则不变。
+
 
 
