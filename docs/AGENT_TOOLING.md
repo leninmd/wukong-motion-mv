@@ -18,6 +18,8 @@
 | GPU | **无**（`nvidia-smi` 不存在） |
 | 本地图像模型 | **无**（无 torch / diffusers / ComfyUI / WebUI） |
 | 终端编码 | Windows 下 Python `subprocess(text=True)` 默认 GBK，读 CLI 输出会 `UnicodeDecodeError`，一律加 `encoding="utf-8", errors="replace"` |
+| Blender | `D:\Design\blender\blender.exe`（5.2.3 LTS，2026-10-22 build）；用户配置在 `%APPDATA%\Blender Foundation\Blender\5.2` |
+| uv / uvx | `C:\Users\<user>\.local\bin\uvx.exe`；包缓存 `D:\dev\caches\uv-cache`（GUI 启动的宿主不继承终端 PATH，配置里必须写绝对路径） |
 
 ---
 
@@ -588,4 +590,189 @@ python scripts/contact_sheet.py out/senbon_v8_mvp.mp4 out/senbon_v8_contact_shee
   `npx remotion still --frame=...`，不要拿 ffmpeg 回抽当唯一证据。
 - 4B 的四帧验收：258（全脸+不）、266（黑金红双色+敬）、274（红黑 Impact+权）、
   282（回弹+四印）。
+
+---
+
+## 14. MCP for Blender ↔ DSH（2026-10-23 实测）
+
+### 14.1 装了什么
+
+| 组件 | 位置 / 版本 |
+|---|---|
+| MCP server | PyPI `mcp-for-blender` 1.30.0，由 `uvx --python 3.11` 启动（CPython 3.11.14 uv-managed） |
+| Blender addon | `C:\Users\<user>\AppData\Roaming\Blender Foundation\Blender\5.2\scripts\addons\blender_mcp.py`（addon 版本 1.8 / 协议 14） |
+| DSH 配置 | `C:\Users\<user>\.dsh\profiles\desktop\cordis.patch.yml`，条目 id `mcp-blender` |
+| 传输 | stdio；服务端 socket 连 Blender 的 `localhost:9876` |
+
+服务把 9 个工具注册成 `mcp__blender__*`：`execute_blender_code`、`look`、
+`get_scene_info`、`generate_3d`、`search_assets`、`import_asset`、
+`get_addon_status`、`disable_telemetry`、`record_trajectory_feedback`。
+
+复现安装（只需要 uv，不需要 git clone）：
+
+```powershell
+$uvx = "$env:USERPROFILE\.local\bin\uvx.exe"
+& $uvx --python 3.11 mcp-for-blender --help          # 首次会装 CPython 3.11 + 31 个包
+& $uvx --python 3.11 mcp-for-blender install-addon   # 写入 Blender 的 scripts/addons
+```
+
+### 14.2 DSH 注册：新增插件行必须套 `insert`
+
+`cordis.patch.yml` 里裸写的 `- id:` 是**按 id 更新已有行**，不是新增。新插件要写：
+
+```yaml
+- insert:
+    - id: mcp-blender
+      name: '@deepseek-ai/dsh-mcp-client'
+      config:
+        serverName: blender
+        transport: stdio
+        command: 'C:\Users\<user>\.local\bin\uvx.exe'
+        args: ['--python', '3.11', 'mcp-for-blender']
+        env:
+          UV_PYTHON_PREFERENCE: only-managed
+          DISABLE_TELEMETRY: 'true'
+          BLENDER_HOST: localhost
+          BLENDER_PORT: '9876'
+        toolCallTimeoutMs: 180000
+        failOnStartupError: false
+```
+
+踩过的坑：第一版没写 `insert:`，`dsh --profile desktop --dump-config` 直接报
+`patch: entry "mcp-blender" not found`，DSH 里也不会出现任何 blender 工具。
+套上 `insert:` 后重载成功。
+
+要点：
+
+- `command` 必须是 **uvx 绝对路径**：DSH Desktop 由 GUI 启动，不继承终端 PATH，
+  裸 `uvx` 会 `ENOENT`。
+- `UV_PYTHON_PREFERENCE=only-managed` 防止 uv 抓到本机 `Python313` 或其它解释器。
+- `DISABLE_TELEMETRY=true` 关闭匿名使用统计；提示词/场景/截图本来就默认不采集。
+- `toolCallTimeoutMs` 调到 180 s：`look` 渲染、资产导入、生图都可能超过默认 60 s。
+- HMR 会监听 profile patch，**不需要重启 DSH**；改完看进程即可确认：
+  `uvx.exe --python 3.11 mcp-for-blender` 的父进程是 `DSH.exe`。
+
+### 14.3 Blender 侧（必须手动启用）
+
+装好文件不等于启用。在 Blender 里：
+
+1. `Edit → Preferences → Add-ons`，搜索 **MCP for Blender**（分类 Interface），勾选启用；
+2. 启用后 addon 的 `blendermcp_auto_start_server` 默认为 True，0.5 s 后自动监听 9876；
+3. 3D 视图按 `N` → **MCP for Blender** 标签页可看到状态与 **Start MCP Server**。
+
+> 2026-10-23 交付时，用户正在运行的 Blender（PID 34764）**尚未启用**该 addon；
+> 为避免重启丢失未保存场景，没有替用户保存 preferences。启用后不需要重启 DSH：
+> server 端在每次工具调用时 `get_blender_connection()` 惰性重连。
+
+### 14.4 验证
+
+```powershell
+# 1) DSH 是否拉起了 MCP server（父进程应是 DSH.exe）
+Get-CimInstance Win32_Process | Where-Object { $_.CommandLine -match 'mcp-for-blender' } |
+  Select-Object ProcessId,ParentProcessId,Name,CommandLine
+
+# 2) Blender addon 是否在监听
+Get-NetTCPConnection -LocalPort 9876 -ErrorAction SilentlyContinue |
+  Select-Object State,OwningProcess
+
+# 3) 离线验证 addon 能在 Blender 5.2 加载（不碰 preferences）
+& "D:\Design\blender\blender.exe" --background --factory-startup --python-expr `
+  "import addon_utils; addon_utils.enable('blender_mcp', default_set=False)"
+```
+
+在 DSH 对话里直接让模型调 `mcp__blender__get_addon_status`：返回 Blender 版本、
+addon 版本、已开启的素材库/生成器即通。
+
+### 14.5 限制与注意
+
+- server 在 Blender 没开时也会连上 DSH（工具照常注册），只是资源类调用报
+  “Make sure the Blender addon is running”；**它每次调用都会重连**，所以先开会话后开
+  Blender 也能用。
+- `execute_blender_code` 等于在 Blender 里执行任意 Python，socket 无鉴权；只能留在
+  `localhost`，不要改成 `0.0.0.0`。
+- 官方要求只跑**一个** MCP server 实例；不要同时在 Cursor/Claude Desktop 里再配一个，
+  否则 9876 端口会抢。
+- 升级：`uvx mcp-for-blender@latest update`（会同时更新 server 与已安装 addon，并留 `.bak`）。
+- 在本项目里的用途：按 `AGENTS.md §4` 生成带 Alpha 的 `.webm`（`public/blender_renders/`），
+  或做角色/山体的 3D 参考；**不要**让 Remotion 运行时依赖 Blender。
+
+## 15. Blender 5.2.3 无头渲染实操清单（2026-10-23 实测，Shot 2B 殿柱爆碎）
+
+本节是写 `scripts/blender/render_shot2_collapse.py` 时踩出来的硬事实，下个 session 直接照抄。
+
+### 15.1 这个构建的能力边界（先确认，再设计）
+
+| 项 | 结论 |
+|---|---|
+| 渲染器 | `bpy.types.RenderSettings.engine` 只有 `BLENDER_EEVEE`；**Cycles / Workbench 未注册**（`addon_utils.enable("cycles")` 也不改变枚举） |
+| Cell Fracture | 没有 `object_fracture_cell`，`--factory-startup` 与常规启动都搜不到；破碎只能自己写 Voronoi |
+| Grease Pencil Line Art | `GreasePencilLineartModifier` 存在，但 `bpy.ops.object.lineart_bake_strokes()` 返回 `FINISHED`、
+  `is_baked=True`，`layers[0].frames` 却始终为 0 —— **本构建描边烘不出来**，三种 source（OBJECT/COLLECTION/SCENE）都一样 |
+| Freestyle | 可用且稳定：`scene.render.use_freestyle`、`view_layer.freestyle_settings`、
+  `line_thickness_mode="ABSOLUTE"` 全都生效，EEVEE 下正常出线 |
+| Shader to RGB / AO 节点 | 存在，可用于三渲二 |
+
+**结论**：墨线走 Freestyle（`AGENTS.md §5` 允许 Line Art 或 Freestyle），破碎走自写 Voronoi。
+Freestyle 的 `linestyle` 必须**自己 new 一个**（`fs.linesets` 里默认那条 `linestyle` 是 `None`，
+直接 `fls.linestyle.color` 会 `AttributeError: 'NoneType'`）。
+
+### 15.2 MCP 插件只能跑 GUI 实例
+
+`blender_mcp.py` 的 `BlenderMCPServer.start()` 第一行就是：
+
+```python
+if bpy.app.background:
+    print("BlenderMCP: cannot start server in background mode ...")
+    return
+```
+
+所以 `blender -b` 里开不了 9876，`execute_blender_code` 会一直报
+“Could not connect to Blender”。要既不动用户的会话、又不点 UI，可以起一个**专用 GUI 实例**
+（`Start-Process blender.exe -ArgumentList '--factory-startup','--python',<boot.py>`），
+boot 脚本里 `addon_utils.enable("blender_mcp")` + `bpy.ops.wm.save_userpref()`，
+0.5 s 后 addon 的 auto-start 定时器就会监听 9876。重活仍然交给 `-b` 子进程做。
+
+**致命坑**：在已连上的 MCP 会话里调用 `bpy.ops.wm.read_factory_settings()` 会**卸载 addon**，
+socket 立刻断，`execute_blender_code` 报 “Connection closed before receiving any data”。
+清场只能走数据层：`bpy.data.objects.remove(...)` 逐个删。
+
+### 15.3 Blender 5.2 API 变更
+
+- `Action.fcurves` 已移除（slotted action）。要读曲线用
+  `action.layers[0].strips[0].channelbag(slot).fcurves`。
+- `Scene.rigidbody_world` 只读，重建刚体世界要用 `bpy.ops.rigidbody.world_remove()` + `world_add()`。
+- `Camera.angle` **不可关键帧**（`property "angle" not animatable`）。FOV 变化要驱动 `camera.lens`：
+  `lens = sensor_width / (2*tan(fov/2))`，并设 `sensor_fit="HORIZONTAL"`。
+- 刚体属性要用对象级完整路径才能插帧：`obj.keyframe_insert("rigid_body.kinematic", frame=f)`；
+  写成 `obj.keyframe_insert("kinematic", ...)` 会报 `property "kinematic" not found`。
+
+### 15.4 刚体破碎的三条经验（都是用错误换来的）
+
+1. **密集凸包必须留缝**：Voronoi 单元严丝合缝时，216 块碎片的接触解算会持续抖动
+   （实测 vmean 从 2.4 m/s 一路涨到 28 m/s，而整体几乎没位移）。把每块网格绕自身质心收缩
+   2.8%，并 `use_margin=False`、`collision_margin=0.0`，抖动立刻消失。
+2. **动态体上永远不要留位移关键帧**：每帧“瞬移”会被 Bullet 当成巨大初速。
+3. **初速度靠 kinematic 匀速关键帧，在带速度的那一帧切 dynamic**：实测 3 m/s 的匀速外移
+   在 `kinematic=False` 之后被完整继承（f14→f26 保持 4.4 m/s 并正常受重力）。
+   于是“爆碎”= 14–17 帧定向冲量 + 17 帧起纯 Bullet（重力/互撞/地面反弹）。
+   > 顺带纠正一个误判：早期测试里 y 从 8 跳到 582，其实是把地面写成了 40 m 立方体，
+   > 物体被埋在被动刚体内部被弹出去，不是速度继承的问题。
+
+### 15.5 Alpha WebM 编码
+
+Remotion 自带的 `node_modules/@remotion/compositor-win32-x64-msvc/ffmpeg.exe` 就够用
+（`--enable-libvpx --enable-encoder=libvpx_vp9 --enable-muxer=webm --enable-demuxer=image2`
+`--enable-decoder=png`），但它 `--disable-filters` 且只白名单了一小撮，**不要加 `-vf`**：
+
+```powershell
+ffmpeg.exe -y -framerate 30 -start_number 1 -i shot2_%04d.png `
+  -c:v libvpx-vp9 -pix_fmt yuva420p -b:v 0 -crf 26 `
+  -auto-alt-ref 0 -row-mt 1 -threads 8 shot2_palace_destruction.webm
+```
+
+- `yuva420p` + `-auto-alt-ref 0` 是保住 alpha 的关键；漏掉 alt-ref 会退化成无 alpha 的 yuv420p。
+- 走 Blender 自己的 FFmpeg 输出拿不到 alpha，必须“PNG 序列 → ffmpeg”。
+- Freestyle 在部分无头构建上退出时会抛 `EXCEPTION_ACCESS_VIOLATION`（产物已落盘）。
+  脚本里在 `__main__` 末尾 `sys.stdout.flush()` 后 `os._exit(0)` 可以保住 CLI 退出码为 0。
+
 

@@ -1156,3 +1156,191 @@ V8 的目标不是再换画风，而是把「动态维度」补上：物理遮�
   `out/v8_check_f###.png`、`out/v8_mp4_*.png`、`out/v8b_cartouche_crop.png`。
 
 
+
+## 19. Shot 2B：Blender 真刚体殿柱爆碎（2026-10-23 实测，首个 3D 物理镜头）
+
+### 19.1 动机
+
+分镜 §2B【凌霄宝殿·无坚不摧】此前是 2D 代码表现（`CelestialThrone3D.tsx` 的
+box + 四棱锥低模）。这一刀要的是“一棒横扫、殿柱真的碎开、碎块带着抛物线砸到地面”，
+2D 拼不出来，改为 Blender 离线渲染、Remotion 只合成。同时把 3D 资产管线跑通，
+为后续镜头（炉火、山崩）留模板。
+
+### 19.2 做法
+
+- **脚本**：`scripts/blender/render_shot2_collapse.py`，纯 bpy + numpy，单文件可参数化，
+  支持 `--frame/--preview/--still/--qa-frames/--all/--inspect/--webm/--alpha-mov`。
+- **柱阵**：6×6=36 根八棱华表巨柱（八棱柱身 + 下沉莲花柱础 + 斗拱梁木 + 云纹鎏金环），
+  朱砂 `#C8281E` 与汉白玉 `#EAE0CE` 交替；33 根静态柱合并成单个 mesh（降 Freestyle 开销），
+  3 根受击柱（前排 `(2,0)/(3,0)/(3,1)`）换成碎块阵列。
+- **破碎**：本构建**没有** `object_fracture_cell`，自己用 numpy 写半空间 Voronoi：
+  八棱柱作为 10 个约束平面 + 最近 13 个邻域种子做二分面，批量解三平面交点、按平面取面、
+  角排序成多边形，最后三角化。每根柱 72 块，簇状加权种子（spread 0.40–3.20）保证
+  巨块与碎屑并存；每块绕自身质心收缩 2.8% 留缝、并做 ±0.022 m 断面起伏。
+- **材质**：三渲二。`Normal · LIGHT_DIR` → 两个阈值 → 三段色阶，纯 Emission 无灯，
+  叠宣纸 Noise 颗粒与每块 Object Info 随机微色差；`view_transform="Standard"` + sRGB→linear
+  保证落盘就是四主色。**没有 PBR 高光、没有霓虹**（符合 AGENTS.md §5）。
+- **墨线**：Freestyle，`line_thickness_mode="ABSOLUTE"`、2.2 px、玄黑 `#120D14`，
+  开 silhouette/border/crease。Grease Pencil Line Art 在本构建烘不出描边（见 19.4）。
+- **物理**：真 Bullet。碎块 13 帧前 `kinematic=True` 冻结；14→17 帧做**匀速定向位移**
+  （冲量 4–12 m/s，含径向 + 朝镜头 −Y + 向上），17 帧切 `kinematic=False` 交回真刚体；
+  之后只有重力、碎块互撞、地面被动刚体反弹（restitution 0.36）。另有隐形倾斜旋转
+  碰撞体沿柱阵扫过，兑现“碰撞体横扫”的设定。
+- **运镜**：Z=16.0 → 2.8 螺旋俯冲，半径 32 → 20，方位 −132° → −92°，FOV 54° → 64°
+  （`camera.angle` 不可关键帧，改驱动 `lens`）。目标点向画面右侧偏移 3.0 m，
+  让受击柱落在左三分而非中心图腾。
+- **输出**：1920×1080 / 30 fps / 52 帧 / Film Transparent，PNG RGBA 序列 → ffmpeg。
+
+### 19.3 结果
+
+| 项 | 数值 |
+|---|---|
+| 建场（参数化几何 + 216 碎块） | 7–10 s |
+| 物理烘焙（1–52 帧） | 39–41 s |
+| 单帧渲染（1080p，EEVEE + Freestyle，16 samples） | 2.9 s |
+| 52 帧总耗时 | 153 s |
+| `out/blender_frames/shot2/` | 52 帧 PNG RGBA，105.4 MB |
+| `public/blender_renders/shot2_palace_destruction.webm` | 3.36 MB，VP9，**无 alpha**（见 19.4） |
+| `out/shot2_palace_destruction_alpha.mov` | 100.3 MB，ProRes 4444 `yuva444p12le`，**带 alpha** |
+| 关键验收帧 | `out/blender_qa/shot2_f008/f014/f020/f032/f044.png`、`shot2_f24.png` |
+| 接触表 | `out/shot2_contact_sheet.png`（12 个时间点） |
+
+物理自检（`--inspect`，按真实帧间隔折算速度）：f14 起爆，f17 平均 4–5 m/s、
+f24 碎块云半径 6.4 m、f52 半径 13.8 m 且过半落地——是“炸开 + 落地”而不是原地抖动。
+
+### 19.4 踩坑与推翻（都是错误的代价）
+
+1. **Grease Pencil Line Art 在本构建不可用**：`GreasePencilLineartModifier` 存在，
+   `bpy.ops.object.lineart_bake_strokes()` 返回 `FINISHED`、`is_baked=True`，
+   但 `layers[0].frames` 始终 0，OBJECT/COLLECTION/SCENE 三种 source 都一样。
+   → 改用 Freestyle（AGENTS.md §5 明确允许）。Freestyle 的默认 lineset `linestyle` 是 `None`，
+   必须自己 `bpy.data.linestyles.new()` 再赋给 `lineset.linestyle`。
+2. **推翻「kinematic 切 dynamic 会炸飞」的早期结论**：那次 y 从 8 瞬移到 582，
+   真实原因是测试地面写成了 40 m 立方体，物体埋在被动刚体里被弹出去。
+   **干净复测后速度继承是可靠的**（3 m/s 匀速外移，释放后保持 4.4 m/s 并正常受重力），
+   这正是本镜头冲量方案的基础。
+3. **推翻「碎片越密越像炸碎」**：216 块严丝合缝的凸包会持续互穿抖动
+   （实测 vmean 2.4 → 28 m/s 而位移几乎为零，看起来就是“原地裂开的石柱”）。
+   必须给每块留 2.8% 缝 + `use_margin=False`，抖动才消失。
+4. **动态体上不能留位移关键帧**：每帧“瞬移”会被 Bullet 当成巨大初速。
+   冲量只能发生在 kinematic 期间，且切换帧必须落在带速度的那一帧。
+5. **鎏金阵纹第一版做成了实心金盘**：`add_octa_prism(cap_top=True)` 会给整块圆盘封顶。
+   地面环带必须用真正的环形面（`add_ring_band`）而不是实心八棱柱。
+6. **VP9 + alpha 在这套离线管线里做不到**（详见 19.5）。
+
+### 19.5 未解决（诚实记录）
+
+1. **VP9 alpha 编码不可用**：本机唯一可用的 ffmpeg 是 Remotion 自带的精简 7.1 构建，
+   它的 matroska 封装不写 VP9 alpha——传 `-pix_fmt yuva420p` 落盘仍是 `yuv420p`，
+   容器里没有 `AlphaMode`/`BlockAdditions`。用 Remotion 自己的渲染器
+   （`--codec=vp9 --pixel-format=yuva420p`）出来的结果一样，因为它的 stitch 阶段
+   **复用的就是同一个 ffmpeg.exe**。要真正拿到 VP9-alpha，必须换带 libwebm 封装的
+   ffmpeg（或 vpxenc/mkvmuxer）。
+   → 因此：透明母版用 **ProRes 4444 MOV**（`yuva444p12le`，Remotion 可读，项目
+   `public/blender_renders/README.md` 本就允许），落 `out/`（约 100 MB，不进 git）；
+   `public/` 里保留 3.36 MB 的 VP9 WebM 作为**不透明**预览与路径占位。
+2. **碎块仍偏“石堆”**：72 块/柱在 25 m 机位下每块 ~0.45 m，爆开后读作一片碎石云，
+   缺少 2–3 块“可辨识的大断柱”作为视觉锚。下一步应把柱身改成“上段 2–3 块巨断柱
+   + 下段碎屑”的二级破碎。
+3. **断面色偏白**：内部断面 `#C9BBA2` 占表面积 60%+，朱砂壳面被稀释，
+   观感更像汉白玉柱炸开而不是朱砂柱。可考虑把断面染成带朱砂底色的暖石。
+4. **没有尘土/速度线**：纯刚体 + 墨线，缺一层水墨飞白，爆点看起来“干净”。
+   下一轮可在 Blender 里加低成本粒子或后期在 Remotion 叠飞白笔触。
+5. **Freestyle 退出崩**：部分无头运行在渲染结束后抛 `EXCEPTION_ACCESS_VIOLATION`
+   （产物完好）。脚本用 `os._exit(0)` 绕过析构保证 CLI 退出码为 0。
+
+### 19.6 代价
+
+- 从接入 MCP 到出片约 1 小时；其中 **5 轮**视觉返工（构图 / 地面 / 相机 / 可见性 driver
+  写反 / 碎片密度），**4 次**物理误判（含 19.4 第 2 条的自我推翻），**3 次**渲染试跑。
+- 每次试跑约 2–3.5 分钟（建场 + 烘焙 + 5 张 QA），全量 52 帧 153 s。
+- 教训：**先隔离变量再调参**。前两轮把“地面做错”“driver 写反”“速度统计按 1 帧折算”
+  混在一起看，浪费了两轮。
+
+### 19.7 影响文件
+
+- 新增：`scripts/blender/render_shot2_collapse.py`、
+  `scripts/blender_alpha_entry/index.tsx`（把 PNG 序列转任意透明格式的独立 Remotion 入口）。
+- 修改：`docs/AGENT_TOOLING.md`（§15 新增 5.2.3 无头实操清单）、
+  `public/blender_renders/README.md`（登记 shot2 资产与 alpha 现状）、
+  `docs/EXPLORATION_LOG.md`（本节）。
+- 交付：`public/blender_renders/shot2_palace_destruction.webm`（VP9，不透明）、
+  `out/blender_frames/shot2/shot2_0001..0052.png`（RGBA 真透明母版）、
+  `out/shot2_palace_destruction_alpha.mov`（ProRes 4444 + alpha）、
+  `out/shot2_contact_sheet.png`、`out/blender_qa/shot2_f0*.png`。
+
+## 20. Shot 3：五指山深渊峡谷 + 刚体铁索（2026-10-23 实测，第二个 3D 物理镜头）
+
+### 20.1 动机
+
+分镜 3A/3B 此前是 2D 的 `MountainCleft.tsx`（岩壁挤压 + SVG 铁索）。这一镜要“垂直深渊 +
+六道重型铁索被山体压得骤然绷紧 + 落石掠过镜头”，2D 画不出链环互扣与空间坠落，改为
+Blender 离线渲染。复用 Shot 2 的管线（EEVEE + Freestyle + 三渲二 + PNG→WebM）。
+
+### 20.2 做法
+
+- **脚本**：`scripts/blender/render_shot3_cleft.py`，单文件参数化，支持
+  `--frame/--preview/--qa-frames/--all/--inspect/--webm/--alpha-mov`。
+- **崖壁**：110×70 网格平面，两层 Displace：`VORONOI`（strength 2.0）+ `CLOUDS`（3.8），
+  纹理坐标走一个 `scale=(1.0, 0.62, 0.26)` 的空物体 → 胞体被竖直拉长 = 皴法；
+  再叠一层只依赖 y 的正弦石纹，以及只依赖 z 的水平层理（相机下坠时提供纵向视差）；
+  最后按 z 做 V 形收束（谷底半宽收到 45%）。
+- **材质**：三渲二，`Normal·LIGHT_DIR` 三段色阶 + 宣纸颗粒；边缘光收窄到 `Facing` 轮廓，
+  并按 `N·L` 的幂次门控：受光侧出宣纸米白金边、背光侧只给极淡墨 lift。
+- **铁链**：6 道、每道 22 个实体椭圆链环（torus 拉长 1.55 倍，相邻环绕链轴交替 90°），
+  全部真刚体（CONVEX_HULL / 11 kg），相邻环用 POINT 球铰约束、`disable_collisions=True`；
+  两端锚固块 kinematic，1→14 帧外扩 0.62 m、下沉 0.42 m 并在 14 帧骤停，把链条绷紧并灌入振动。
+- **落石 / 粉尘 / 火星**：60 块不规则碎岩 + 34 片粉尘面片走确定性解析抛物与自旋，
+  48 片鎏金自发光小面片在 14–19 帧从锚点迸出。
+- **运镜**：z 22 → −26（48 m），俯角 9° → 40°，FOV 60° → 72°，带 3.5° 以内的滚转。
+
+### 20.3 结果
+
+| 项 | 数值 |
+|---|---|
+| 建场 | 18 s |
+| 物理烘焙（132 环 + 132 约束，75 帧） | 7 s |
+| 单帧 1080p（EEVEE + Freestyle） | 2.0 s |
+| 75 帧全量 | 147 s |
+| `public/blender_renders/shot3_mountain_chains.webm` | 1.37 MB，VP9（无 alpha） |
+| `out/shot3_mountain_chains_alpha.mov` | 104.1 MB，ProRes 4444 `yuva444p12le`（含 alpha） |
+| 铁链物理 | 最低点 1→14 帧抬升 0.7 m（收紧），f16 速度尖峰 9.8 m/s，之后指数衰减摆动 |
+| 验收帧 | `out/blender_qa/shot3_f30.png`（2.13 MB） |
+| 接触表 | `out/shot3_contact_sheet.png` |
+
+### 20.4 踩坑与结论
+
+1. **刚体世界必须先建**：先 `world_add()` 再 `rigidbody.object_add()`。反过来的话对象不会进
+   `rbw.collection`，`ptcache.bake_all` 0.0 s 完成、物体全程不动（本轮第一版就是这样“静帧”），
+   而且 `--inspect` 速度全是 0.0，很容易被误读成“物理稳定”。
+2. **Freestyle 的 crease 角决定岩石能否读出皴法**：112° 时岩面是一整片死黑（折边全被滤掉），
+   58° 才把面片折边画成墨线 —— 这是国画皴法在 3D 里的等效物。
+3. **暗部基调必须高于墨线色**：崖壁基色就是 `#120D14`，若 deep/shade 再乘 0.95 去压暗，
+   墨线（同样是 `#120D14`）在暗面等于没画。把 deep/shade/highlight 抬到 1.7 / 2.6 / 2.55 倍后，
+   仍是玄黑调，但岩面与墨线都能看见。
+4. **链条不需要真几何互扣**：CONVEX_HULL 的碰撞体是实心环，靠 POINT 约束串接，
+   视觉上仍是环环相扣，物理上稳定（132 环烘焙 7 s）。
+5. **镜面构图会“平”**：竖直峡谷 + 等距崖壁 = 12 个抽帧几乎一样。必须靠水平层理、
+   坠落经过的链条与落石提供运动参照；这是本镜最大的构图短板。
+
+### 20.5 未解决（诚实记录）
+
+1. 崖壁偏“低模晶体”：8–10 m 机位下单个面片约 1 m，棱角硬，离“深邃岩石皴法”还有距离。
+2. 右壁比左壁亮一档（紫灰），与“深黑玄墨”有落差。
+3. 火星 48 片面片在 30 fps 里几乎看不清。
+4. 峡谷中缝是透明区（f30 占 16%），合成时必须保证背后有山体。
+5. 同 Shot 2：VP9 alpha 在本机不可得，透明母版走 PNG 序列 / ProRes 4444。
+
+### 20.6 代价
+
+- 从写脚本到出片约 40 分钟，**6 轮**视觉返工（尺度 / 崖壁亮度 / 材质门控 / 层理视差 / 落石尺寸 /
+  粉尘面片），**1 次**重大物理错误（刚体世界顺序），**3 次**全量或近全量渲染。
+- 教训：`--inspect` 只看“速度是否合理”会漏掉“物理根本没跑”；必须同时看 bake 耗时与位移。
+
+### 20.7 影响文件
+
+- 新增：`scripts/blender/render_shot3_cleft.py`。
+- 修改：`public/blender_renders/README.md`（登记 shot3）、`docs/EXPLORATION_LOG.md`（本节）。
+- 交付：`public/blender_renders/shot3_mountain_chains.webm`、
+  `out/blender_frames/shot3/*.png`、`out/shot3_mountain_chains_alpha.mov`、
+  `out/blender_qa/shot3_f30.png`、`out/shot3_contact_sheet.png`、`out/shot3_render_report.md`。
