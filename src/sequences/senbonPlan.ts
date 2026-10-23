@@ -96,12 +96,12 @@ export const CUE = {
   armyWaves: [sb(36), sb(50), sb(64)],
 
   /* Sub2A —— 眼部横切 */
-  eyeBand: {start: sb(75), open: sb(79), end: sb(98)},
+  eyeBand: {start: sb(75), open: sb(76), end: sb(98)},
   eyeWords: [sb(78), sb(86), sb(93)],
 
   /* Sub2B —— 3D 崩裂 + 劈字 */
   palace: {start: sb(98), end: sb(150)},
-  slash: {reveal: sb(104), cut: sb(112)},
+  slash: {reveal: sb(102), cut: sb(112)},
   invert: [sb(112), sb(113)],
 
   /* Sub3A —— 巨岩 + 铁索 */

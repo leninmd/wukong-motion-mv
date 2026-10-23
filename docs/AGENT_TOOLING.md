@@ -332,3 +332,121 @@ npm run assets:wukong
 - 柱体长宽比低于 2:1 就会读成“滚筒”。经验值：高 9–14、半径 0.6–0.75、碎段 3。
 - **未断裂的柱段不要画顶盖**，否则整根柱子被切成香肠；顶盖只在 `broken` 后出现。
 - 相机不要低于柱高的 1/3，否则观众会进到碎块内部，画面失去“殿”的读法。
+
+---
+
+## 11. V6：真 WebGL + 2K 生图矢量化管线（2026-10-23 实测）
+
+### 11.1 新增依赖（全部锁定精确版本）
+
+```powershell
+# 前端
+npm install --save-exact `
+  @remotion/motion-blur@4.0.537 `
+  @react-three/drei@10.7.9 `
+  @react-three/postprocessing@3.2.2 `
+  postprocessing@6.39.5
+npm install --save-dev --save-exact @resvg/resvg-js@2.6.2
+
+# Python（用 D:\dev\runtimes\python\Python313\python.exe）
+python -m pip install rembg[cpu] vtracer opencv-python
+```
+
+- `rembg` 首次运行会下载 `u2net.onnx`（176 MB）到 `C:\Users\<user>\.rembg\models\u2net\u2net.onnx`；
+  本机下载约 45 s，之后每张图 3–9 s（CPU）。
+- `vtracer` 是 Rust 扩展；`resvg` 用 `scripts/rasterize_svg.mjs` 调 `@resvg/resvg-js`，
+  **不要**去装 `cairosvg`（Windows 上缺 cairo DLL）。
+- 本机无 GPU，Remotion/Chrome 走 SwiftShader；WebGL 能出图，但会打印
+  `Automatic fallback to software WebGL has been deprecated`，这是环境警告，不是失败。
+
+### 11.2 `<ThreeCanvas>` + `<EffectComposer>` 的致命坑：首帧空白
+
+`<EffectComposer>` 用 `useFrame(priority=1)` 接管渲染；`<ThreeCanvas>` 的
+`ManualFrameRenderer` 在 **子组件的 effect 之前** 执行一次 `advance()`。结果：
+Composition 的第一个仍/视频首帧里 composer 还没挂好，**整帧全黑**（V6 实测）。
+
+修法：在 `<ThreeCanvas>` 内部、`<EffectComposer>` 之后放一个 `LateAdvance`：
+
+```tsx
+const LateAdvance = () => {
+  const advance = useThree((s) => s.advance);
+  const frame = useCurrentFrame();
+  useEffect(() => {
+    const handle = delayRender(`advance-${frame}`);
+    let done = false;
+    const finish = () => { if (!done) { done = true; continueRender(handle); } };
+    const timer = setTimeout(() => { advance(performance.now()); finish(); }, 34);
+    return () => { clearTimeout(timer); finish(); };
+  }, [advance, frame]);
+  return null;
+};
+```
+
+- 没有它，`remotion still --frame=120` 会输出纯底色；有了它，still 与成片都正常。
+- 每个 3D 帧多 ~34 ms；52 帧约 1.8 s，可接受。
+- `EffectComposer` 的 `<Bloom luminanceThreshold={0.25} intensity={2} mipmapBlur />`
+  在 SwiftShader 下可用；不要开 `frameBufferType={HalfFloatType}` 以外的自定义 target，
+  本机内存只有 ~1.4–2.4 GB 可用，`--concurrency=2` 比默认并发稳。
+
+### 11.3 确定性的 `<Sparkles>`
+
+`@react-three/drei` 的 `<Sparkles>` 在 mount 时用 `THREE.MathUtils.randFloatSpread` +
+`Math.random` 生成位置。Remotion 并发渲染每个 tab 独立 mount，粒子分布不同，切帧会跳。
+V6 在 `CelestialThrone3D.tsx` 内实现了同参数（`count=400 / scale=15 / size=6 /
+color="#FFF3D1"`）的确定性点云，位置全部来自 `hash(seed, i)`。**不要**为了“用库”
+直接把 drei Sparkles 放回并发渲染树。
+
+### 11.4 V6 资产管线命令
+
+```powershell
+# 1) 生图（只通过 agy_image.mjs；每次一张，落 out/gen/v6_*_raw.png）
+node scripts/agy_image.mjs "<prompt>" "D:\AI\wukong-motion-mv\out\gen\v6_eyes_raw.png" 420000
+
+# 2) 烘焙（角色 / 特写 / 建筑可分开跑）
+python scripts/build_wukong_assets.py --only characters
+python scripts/build_wukong_assets.py --only prints
+python scripts/build_wukong_assets.py --only buildings
+python scripts/build_wukong_assets.py            # 最后跑一次生成完整 manifest
+
+# 3) 质检
+npm run typecheck
+npx remotion still src/index.ts WukongClimaxSegment out/v6_check_f085.png --frame=85
+npx remotion still src/index.ts WukongClimaxSegment out/v6_check_f120.png --frame=120
+npx remotion render src/index.ts WukongClimaxSegment out/senbon_v6_mvp.mp4 --concurrency=2
+```
+
+- 生成图经常是 **JPEG 但扩展名 `.png`**，PIL `Image.open()` 按内容解码即可，
+  不要用后缀判断（`read_image` 工具也会报格式不符）。
+- 生图默认会带 1px 黑框/米白纸边。`build_army()` 先裁 18px；`woodblock_slash`
+  先裁 30px。**不要**把黑框当角色轮廓。
+- `vtracer` 的 SVG 会很大（gate 12 MB / palace 11 MB / army 20 MB），
+  但 `resvg` 渲染 1 张 2K 只要 1–3 s。
+
+### 11.5 合成时间轴事故：`clip-path` + 零高父容器
+
+V5 的【无坚不摧】只显示右上一条金线，根因不是 `<Sequence>`、不是 z-index：
+
+```tsx
+// 父容器只有 absolute 子节点 → height: 0
+<div style={{position:'absolute', width:760}}>
+  <div style={{position:'absolute', inset:0, clipPath:'inset(0 0 51% 0)'}}>无坚不摧</div>
+</div>
+```
+
+`inset(... 51% ...)` 在 0 高元素上把 100% 都裁掉；`bottom:-18` 的金线是唯一漏网的。
+V6 约定：**斜切大字必须有显式 `height`，只用内联 `polygon(...)`，并画在所有叠加层
+之后（zIndex ≥ 60）**。禁用在 Headless Chromium 里难排查的外部 SVG `clipPath id`。
+
+### 11.6 成片级回抽（必须做）
+
+单帧 still 不等于成片。V6 交付前固定从 **最终 MP4** 回抽 7 帧：
+
+```powershell
+$ff = 'node_modules\@remotion\compositor-win32-x64-msvc\ffmpeg.exe'
+foreach ($t in @('0.5','1.8','2.8','4.0','6.5','8.0','9.2')) {
+  & $ff -y -v error -ss $t -i out/senbon_v6_mvp.mp4 -frames:v 1 ("out/v6_mp4_{0}.png" -f $t)
+}
+```
+
+对应验收：1A 建筑 / 1B 天兵与大字 / 2A 眼部横切 / 2B【无坚不摧】/ 3A 跪撑 / 4A 悬签 / 4B 2K 怒颜。
+回抽图必须用视觉能力逐张读，不得只看文件大小。

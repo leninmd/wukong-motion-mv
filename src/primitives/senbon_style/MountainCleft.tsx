@@ -150,11 +150,11 @@ export const MountainCleft: React.FC<MountainCleftProps> = ({
       >
         <ClimaxAsset
           asset="trapped"
-          height={700}
-          x={960}
+          height={724}
+          x={764}
           baseline={1082}
-          echo={0.22}
-          rim={0.9}
+          echo={0.16}
+          rim={0.18}
           rotate={Math.sin(local * 1.6) * 0.4}
         />
       </div>

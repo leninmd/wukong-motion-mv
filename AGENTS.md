@@ -176,3 +176,44 @@ V4 用 SVG `<polygon>` 手写大圣的五官与身体，被判定为「折纸积
    禁止在 `src/` 里出现生图会话路径或本机绝对路径。
 6. **自检命名**：V5 起抽帧用 `out/v5_check_f###.png`，成片 `out/senbon_v5_mvp.mp4`，
    接触表 `out/senbon_v5_contact_sheet.png`。§12.3 的四条同样适用于 V5。
+
+## 14. V6：真 WebGL + 2K 生图资产铁律（2026-10-23 增补）
+
+本节**明确推翻** §13.2「剪影内部恒为 #120D14」、§13.4「三维用
+`threeDCamera.ts` 手写投影」与 §13.6 的 V5 命名。不是风格建议，是必须执行的
+工程约束。
+
+1. **2B 必须走真 WebGL**。`@remotion/three` 的 `<ThreeCanvas>` +
+   `@react-three/fiber` + `@react-three/drei` 的 `<Outlines>` / `<Edges>` +
+   `@react-three/postprocessing` 的 `<EffectComposer><Bloom …/>`。
+   禁止再手写 2D 透视投影；`CelestialCollapse3D.tsx` 与 `utils/threeDCamera.ts`
+   已删除，不得恢复。
+2. **EffectComposer 首帧必须补一次 advance**。`<ThreeCanvas>` 的
+   `ManualFrameRenderer` 早于 composer 的 effect，直接渲染会得到纯底色。
+   任何启用 `<EffectComposer>` 的 ThreeCanvas 必须在 composer 之后挂
+   `LateAdvance`（`delayRender` + 34 ms 后 `advance(performance.now())`）。
+3. **粒子必须确定性**。禁止直接使用会在 mount 时调用 `Math.random` /
+   `randFloatSpread` 的 `<Sparkles>`；需要粒子刀光时用 `hash(seed, i)` 的
+   本地点云，参数可对齐 `count=400 / scale=15 / size=6 / #FFF3D1`。
+4. **禁止 480p 截帧放大**。脸、眼、建筑、天兵只允许来自生图网关的 ≥1024px
+   素材；眼部横条最终 ≥2200×356，怒颜 ≥2048²。`public/wukong_assets/` 里
+   不允许再出现参考视频截帧派生的面部/眼部资产。
+5. **角色必须是四色套版木刻**。`scripts/build_wukong_assets.py` 的
+   `posterize_character()`：rembg 去背 + 白边剥离 + `cv2.erode(3px)`，内部保留
+   墨 `#120D14` / 朱砂 `#C8281E` / 鎏金 `#F5C242` / 宣纸 `#EAE0CE`。
+   既禁止整块填死成黑墨团，也禁止保留白色贴纸描边。
+6. **建筑/天兵必须矢量化**。南天门、凌霄殿、十万天兵一律
+   `LANCZOS 2K → vtracer → resvg`；禁止再写 `<rect>` 搭门楼。SVG 用
+   `scripts/rasterize_svg.mjs`，禁止 `cairosvg`。
+7. **斜切大字禁止零高父容器**。文字层必须有显式 `height`，只用内联
+   `clip-path: polygon(...)`；禁止依赖外部 SVG `<clipPath id>`。所有主标题
+   必须画在 `HalftoneOverlay`、白闪、反色、暗角之后（zIndex ≥ 60）。
+8. **交付前必须从最终 MP4 回抽 7 帧**：0.5 / 1.8 / 2.8 / 4.0 / 6.5 / 8.0 / 9.2 s，
+   逐张读图确认：1A 建筑、1B 大字与天兵、2A 眼部横切、2B【无坚不摧】、
+   3A 跪撑、4A 悬签、4B 2K 怒颜。只测 still 不测 MP4，视为未交付。
+9. **命名**：V6 抽帧 `out/v6_check_f###.png`，成片 `out/senbon_v6_mvp.mp4`，
+   接触表 `out/senbon_v6_contact_sheet.png`，MP4 回抽 `out/v6_mp4_<t>.png`。
+10. **依赖锁版本**：`three 0.186.1`、`@types/three 0.186.0`、`@react-three/fiber
+    9.8.2`、`@react-three/drei 10.7.9`、`@react-three/postprocessing 3.2.2`、
+    `postprocessing 6.39.5`、`@remotion/three` / `@remotion/motion-blur` `4.0.537`；
+    禁止 `^` 漂移。

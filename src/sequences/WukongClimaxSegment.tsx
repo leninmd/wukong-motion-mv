@@ -7,7 +7,7 @@ import {
 } from '../audio/spectrum';
 import {CLIMAX} from '../config/theme';
 import {clamp} from '../utils/math';
-import {CelestialCollapse3D} from '../primitives/senbon_style/CelestialCollapse3D';
+import {CelestialThrone3D} from '../primitives/senbon_style/CelestialThrone3D';
 import {ClimaxAsset} from '../primitives/senbon_style/ClimaxAsset';
 import {EyeWoodblockShot} from '../primitives/senbon_style/EyeWoodblockShot';
 import {FourPaperPanels} from '../primitives/senbon_style/FourPaperPanels';
@@ -45,48 +45,106 @@ export const WUKONG_CLIMAX_FPS = CLIMAX.fps;
 const SlashType: React.FC<{time: number; revealAt: number; cutAt: number}> = ({time, revealAt, cutAt}) => {
   const appear = clamp01((time - revealAt) / 0.18);
   if (appear <= 0) return null;
-  const cut = clamp01((time - cutAt) / 0.05);
-  const offset = 12 * cut;
-  const base = {
-    position: 'absolute' as const,
-    right: 118,
-    top: 132,
-    width: 760,
+  const cut = clamp01((time - cutAt) / 0.06);
+  const offset = 14 * cut;
+  const textBase: React.CSSProperties = {
+    position: 'absolute',
+    inset: 0,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'flex-end',
+    paddingRight: 26,
     fontFamily: SERIF_STACK,
-    fontSize: 118,
+    fontSize: 128,
     fontWeight: 900,
-    letterSpacing: 10,
-    lineHeight: 1.08,
-    textAlign: 'right' as const,
-    transform: `scale(${f(1.12 - appear * 0.12)})`,
-    transformOrigin: '100% 0%',
-    opacity: appear,
+    letterSpacing: 14,
+    lineHeight: 1,
+    whiteSpace: 'nowrap',
+    WebkitTextStroke: '3px #120D14',
+    textShadow: '0 6px 0 rgba(6,4,6,0.55)',
   };
   return (
-    <div style={base}>
+    <div
+      style={{
+        position: 'absolute',
+        right: 62,
+        top: 92,
+        width: 900,
+        height: 264,
+        zIndex: 60,
+        opacity: appear,
+        transform: `scale(${f(1.08 - appear * 0.08)})`,
+        transformOrigin: '100% 50%',
+        pointerEvents: 'none',
+      }}
+    >
+      {/* 墨底斜切牌：给大字一个确定的局部对比护罩，不靠整屏压暗 */}
       <div
         style={{
           position: 'absolute',
           inset: 0,
-          color: '#FFEFC4',
-          clipPath: 'inset(0 0 51% 0)',
-          transform: `translateX(${f(offset)}px)`,
+          background: 'linear-gradient(105deg, rgba(8,5,7,0) 0%, rgba(8,5,7,0.62) 13%, rgba(8,5,7,0.88) 100%)',
+          clipPath: 'polygon(5% 0, 100% 6%, 100% 94%, 0 100%)',
+          border: '1px solid rgba(252,201,52,0.28)',
         }}
-      >
-        无坚不摧
+      />
+      <div style={{position: 'absolute', left: '6%', right: '3%', top: 16, height: 2, backgroundColor: SENBON.gold, opacity: 0.55}} />
+      <div style={{position: 'absolute', left: '6%', right: '3%', bottom: 16, height: 2, backgroundColor: SENBON.gold, opacity: 0.55}} />
+
+      {/* 字：上下两半互补斜切，父容器有确定高度，clip-path 绝不会退化成零高 */}
+      <div style={{position: 'absolute', left: 30, right: 22, top: 34, height: 196}}>
+        <div
+          style={{
+            ...textBase,
+            color: '#FFF3D1',
+            clipPath: 'polygon(0 0, 100% 0, 100% 42%, 0 60%)',
+            transform: `translateX(${f(offset)}px)`,
+          }}
+        >
+          无坚不摧
+        </div>
+        <div
+          style={{
+            ...textBase,
+            color: SENBON.gold,
+            clipPath: 'polygon(0 60%, 100% 42%, 100% 100%, 0 100%)',
+            transform: `translateX(${f(-offset)}px)`,
+          }}
+        >
+          无坚不摧
+        </div>
+        <div
+          style={{
+            position: 'absolute',
+            left: -18,
+            right: -18,
+            top: '50%',
+            height: 4,
+            backgroundColor: SENBON.gold,
+            opacity: 0.4 + cut * 0.6,
+            transform: 'rotate(-2.4deg)',
+            boxShadow: cut > 0.2 ? '0 0 22px rgba(252,201,52,0.85)' : undefined,
+          }}
+        />
+        <div
+          style={{
+            position: 'absolute',
+            left: 2,
+            bottom: -2,
+            width: 46,
+            height: 46,
+            border: `2px solid ${SENBON.cinnabar}`,
+            color: SENBON.cinnabar,
+            fontFamily: SERIF_STACK,
+            fontSize: 22,
+            lineHeight: '30px',
+            textAlign: 'center',
+            opacity: 0.92,
+          }}
+        >
+          破
+        </div>
       </div>
-      <div
-        style={{
-          position: 'absolute',
-          inset: 0,
-          color: SENBON.cinnabar,
-          clipPath: 'inset(49% 0 0 0)',
-          transform: `translateX(${f(-offset)}px)`,
-        }}
-      >
-        无坚不摧
-      </div>
-      <div style={{position: 'absolute', left: 0, right: 0, bottom: -18, height: 3, backgroundColor: SENBON.gold, opacity: 0.7}} />
     </div>
   );
 };
@@ -97,23 +155,29 @@ const SlashType: React.FC<{time: number; revealAt: number; cutAt: number}> = ({t
 
 const Shot2B: React.FC<{time: number; start: number; end: number; pulse: number}> = ({time, start, end, pulse}) => (
   <>
-    <CelestialCollapse3D time={time} start={start} end={end} cutAt={CUE.slash.cut} pulse={pulse} />
+    <CelestialThrone3D time={time} start={start} end={end} cutAt={CUE.slash.cut} pulse={pulse} />
 
-    {/* 左下角前景：真实立绘侧影（三层残影），不描荧光边 */}
-    <div style={{position: 'absolute', inset: 0, opacity: 0.96}}>
+    {/* 左下角：朱砂逆光底，把四色套版立绘从暗殿里托出来 */}
+    <div
+      style={{
+        position: 'absolute',
+        inset: 0,
+        pointerEvents: 'none',
+        background: 'radial-gradient(ellipse 34% 48% at 20% 82%, rgba(200,40,30,0.26) 0%, rgba(200,40,30,0) 72%)',
+      }}
+    />
+
+    <div style={{position: 'absolute', inset: 0, opacity: 0.98}}>
       <ClimaxAsset
-        asset="slashColour"
-        height={644}
-        x={352}
-        baseline={1104}
-        echo={0.5}
+        asset="slash"
+        height={700}
+        x={344}
+        baseline={1128}
+        echo={0.28}
         rotate={-2}
-        rim={0.35}
-        style={{filter: 'brightness(0.86) saturate(0.94)'}}
+        rim={0}
       />
     </div>
-
-    <SlashType time={time} revealAt={CUE.slash.reveal} cutAt={CUE.slash.cut} />
 
     {/* 右下角：刀光落点的余烬 */}
     <svg viewBox="0 0 1920 1080" width="1920" height="1080" style={{position: 'absolute', inset: 0, mixBlendMode: 'screen', pointerEvents: 'none'}}>
@@ -209,7 +273,7 @@ export const WukongClimaxSegment: React.FC = () => {
     s1a: 0.2,
     s1b: 0.16,
     s2a: 0.14,
-    s2b: 0.34,
+    s2b: 0.18,
     s3a: 0.26,
     s3b: 0.28,
     s4a: 0.1,
@@ -340,6 +404,14 @@ export const WukongClimaxSegment: React.FC = () => {
           }}
         />
       ) : null}
+
+      {/*
+        【无坚不摧】必须画在所有叠加层之后。
+        V5 的根因是父容器只有绝对定位子节点 → height:0 → clip-path: inset(...%)
+        把两半文字全裁掉，只剩底边那条金线。V6 给父容器确定高度 + 内联
+        polygon 互补斜切，不再依赖任何外部 SVG clipPath ID。
+      */}
+      {shot.id === 's2b' ? <SlashType time={time} revealAt={CUE.slash.reveal} cutAt={CUE.slash.cut} /> : null}
     </AbsoluteFill>
   );
 };

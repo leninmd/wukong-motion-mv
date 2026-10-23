@@ -8,9 +8,9 @@ import {SERIF_STACK, SENBON, clamp01, easeOutCubic, easeOutExpo, f, overshoot} f
  * `<EyeWoodblockShot />` —— Sub2A：宣纸白底上的眼部横切。
  *
  * 复刻《千本樱》00:32 / 00:37：整屏翻成暖白古宣纸，斜 -5° 撕开一道玄黑金边
- * 横条，横条里是**从参考片 00:17.5 真实抽帧**做成的木刻套色眼部特写——不是
- * 代码画的多边形眼睛。瞳孔方向迸出金色横向闪电，右侧在纸面上砸出
- * 【怎】【敌】【我】三字。
+ * 横条，横条里是**生图网关的 2K 眼部木刻**（2200×356，vtracer 之前的高精度
+ * 印张），不是 480p 视频截帧放大。瞳孔方向迸出金色横向闪电，右侧在纸面上
+ * 砸出【怎】【敌】【我】三字。
  */
 
 export interface EyeWoodblockShotProps {
@@ -201,7 +201,7 @@ export const EyeWoodblockShot: React.FC<EyeWoodblockShotProps> = ({
           opacity: 0.6 * clamp01((time - openAt) * 3),
         }}
       >
-        火眼金睛 · 真帧放大
+        火眼金睛 · 木刻套色
       </div>
 
       {/* 底部一条朱砂粗线，像版画的套色规矩线 */}

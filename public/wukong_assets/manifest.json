@@ -1,73 +1,93 @@
 {
-  "version": "v5",
+  "version": "v6",
+  "pipeline": "image-gateway 2K → rembg / OpenCV 四色套版 → vtracer + resvg",
+  "palette": {
+    "ink": "#120D14",
+    "cinnabar": "#C8281E",
+    "gold": "#F5C242",
+    "washi": "#EAE0CE"
+  },
   "assets": {
-    "face_glare_woodblock": {
-      "file": "face_glare_woodblock.png",
-      "source": "ref f271 (00:18.0)",
-      "size": [
-        1280,
-        1200
-      ],
-      "note": "咬牙怒视特写，五阶套色 + 黑版线",
-      "bytes": 1812938,
-      "sha": "e7d8b22b49f8"
+    "woodblock_spin": {
+      "file": "woodblock_spin.png",
+      "width": 1240,
+      "height": 1800,
+      "source": "生图网关 hero_spin_raw.png",
+      "pipeline": "rembg u2net → 白边剥离（外轮廓填洞 + erode 3px）→ HSV 四色套版 #120D14/#C8281E/#F5C242/#EAE0CE",
+      "bytes": 1763085,
+      "sha": "9bf6f9300b32"
+    },
+    "woodblock_slash": {
+      "file": "woodblock_slash.png",
+      "width": 1876,
+      "height": 2048,
+      "source": "生图网关 hero_slash_clean_raw.png",
+      "pipeline": "rembg u2net → 白边剥离（外轮廓填洞 + erode 3px）→ HSV 四色套版 #120D14/#C8281E/#F5C242/#EAE0CE",
+      "bytes": 3128778,
+      "sha": "7c1fc70a33b5"
+    },
+    "woodblock_trapped": {
+      "file": "woodblock_trapped.png",
+      "width": 1239,
+      "height": 1800,
+      "source": "生图网关 hero_trapped_raw.png",
+      "pipeline": "rembg u2net → 白边剥离（外轮廓填洞 + erode 3px）→ HSV 四色套版 #120D14/#C8281E/#F5C242/#EAE0CE",
+      "bytes": 1884939,
+      "sha": "2fcc2dc55002"
+    },
+    "woodblock_raise": {
+      "file": "woodblock_raise.png",
+      "width": 1463,
+      "height": 1800,
+      "source": "生图网关 hero_raise_raw.png",
+      "pipeline": "rembg u2net → 白边剥离（外轮廓填洞 + erode 3px）→ HSV 四色套版 #120D14/#C8281E/#F5C242/#EAE0CE",
+      "bytes": 2113381,
+      "sha": "c4efb003570d"
     },
     "eyes_closeup_woodblock": {
       "file": "eyes_closeup_woodblock.png",
-      "source": "ref f271 (00:18.0) eye band",
-      "size": [
-        2200,
-        356
-      ],
-      "note": "CLAHE + 三色调（墨/朱砂/宣纸）+ 黑帽细线，专供横条",
-      "bytes": 651688,
-      "sha": "807e2ae7734a"
+      "width": 2200,
+      "height": 356,
+      "source": "生图网关 v6_eyes_raw.png（1376×768，2K 眼部木刻特写）",
+      "pipeline": "按 6.18:1 取双眼带 → LANCZOS 2200×356 → unsharp + 反差 1.12 + 纸纹",
+      "bytes": 1325357,
+      "sha": "7c4b321976dd"
     },
-    "trapped_print": {
-      "file": "trapped_print.png",
-      "source": "ref f166 (00:14.5)",
-      "size": [
-        1400,
-        900
-      ],
-      "bytes": 1697409,
-      "sha": "499df1aad59d"
+    "face_glare_woodblock": {
+      "file": "face_glare_woodblock.png",
+      "width": 2048,
+      "height": 2048,
+      "source": "生图网关 v6_face_raw.png（1024×1024，2K 怒颜木刻）",
+      "pipeline": "中心方形裁切 → LANCZOS 2048×2048 → unsharp + 反差 1.08 + 纸纹 + 暗角",
+      "bytes": 6835482,
+      "sha": "b24ded9738d0"
     },
-    "silhouette_spin_staff": {
-      "file": "silhouette_spin_staff.png",
-      "source": "gen/hero_spin_raw.png",
-      "w": 1049,
-      "h": 1500,
-      "solidity": 0.3906,
-      "bytes": 25629,
-      "sha": "03effd6acf0c"
+    "gate_woodblock": {
+      "file": "gate_woodblock.png",
+      "width": 1400,
+      "height": 2087,
+      "source": "生图网关 v6_gate_raw.png（南天门盘龙阙楼）",
+      "pipeline": "LANCZOS 2K → vtracer 多层 SVG → resvg 栅格 → 纸纹 + 暗角",
+      "bytes": 3233364,
+      "sha": "b1ca1d55e010"
     },
-    "silhouette_side_slash": {
-      "file": "silhouette_side_slash.png",
-      "source": "gen/hero_slash_raw.png",
-      "w": 1830,
-      "h": 1500,
-      "solidity": 0.4115,
-      "bytes": 35031,
-      "sha": "807d8e720aba"
+    "palace_woodblock": {
+      "file": "palace_woodblock.png",
+      "width": 1400,
+      "height": 2100,
+      "source": "生图网关 v6_palace_raw.png（凌霄殿重檐飞阁 + 满月）",
+      "pipeline": "去印刷框 → LANCZOS 2K → vtracer 多层 SVG → resvg 栅格 → 纸纹 + 暗角",
+      "bytes": 3149470,
+      "sha": "9fae8dc1976b"
     },
-    "silhouette_trapped": {
-      "file": "silhouette_trapped.png",
-      "source": "gen/hero_trapped_raw.png",
-      "w": 1062,
-      "h": 1500,
-      "solidity": 0.5416,
-      "bytes": 29978,
-      "sha": "aef3aa6491e6"
-    },
-    "silhouette_raise_staff": {
-      "file": "silhouette_raise_staff.png",
-      "source": "gen/hero_raise_raw.png",
-      "w": 1215,
-      "h": 1500,
-      "solidity": 0.4439,
-      "bytes": 24688,
-      "sha": "4f6a474dd195"
+    "army_silhouette": {
+      "file": "army_silhouette.png",
+      "width": 2390,
+      "height": 1102,
+      "source": "生图网关 v6_army_raw.png（十万天兵压境，白底）",
+      "pipeline": "LANCZOS 2400 → vtracer SVG → resvg → 白底软抠 + 白边去污染 → 墨/朱砂/金套色",
+      "bytes": 1579992,
+      "sha": "4fcd9a1e089c"
     }
   }
 }

@@ -1,6 +1,6 @@
 import React from 'react';
-import {AbsoluteFill} from 'remotion';
-import {ClimaxAsset} from './ClimaxAsset';
+import {AbsoluteFill, Img, staticFile} from 'remotion';
+import {CLIMAX_ASSETS, ClimaxAsset} from './ClimaxAsset';
 import {WASHI} from './PaperStage';
 import {OrnateSealStamp} from './OrnateSealStamp';
 import {SENBON, SERIF_STACK, clamp01, easeOutCubic, f} from './style';
@@ -8,11 +8,12 @@ import {SENBON, SERIF_STACK, clamp01, easeOutCubic, f} from './style';
 /**
  * `<FourPaperPanels />` —— Sub1A：四道竖幅和纸画格。
  *
- * 复刻《千本樱》00:30 的四分屏：**每格自带一种底色**（米白 / 深绯 / 深黛 /
- * 泥金），而不是四块一样的黑牌。四格分别是南天门、凌霄殿飞檐与满月、银戈
- * 之林、大圣剪影；编号印（壹贰叁肆）跨在格子边框上砸下。
+ * V5 的南天门是 4 个 <rect> 顶 1 个三角形、凌霄殿是两块黑梯形。V6 把这两格
+ * 换成生图网关产出的 2K 浮世绘版画（`gate_woodblock.png` /
+ * `palace_woodblock.png`，经 vtracer + resvg 矢量化），银戈林用
+ * `army_silhouette.png` 的天兵压境局部，大圣用四色套版立绘。
  *
- * 格子里的建筑都是"景"，可以代码画；**只有大圣本人**必须是真实资产。
+ * 四分屏的编号、标题、说明、宋体印仍由代码叠在画心上。
  */
 
 export interface PaperPanel {
@@ -40,91 +41,77 @@ const GAP = 30;
 const TOP = 76;
 const PANEL_H = 860;
 
-const GateScene: React.FC<{accent: string}> = ({accent}) => (
-  <svg viewBox="0 0 424 860" width="424" height="860" style={{position: 'absolute', inset: 0}} preserveAspectRatio="none">
-    <rect width="424" height="860" fill={WASHI.paper} />
-    <g fill={WASHI.ink}>
-      <rect x="20" y="560" width="384" height="300" />
-      <rect x="44" y="250" width="46" height="330" />
-      <rect x="334" y="250" width="46" height="330" />
-      <rect x="170" y="250" width="84" height="330" />
-      <rect x="16" y="206" width="392" height="58" />
-      <rect x="60" y="150" width="304" height="46" />
-      <path d="M 92 150 L 212 76 L 332 150 Z" />
-    </g>
-    <g fill={accent}>
-      <rect x="20" y="196" width="384" height="8" />
-      <rect x="92" y="146" width="240" height="5" />
-      {[0, 1, 2, 3, 4].map((i) => (
-        <rect key={`step-${i}`} x={20 + i * 8} y={812 + i * 10} width={384 - i * 16} height={6} />
-      ))}
-    </g>
-    <g stroke={WASHI.ink} strokeWidth="2" opacity="0.32">
-      {Array.from({length: 12}, (_, i) => (
-        <line key={`rain-${i}`} x1={i * 38} y1="0" x2={i * 38 - 40} y2="206" />
-      ))}
-    </g>
-  </svg>
+const PanelPlate: React.FC<{
+  asset: 'gate' | 'palace' | 'army';
+  objectPosition: string;
+  filter?: string;
+}> = ({asset, objectPosition, filter}) => (
+  <Img
+    src={staticFile(CLIMAX_ASSETS[asset].file)}
+    style={{
+      position: 'absolute',
+      inset: 0,
+      width: '100%',
+      height: '100%',
+      objectFit: 'cover',
+      objectPosition,
+      filter,
+    }}
+  />
 );
 
-const PalaceScene: React.FC<{accent: string}> = ({accent}) => (
-  <svg viewBox="0 0 424 860" width="424" height="860" style={{position: 'absolute', inset: 0}} preserveAspectRatio="none">
-    <rect width="424" height="860" fill={WASHI.crimson} />
-    <circle cx="300" cy="238" r="132" fill={WASHI.moon} />
-    <circle cx="300" cy="238" r="132" fill="none" stroke="#F6DFA6" strokeWidth="2" opacity="0.55" />
-    <g fill={WASHI.ink}>
-      <path d="M -10 604 L 434 604 L 434 620 L -10 620 Z" />
-      <path d="M 26 620 L 398 620 L 372 700 L 52 700 Z" />
-      <path d="M 60 700 L 364 700 L 364 860 L 60 860 Z" />
-      <path d="M -40 604 C 60 540 120 536 212 556 C 304 536 364 540 464 604 L 464 604 L -40 604 Z" />
-      <path d="M 132 700 L 292 700 L 292 860 L 132 860 Z" fill={accent} opacity="0.55" />
-    </g>
-    <g fill={WASHI.ink}>
-      {[0, 1, 2, 3, 4, 5].map((i) => (
-        <rect key={`eave-${i}`} x={64 + i * 50} y={590 - (i % 2) * 14} width="10" height="26" />
-      ))}
-    </g>
-    <g stroke={WASHI.moon} strokeWidth="3" opacity="0.75">
-      <line x1="26" y1="640" x2="398" y2="640" />
-    </g>
-  </svg>
+const SpearScene: React.FC = () => (
+  <>
+    <div
+      style={{
+        position: 'absolute',
+        left: '50%',
+        top: 230,
+        width: 300,
+        height: 300,
+        marginLeft: -150,
+        borderRadius: '50%',
+        background: 'radial-gradient(circle, rgba(194,149,38,0.38) 0%, rgba(194,149,38,0.12) 55%, rgba(194,149,38,0) 100%)',
+      }}
+    />
+    <Img
+      src={staticFile(CLIMAX_ASSETS.army.file)}
+      style={{
+        position: 'absolute',
+        left: '50%',
+        top: '54%',
+        width: 560,
+        height: 600,
+        marginLeft: -280,
+        marginTop: -300,
+        objectFit: 'cover',
+        objectPosition: '35% 62%',
+        filter: 'grayscale(0.92) brightness(1.24) contrast(1.08)',
+        opacity: 0.94,
+      }}
+    />
+    <div
+      style={{
+        position: 'absolute',
+        inset: 0,
+        background: 'linear-gradient(180deg, rgba(27,21,33,0.18) 0%, rgba(27,21,33,0) 44%, rgba(18,13,20,0.62) 100%)',
+      }}
+    />
+  </>
 );
-
-const SpearScene: React.FC<{accent: string}> = ({accent}) => (
-  <svg viewBox="0 0 424 860" width="424" height="860" style={{position: 'absolute', inset: 0}} preserveAspectRatio="none">
-    <rect width="424" height="860" fill={WASHI.purple} />
-    {Array.from({length: 26}, (_, i) => {
-      const x = 8 + i * 16.4;
-      const top = 120 + ((i * 37) % 150);
-      return (
-        <g key={`spear-${i}`} opacity={0.55 + (i % 3) * 0.15}>
-          <line x1={x} y1={top} x2={x + 42} y2={860} stroke={i % 4 === 0 ? accent : ECHO_SILVER} strokeWidth={i % 4 === 0 ? 3 : 1.6} />
-          <path d={`M ${x} ${top} l -7 -34 l 13 6 l -6 -26 l 12 28 l 8 -10 z`} fill={i % 4 === 0 ? accent : ECHO_SILVER} opacity="0.9" />
-        </g>
-      );
-    })}
-    <rect y="640" width="424" height="220" fill={WASHI.ink} opacity="0.55" />
-    <g fill={WASHI.ink}>
-      {[0, 1, 2, 3, 4].map((i) => (
-        <circle key={`helm-${i}`} cx={48 + i * 82} cy={786 + (i % 2) * 20} r="26" />
-      ))}
-    </g>
-  </svg>
-);
-
-const ECHO_SILVER = '#C9C2B4';
 
 const HeroScene: React.FC = () => (
   <>
     <svg viewBox="0 0 424 860" width="424" height="860" style={{position: 'absolute', inset: 0}} preserveAspectRatio="none">
       <rect width="424" height="860" fill={WASHI.ochre} />
-      <g opacity="0.22" stroke={WASHI.ink} strokeWidth="10">
+      <g opacity="0.24" stroke={WASHI.ink} strokeWidth="10">
         {Array.from({length: 9}, (_, i) => (
           <circle key={`ring-${i}`} cx="212" cy="600" r={40 + i * 46} fill="none" />
         ))}
       </g>
+      <path d="M -20 700 Q 110 640 212 690 Q 320 742 444 676 L 444 880 L -20 880 Z" fill={WASHI.ink} opacity="0.18" />
     </svg>
-    <ClimaxAsset asset="raise" height={548} x={212} baseline={856} echo={0.26} rim={0.4} />
+    <ClimaxAsset asset="raise" height={620} x={212} baseline={866} echo={0.16} rotate={-1} rim={0} />
   </>
 );
 
@@ -158,12 +145,13 @@ export const FourPaperPanels: React.FC<FourPaperPanelsProps> = ({time, frame, pa
               opacity: 1 - collapse * 0.9,
               boxShadow: `0 ${18 + index * 2}px ${26}px rgba(40,26,16,${0.26 * slide})`,
               backgroundColor: panel.tone,
+              overflow: 'hidden',
             }}
           >
             <div style={{position: 'absolute', inset: 0, overflow: 'hidden', zIndex: 0}}>
-              {panel.scene === 'gate' ? <GateScene accent={WASHI.ochre} /> : null}
-              {panel.scene === 'palace' ? <PalaceScene accent={WASHI.ochre} /> : null}
-              {panel.scene === 'spear' ? <SpearScene accent={WASHI.cinnabar} /> : null}
+              {panel.scene === 'gate' ? <PanelPlate asset="gate" objectPosition="50% 46%" /> : null}
+              {panel.scene === 'palace' ? <PanelPlate asset="palace" objectPosition="50% 42%" /> : null}
+              {panel.scene === 'spear' ? <SpearScene /> : null}
               {panel.scene === 'hero' ? <HeroScene /> : null}
             </div>
 
@@ -184,27 +172,10 @@ export const FourPaperPanels: React.FC<FourPaperPanelsProps> = ({time, frame, pa
                 zIndex: 30,
               }}
             >
-              <span
-                style={{
-                  fontFamily: SERIF_STACK,
-                  fontSize: 19,
-                  letterSpacing: 4,
-                  color: SENBON.goldLight,
-                  flexShrink: 0,
-                }}
-              >
+              <span style={{fontFamily: SERIF_STACK, fontSize: 19, letterSpacing: 4, color: SENBON.goldLight, flexShrink: 0}}>
                 {panel.indexLabel}
               </span>
-              <span
-                style={{
-                  fontFamily: SERIF_STACK,
-                  fontSize: 25,
-                  fontWeight: 800,
-                  letterSpacing: 6,
-                  color: SENBON.paper,
-                  whiteSpace: 'nowrap',
-                }}
-              >
+              <span style={{fontFamily: SERIF_STACK, fontSize: 25, fontWeight: 800, letterSpacing: 6, color: SENBON.paper, whiteSpace: 'nowrap'}}>
                 {panel.title}
               </span>
             </div>
@@ -242,18 +213,12 @@ export const FourPaperPanels: React.FC<FourPaperPanelsProps> = ({time, frame, pa
                 zIndex: 40,
               }}
             >
-              <OrnateSealStamp
-                text={panel.seal}
-                subText={panel.caption.slice(0, 2)}
-                size={118}
-                rotate={0}
-                tone={index % 2 === 0 ? 'cinnabar' : 'gold'}
-              />
+              <OrnateSealStamp text={panel.seal} subText={panel.caption.slice(0, 2)} size={118} rotate={0} tone={index % 2 === 0 ? 'cinnabar' : 'gold'} />
             </div>
 
             {/* 格子内框：外粗内细 */}
-            <div style={{position: 'absolute', inset: 0, border: `3px solid ${WASHI.ink}`, opacity: 0.82, zIndex: 2}} />
-            <div style={{position: 'absolute', inset: 7, border: `1px solid ${WASHI.ink}`, opacity: 0.45, zIndex: 2}} />
+            <div style={{position: 'absolute', inset: 0, border: `3px solid ${WASHI.ink}`, opacity: 0.82, zIndex: 2, pointerEvents: 'none'}} />
+            <div style={{position: 'absolute', inset: 7, border: `1px solid ${WASHI.ink}`, opacity: 0.45, zIndex: 2, pointerEvents: 'none'}} />
           </div>
         );
       })}

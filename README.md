@@ -197,7 +197,7 @@ src/
     spectrum.ts                32-band 鼓组频谱 + useStemEnergy 三频段能量
     sfx.ts                     音效 cue → frame 调度
   primitives/
-    senbon_style/              ★ V5 原语族（ClimaxAsset / CelestialCollapse3D / PaperStage /
+    senbon_style/              ★ V6 原语族（ClimaxAsset / CelestialThrone3D / PaperStage /
                                FourPaperPanels / MoonSpinShot / EyeWoodblockShot /
                                MountainCleft / WoodblockJumpCuts / OrnateSealStamp /
                                ComplexOfudaTalisman / IronChain / SuspendedTags /
@@ -217,15 +217,15 @@ src/
     math.ts                    确定性 rng/hash/noise/缓动/弹簧
     timing.ts                  秒 ↔ 帧唯一换算入口
     alignment.ts               字级对齐 JSON 类型与解析
-    threeDCamera.ts            透视相机（移植自 _archive_dufu/world3d.js）+ 螺旋俯冲轨道
   _archive_dufu/               杜甫原工程只读归档（不参与构建）
 
 public/
-  wukong_assets/               ★ V5 真实造型资产（剪影 / 木刻脸 / 眼部）+ manifest + README
+  wukong_assets/               ★ V6 2K 版画 / 四色套版资产（9 PNG + manifest + README）
   audio/ alignment/ fonts/ ... 音频、字级对齐、字体契约
 
 scripts/
-  build_wukong_assets.py       ★ 参考帧 + 立绘 → 木刻套色 / 纯黑剪影
+  build_wukong_assets.py       ★ 2K 生图 → rembg 四色套版 / vtracer + resvg
+  rasterize_svg.mjs            vtracer SVG → 2K PNG（@resvg/resvg-js）
   contact_sheet.py             成片接触表
   agy_image.mjs                生图网关桥（离线，只在烘焙期用）
   gen_plates.py                按 assets.manifest.json 生成 AI 板并规整为 1920×1080 PNG
@@ -273,3 +273,26 @@ assets.manifest.json            镜头表 + AI 板清单（id/用途/尺寸/提�
 2. 从零建立 Remotion 根工程，把可复用的图形/物理/排版/音频算法**重写为严格类型化的 TypeScript 组件**，而不是把旧浏览器脚本直接塞进 React。
 
 原工程版本：`3ece975e99c2f7cc91ff9c1ae3fa2e7315e9af76`（`main`，2026-10-21）。
+
+## V6 交付（2026-10-23）
+
+V6 针对 V5 成片的五处工程偏差重做：
+
+| V5 问题 | V6 处理 |
+|---|---|
+| 2B【无坚不摧】消失，只剩一条金线 | 根因是 `SlashType` 父容器 `height:0` + `clip-path: inset(...%)` 把两层字全裁掉。改为显式高度 + 内联 `polygon` 互补斜切，并把文字画在所有叠加层之后 |
+| 角色填死成 `#120D14` 黑墨团 / 2B 白边贴纸 | `rembg` 去背 + 白边剥离 + `erode`，再按 HSV 做墨/朱砂/鎏金/宣纸四色套版；四姿立绘全部重烘 |
+| 4B 用 480p 截图放大成红斑 | 生图网关 2048² 怒颜 + 2200×356 眼部；不再从参考视频截帧 |
+| 1A 南天门是 `<rect>` 简笔画 | 生图网关 2K 南天门/凌霄殿 → `vtracer` SVG → `resvg` 栅格 |
+| 2B 手写 2D Canvas 灰色水泥管 | `@remotion/three` 真 WebGL：36 柱组合几何体 + `meshToonMaterial` + `<Outlines>`/`<Edges>` + `<EffectComposer>` Bloom + 弧形刀光 + 确定性 Sparkles |
+
+交付物：
+
+- 成片：`out/senbon_v6_mvp.mp4`（1920×1080 / 30 fps / 300 帧 / 10.005 s）
+- 单帧自检：`out/v6_check_f###.png`
+- **成片回抽 7 帧**：`out/v6_mp4_{0.5,1.8,2.8,4.0,6.5,8.0,9.2}.png`
+- 接触表：`out/senbon_v6_contact_sheet.png`（20 个时间点）
+
+工程约束见 [AGENTS.md](AGENTS.md) §14；完整资产清单与提示词见
+[`assets.manifest.json`](assets.manifest.json) 与
+[`public/wukong_assets/README.md`](public/wukong_assets/README.md)。

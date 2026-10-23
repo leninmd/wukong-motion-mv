@@ -3,35 +3,35 @@ import {Img, staticFile} from 'remotion';
 import {WASHI} from './PaperStage';
 
 /**
- * `<ClimaxAsset />` —— 真实造型资产的唯一入口。
+ * `<ClimaxAsset />` —— 真实造型资产的唯一入口（V6）。
  *
- * V5 起，孙悟空不再由代码画：所有形象来自 `public/wukong_assets/` 里由
- * `scripts/build_wukong_assets.py` 烘焙出来的真实素材（参考片帧的木刻套色、
- * 立绘抠底后的纯黑剪影）。本组件只负责摆放、翻转、残影和逆光边缘。
+ * V5 的剪影是「纯 #120D14 填死」，内部铠甲/五官/披风 100% 丢失；V5 的 colour
+ * 版本又保留了生图自带的白色贴纸边。V6 起四个姿态统一换成
+ * `scripts/build_wukong_assets.py` 烘焙出来的**黑金朱砂四色套版木刻**：
  *
- * 残影（Echo Trail）复刻《千本樱》00:28：朱砂 / 青 / 金三层，用 CSS mask
- * 把同一张剪影染成三色后错位叠加，**不再给剪影描荧光线**。
+ *   · 外轮廓 = rembg 抠底 + 白边剥离 + erode，边界恒为 #120D14 墨线；
+ *   · 内部 = 鎏金甲胄线 #F5C242、朱砂披风 #C8281E、宣纸留白 #EAE0CE。
+ *
+ * 运行期只做“摆放 / 翻转 / 残影 / 逆光”，不再给剪影描荧光边。
  */
 
 export interface ClimaxAssetInfo {
   file: string;
   width: number;
   height: number;
-  kind: 'silhouette' | 'print';
+  kind: 'woodblock' | 'print';
 }
 
 export const CLIMAX_ASSETS = {
-  spin: {file: 'wukong_assets/silhouette_spin_staff.png', width: 1049, height: 1500, kind: 'silhouette'},
-  slash: {file: 'wukong_assets/silhouette_side_slash.png', width: 1830, height: 1500, kind: 'silhouette'},
-  trapped: {file: 'wukong_assets/silhouette_trapped.png', width: 1062, height: 1500, kind: 'silhouette'},
-  raise: {file: 'wukong_assets/silhouette_raise_staff.png', width: 1215, height: 1500, kind: 'silhouette'},
-  spinColour: {file: 'wukong_assets/colour_spin_staff.png', width: 1049, height: 1500, kind: 'print'},
-  slashColour: {file: 'wukong_assets/colour_side_slash.png', width: 1830, height: 1500, kind: 'print'},
-  trappedColour: {file: 'wukong_assets/colour_trapped.png', width: 1062, height: 1500, kind: 'print'},
-  raiseColour: {file: 'wukong_assets/colour_raise_staff.png', width: 1215, height: 1500, kind: 'print'},
-  face: {file: 'wukong_assets/face_glare_woodblock.png', width: 1280, height: 1200, kind: 'print'},
-  eyes: {file: 'wukong_assets/eyes_closeup_woodblock.png', width: 1920, height: 660, kind: 'print'},
-  trappedPrint: {file: 'wukong_assets/trapped_print.png', width: 1400, height: 900, kind: 'print'},
+  spin: {file: 'wukong_assets/woodblock_spin.png', width: 1240, height: 1800, kind: 'woodblock'},
+  slash: {file: 'wukong_assets/woodblock_slash.png', width: 1876, height: 2048, kind: 'woodblock'},
+  trapped: {file: 'wukong_assets/woodblock_trapped.png', width: 1239, height: 1800, kind: 'woodblock'},
+  raise: {file: 'wukong_assets/woodblock_raise.png', width: 1463, height: 1800, kind: 'woodblock'},
+  face: {file: 'wukong_assets/face_glare_woodblock.png', width: 2048, height: 2048, kind: 'print'},
+  eyes: {file: 'wukong_assets/eyes_closeup_woodblock.png', width: 2200, height: 356, kind: 'print'},
+  gate: {file: 'wukong_assets/gate_woodblock.png', width: 1400, height: 2087, kind: 'print'},
+  palace: {file: 'wukong_assets/palace_woodblock.png', width: 1400, height: 2100, kind: 'print'},
+  army: {file: 'wukong_assets/army_silhouette.png', width: 2390, height: 1102, kind: 'print'},
 } as const satisfies Record<string, ClimaxAssetInfo>;
 
 export type ClimaxAssetKey = keyof typeof CLIMAX_ASSETS;
@@ -53,15 +53,15 @@ export interface ClimaxAssetProps {
   /** 逆光边缘：极细的宣纸色光，不是荧光描边。 */
   rim?: number;
   zIndex?: number;
-  /** 染色（把剪影整体染成某色，用于黑底上的反白剪影）。 */
+  /** 染色（把角色整体染成某色，用于黑底上的反白剪影）。 */
   tint?: string;
   style?: React.CSSProperties;
 }
 
 const ECHO_LAYERS: Array<{color: string; dx: number; dy: number; scale: number}> = [
-  {color: WASHI.cinnabar, dx: -16, dy: 4, scale: 1.006},
-  {color: '#2E5F63', dx: 14, dy: -5, scale: 0.995},
-  {color: WASHI.ochre, dx: -7, dy: -9, scale: 1.0},
+  {color: WASHI.cinnabar, dx: -14, dy: 4, scale: 1.006},
+  {color: '#2E5F63', dx: 12, dy: -5, scale: 0.995},
+  {color: WASHI.ochre, dx: -6, dy: -8, scale: 1.0},
 ];
 
 export const ClimaxAsset: React.FC<ClimaxAssetProps> = ({
@@ -109,7 +109,7 @@ export const ClimaxAsset: React.FC<ClimaxAssetProps> = ({
                 position: 'absolute',
                 inset: 0,
                 backgroundColor: layer.color,
-                opacity: echo * (index === 0 ? 0.55 : index === 1 ? 0.4 : 0.32),
+                opacity: echo * (index === 0 ? 0.42 : index === 1 ? 0.28 : 0.24),
                 transform: `translate(${layer.dx * echo}px, ${layer.dy * echo}px) scale(${layer.scale})`,
                 transformOrigin: '50% 100%',
                 WebkitMaskImage: `url(${src})`,
@@ -146,7 +146,7 @@ export const ClimaxAsset: React.FC<ClimaxAssetProps> = ({
             inset: 0,
             width: '100%',
             height: '100%',
-            filter: rim > 0 ? `drop-shadow(0 0 ${2 + rim * 3}px rgba(244,236,214,${0.35 + rim * 0.4}))` : undefined,
+            filter: rim > 0 ? `drop-shadow(0 0 ${1 + rim * 2}px rgba(244,236,214,${0.18 + rim * 0.22}))` : undefined,
           }}
         />
       )}

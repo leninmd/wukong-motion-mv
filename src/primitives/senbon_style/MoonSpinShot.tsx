@@ -1,20 +1,23 @@
 import React, {useMemo} from 'react';
-import {AbsoluteFill} from 'remotion';
+import {AbsoluteFill, Img, staticFile, useCurrentFrame, useVideoConfig} from 'remotion';
+import {Trail} from '@remotion/motion-blur';
 import {hash} from '../../utils/math';
-import {ClimaxAsset} from './ClimaxAsset';
+import {CLIMAX_ASSETS, ClimaxAsset} from './ClimaxAsset';
 import {CloudBank, MoonDisc, WASHI} from './PaperStage';
 import {SENBON, SERIF_STACK, clamp01, f} from './style';
 
 /**
  * `<MoonSpinShot />` —— Sub1B：满月逆光下的真剪影旋棍。
  *
- * 构图照《千本樱》00:02 / 01:38：一轮占画面近半屏的暖白满月偏左后方升起，
- * 米白与浅灰的浮世绘云海压在底部，大圣的**真实剪影**落在 X=35% 的黄金位，
- * 前后是高速旋棍卷起的水墨旋风——不是给小人描黄边，而是让背后的亮月把
- * 纯黑轮廓"咬"出来。
+ * V5 的两个败笔在 V6 被换掉：
+ *   1. 右侧的「十万天兵」是一块平移的黑色大方块 → 换成生图网关的
+ *      `army_silhouette.png`（2400px，vtracer 矢量化，白底软抠），
+ *      兜鍪/长戈/战马/朱砂战旗全部是可读的细节。
+ *   2. 棍影是两条 `strokeDasharray` 虚线椭圆 → 换成真正旋转的金箍棒图层，
+ *      外面套 `@remotion/motion-blur` 的 `<Trail layers={8} lagInFrames={0.25}>`，
+ *      每一层冻结在过去 0.25 帧，形成真实的光学残影。
  *
- * 敌人只以**成片的黑**出现：右侧一整面由兜鍪、肩甲与枪尖叠成的天兵墙，
- * 空中是被棍风掀翻的碎影与箭雨。不画任何能看清五官的小人。
+ * 左上角小得看不见的“十万天兵合围”改成右侧上方的 82px 竖排浓墨大字。
  */
 
 export interface MoonSpinShotProps {
@@ -28,23 +31,47 @@ export interface MoonSpinShotProps {
 const HERO_X = 672;
 const HERO_BASELINE = 1168;
 
+/** 旋转金箍棒：必须读取 useCurrentFrame，Trail 的 Freeze 才能真正拿到过去帧。 */
+const SpinningCudgel: React.FC<{start: number}> = ({start}) => {
+  const frame = useCurrentFrame();
+  const {fps} = useVideoConfig();
+  const time = frame / fps;
+  const angle = 24 + Math.max(0, time - start) * 470;
+  return (
+    <AbsoluteFill style={{pointerEvents: 'none'}}>
+      <div
+        style={{
+          position: 'absolute',
+          left: HERO_X,
+          top: 620,
+          width: 0,
+          height: 0,
+          transform: `scaleY(0.55) rotate(${f(angle)}deg)`,
+          transformOrigin: '0 0',
+        }}
+      >
+        <div
+          style={{
+            position: 'absolute',
+            left: -500,
+            top: -15,
+            width: 1000,
+            height: 30,
+            borderRadius: 15,
+            border: `3px solid ${WASHI.ink}`,
+            background: `linear-gradient(90deg, ${SENBON.gold} 0%, ${SENBON.cinnabar} 6%, ${SENBON.gold} 12%, ${SENBON.gold} 88%, ${SENBON.cinnabar} 94%, ${SENBON.gold} 100%)`,
+            boxShadow: `0 0 30px rgba(252,201,52,0.55)`,
+            opacity: 0.9,
+          }}
+        />
+      </div>
+    </AbsoluteFill>
+  );
+};
+
 export const MoonSpinShot: React.FC<MoonSpinShotProps> = ({time, start, progress, pulse = 0, high = 0}) => {
   const local = Math.max(0, time - start);
   const spin = local * 5.2;
-
-  /** 棍影盘：三层椭圆 + 短弧，绕棍心旋转。 */
-  const discs = useMemo(
-    () =>
-      Array.from({length: 3}, (_, index) => ({
-        rx: 292 + index * 58,
-        ry: 86 + index * 26,
-        tilt: -18 + index * 9,
-        width: 30 - index * 7,
-        opacity: 0.3 - index * 0.07,
-        spin: 1.6 + index * 0.7,
-      })),
-    [],
-  );
 
   const blades = useMemo(
     () =>
@@ -66,36 +93,22 @@ export const MoonSpinShot: React.FC<MoonSpinShotProps> = ({time, start, progress
 
       <MoonDisc cx={566} cy={430} radius={388} halo={1.36} opacity={1} seed={9082} />
 
-      {/* 右侧天兵墙：兜鍪 + 肩甲 + 枪尖叠成的一整片黑 */}
-      <svg viewBox="0 0 1920 1080" width="1920" height="1080" style={{position: 'absolute', inset: 0, pointerEvents: 'none'}}>
-        <g fill="#120D14">
-          {Array.from({length: 18}, (_, index) => {
-            const x = 1580 + (index % 9) * 44;
-            const y = 520 + Math.floor(index / 9) * 62 + hash(7600, index) * 22;
-            return (
-              <g key={`helm-${index}`}>
-                <circle cx={x} cy={y} r={20 + hash(7601, index) * 4} />
-                <path d={`M ${x - 26} ${y + 16} l 52 0 l 12 170 l -76 0 Z`} />
-              </g>
-            );
-          })}
-        </g>
-        {/* 枪林 */}
-        <g stroke={WASHI.ink} strokeWidth="4">
-          {Array.from({length: 26}, (_, index) => {
-            const x = 1520 + index * 17;
-            const top = 300 + ((index * 47) % 180);
-            return <line key={`spear-${index}`} x1={x} y1={top} x2={x + 120} y2={1080} strokeWidth={3} />;
-          })}
-        </g>
-        <g fill={WASHI.ink}>
-          {Array.from({length: 26}, (_, index) => {
-            const x = 1520 + index * 17;
-            const top = 300 + ((index * 47) % 180);
-            return <path key={`spear-head-${index}`} d={`M ${x} ${top} l -6 -32 l 8 6 l -3 -22 l 8 22 l 7 -6 Z`} />;
-          })}
-        </g>
-      </svg>
+      {/* 十万天兵压境：2K 版画层，右缘起势，随镜头缓缓左移 */}
+      <Img
+        src={staticFile(CLIMAX_ASSETS.army.file)}
+        style={{
+          position: 'absolute',
+          right: -80,
+          top: 580,
+          width: 1000,
+          height: 560,
+          objectFit: 'cover',
+          objectPosition: '35% 75%',
+          opacity: 0.95,
+          transform: `translateX(${f(-progress * 22)}px)`,
+          filter: 'contrast(1.06) saturate(1.02)',
+        }}
+      />
 
       {/* 箭雨：从右向左的细线 */}
       <svg viewBox="0 0 1920 1080" width="1920" height="1080" style={{position: 'absolute', inset: 0, pointerEvents: 'none'}}>
@@ -112,24 +125,16 @@ export const MoonSpinShot: React.FC<MoonSpinShotProps> = ({time, start, progress
         })}
       </svg>
 
-      {/* 棍影盘：三圈虚线椭圆 + 短弧，旋转读作高速旋棍的残影 */}
+      {/* 真实残影：8 层 Trail 冻结在过去帧，外层再叠 2px 光学模糊，读成旋棍残影而不是一把扇子 */}
+      <div style={{position: 'absolute', inset: 0, filter: 'blur(2.4px)', opacity: 0.9}}>
+        <Trail layers={8} lagInFrames={0.25} trailOpacity={0.6}>
+          <SpinningCudgel start={start} />
+        </Trail>
+      </div>
+
+      {/* 棍风短弧：只在棍心周围，不再是虚线椭圆 */}
       <svg viewBox="0 0 1920 1080" width="1920" height="1080" style={{position: 'absolute', inset: 0, pointerEvents: 'none'}}>
         <g transform={`translate(${HERO_X} 700)`}>
-          {discs.map((disc, index) => (
-            <ellipse
-              key={`disc-${index}`}
-              rx={disc.rx}
-              ry={disc.ry}
-              fill="none"
-              stroke={index === 1 ? SENBON.cinnabar : index === 2 ? WASHI.ink : SENBON.gold}
-              strokeWidth={disc.width * 0.6}
-              opacity={disc.opacity + pulse * 0.06}
-              strokeDasharray={`${f(34 + index * 22)} ${f(20 + index * 12)}`}
-              strokeDashoffset={f(-spin * (70 + index * 40))}
-              transform={`rotate(${f(disc.tilt)} 0 0)`}
-              style={{filter: 'blur(5px)'}}
-            />
-          ))}
           {blades.map((blade, index) => {
             const angle = spin * blade.speed + blade.offset;
             const x = Math.cos(angle) * blade.radius;
@@ -142,12 +147,12 @@ export const MoonSpinShot: React.FC<MoonSpinShotProps> = ({time, start, progress
                 d={`M ${f(x)} ${f(y)} A ${f(blade.radius)} ${f(blade.radius * blade.squash)} 0 0 1 ${f(x2)} ${f(y2)}`}
                 stroke={
                   blade.tone === 0
-                    ? `rgba(217,48,37,${0.62 + pulse * 0.2})`
+                    ? `rgba(217,48,37,${0.5 + pulse * 0.2})`
                     : blade.tone === 1
-                      ? `rgba(18,13,20,${0.72 + high * 0.2})`
-                      : `rgba(232,176,75,${0.84 + pulse * 0.14})`
+                      ? `rgba(18,13,20,${0.62 + high * 0.18})`
+                      : `rgba(232,176,75,${0.74 + pulse * 0.14})`
                 }
-                strokeWidth={blade.width * 1.5}
+                strokeWidth={blade.width * 1.3}
                 strokeLinecap="round"
                 fill="none"
               />
@@ -156,16 +161,8 @@ export const MoonSpinShot: React.FC<MoonSpinShotProps> = ({time, start, progress
         </g>
       </svg>
 
-      {/* 大圣：真实剪影，X=35% */}
-      <ClimaxAsset
-        asset="spin"
-        height={912}
-        x={HERO_X}
-        baseline={HERO_BASELINE}
-        echo={0.42 + pulse * 0.12}
-        rim={0.45}
-        rotate={-1.6 + Math.sin(local * 8) * 0.9}
-      />
+      {/* 大圣：四色套版木刻立绘，X=35% */}
+      <ClimaxAsset asset="spin" height={912} x={HERO_X} baseline={HERO_BASELINE} echo={0.2 + pulse * 0.08} rim={0} rotate={-1.6 + Math.sin(local * 8) * 0.8} />
 
       {/* 云海：盖住脚踝 */}
       <CloudBank y={828} height={250} color="#FCF4E1" shade="#E5D5B7" time={local} amp={20} opacity={1} />
@@ -187,23 +184,51 @@ export const MoonSpinShot: React.FC<MoonSpinShotProps> = ({time, start, progress
       <div style={{position: 'absolute', left: 0, top: 0, bottom: 0, width: 26, backgroundColor: WASHI.ink, opacity: 0.9}} />
       <div style={{position: 'absolute', right: 0, top: 0, bottom: 0, width: 26, backgroundColor: WASHI.ink, opacity: 0.9}} />
 
+      {/* 右侧上方：82px 竖排浓墨大字 */}
       <div
         style={{
           position: 'absolute',
-          left: 78,
-          top: 112,
+          right: 96,
+          top: 64,
           writingMode: 'vertical-rl',
           fontFamily: SERIF_STACK,
-          fontSize: 30,
-          letterSpacing: 12,
+          fontSize: 74,
+          fontWeight: 900,
+          lineHeight: 1.06,
+          letterSpacing: 14,
           color: WASHI.ink,
-          opacity: 0.74 * clamp01(progress * 2.4),
+          whiteSpace: 'nowrap',
+          opacity: 0.92 * clamp01(progress * 3.2),
+          textShadow: '0 0 22px rgba(250,243,226,0.92), 0 0 6px rgba(250,243,226,0.92)',
+          transform: `translateY(${f((1 - clamp01(progress * 3.2)) * -26)}px)`,
         }}
       >
         十万天兵合围
+      </div>
+
+      {/* 左下角：朱砂小印，平衡右上的大字 */}
+      <div
+        style={{
+          position: 'absolute',
+          left: 96,
+          bottom: 92,
+          width: 54,
+          height: 54,
+          border: `2px solid ${WASHI.cinnabar}`,
+          color: WASHI.cinnabar,
+          fontFamily: SERIF_STACK,
+          fontSize: 17,
+          lineHeight: '23px',
+          textAlign: 'center',
+          letterSpacing: 0,
+          opacity: 0.76 * clamp01(progress * 2.4),
+        }}
+      >
+        天兵
       </div>
     </AbsoluteFill>
   );
 };
 
 export default MoonSpinShot;
+

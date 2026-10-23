@@ -713,3 +713,158 @@ V4 虽然把“指标”凑齐了（36 柱、五层图元、8 微切），但被
   更像高对比三色丝网；若要木刻感，需要 4K 源而不是继续调参。
 - **推翻 §15“未解决 3”（碎块偏大偏平）**：柱段变高后近景碎块有了纵深，但**仍无
   真法线光照**——现在是“竖向渐变 + 面法线明暗”，不是 PBR。
+
+---
+
+## 16. V6：2K 生图 + rembg/vtracer 四色套版 + 真 WebGL（2026-10-23）
+
+### 16.1 动机
+
+V5 交付后逐帧复审，五处工程事实偏差：
+
+1. **2B【无坚不摧】在成片里消失**：00:03–00:04 右上只剩一条金线。
+2. **角色两个极端**：1B/3A 立绘被填死成 `#120D14` 黑墨团；2B 左下角的
+   `colour_side_slash.png` 带白色粗描边，像一张贴纸。
+3. **4B 的怒颜来自 852×480 参考帧放大 4.4 倍**，00:09 是一滩红白灰像素。
+4. **1A 的南天门是 4 个 `<rect>` + 1 个三角形**，凌霄殿是两块黑梯形。
+5. **2B 的 36 根柱是手写 2D 透视**，没有着色器、没有三渲二描边、没有 Bloom。
+
+### 16.2 做法
+
+**A. 依赖升级**
+
+- 前端：`@remotion/three` + `@react-three/fiber` + `@react-three/drei` +
+  `@react-three/postprocessing` + `postprocessing` + `@remotion/motion-blur`，
+  全部精确版本（见 `package.json`）。
+- Python：`rembg[cpu]` + `vtracer` + `opencv-python`；SVG 用
+  `@resvg/resvg-js` 栅格化（新脚本 `scripts/rasterize_svg.mjs`）。
+
+**B. 2K 生图资产（禁用 480p 截帧）**
+
+生图网关共生成 7 张（V5 四姿原图 4 张 + V6 新增/重生成 5 张，其中
+clean slash 为排除速度线重生成）：
+
+| 资产 | 原始 | 成品 |
+|---|---|---|
+| 眼部 | 1376×768 | 2200×356 `eyes_closeup_woodblock.png` |
+| 怒颜 | 1024×1024 | 2048² `face_glare_woodblock.png` |
+| 南天门 | 848×1264 | 1400×2087，vtracer + resvg |
+| 凌霄殿 | 848×1264 | 1400×2100，vtracer + resvg |
+| 十万天兵 | 1376×768 | 2390×1102 RGBA，vtracer + resvg + 软抠 |
+| 横扫立绘（重生成，明确排除速度线） | 896×1200 | 1876×2048，rembg + 四色套版 |
+
+四姿立绘全部走 `rembg` → 白边剥离（外轮廓填洞 + `cv2.erode(3px)`）→
+HSV 四色套版：墨 `#120D14` / 朱砂 `#C8281E` / 鎏金 `#F5C242` / 宣纸 `#EAE0CE`。
+**不再有白色钥匙线，也不再填死成黑团。**
+
+**C. 2B 真 WebGL**
+
+新文件 `src/primitives/senbon_style/CelestialThrone3D.tsx`，删除
+`CelestialCollapse3D.tsx` 与 `src/utils/threeDCamera.ts`：
+
+- 36 根柱 = 柱础（2 cylinder）+ 柱身（3 段，可断）+ 斗拱（3 box + 4 短枋）；
+- `meshToonMaterial` + drei `<Outlines>` + `<Edges>`；
+- `<EffectComposer><Bloom luminanceThreshold={0.25} intensity={2.0} mipmapBlur /></EffectComposer>`；
+- 112 帧斜向刀光 = 三条 `CatmullRomCurve3` + `TubeGeometry`（白热 / 金 / 朱砂）；
+- 400 颗确定性点云 Sparkles（不用 drei 的随机版）；
+- 碎块 `p = p0 + v·t + ½g·t²` 解析解，裂口用暗盘 + 低透明金环 + 三条不规则裂纹；
+- 相机从半径 30.5 / 高 16.2 俯冲到 18 / 10.2，FOV 54→62。
+
+**D. 时间轴 Bug 根因与修复**
+
+`SlashType` 的父容器只有绝对定位子节点，`height` 为 0；两层字都用
+`clipPath: inset(0 0 51% 0)`，在 0 高元素上把 100% 裁掉，`bottom:-18` 的金线
+是唯一漏网的。V6 改为**显式 height + 两个互补内联 `polygon(...)`**，并把
+`SlashType` 移出 `Shot2B`，画在 `HalftoneOverlay`、白闪、反色、暗角之后
+（zIndex 60），保证任何叠加层都压不住它。
+
+2A：`eyeBand.open` 从 79 帧提前到 76 帧；横条在 75–98 帧内一定出现。
+**复现 V5 成片时 t=2.8 s 的眼部横条其实是存在的**（`out/v5probe/t2.8.png`），
+t=4.0 s 的大字确实丢失；V6 仍把 open 提前并把横条换成 2K 生图眼部，确保
+“00:02–00:03 没有眼部”不可能再发生。
+
+### 16.3 结果（证据）
+
+单帧：
+
+- `out/v6_check_f008.png` / `f022b.png`：南天门/凌霄殿换成 2K 版画；
+  第三格是天兵反相银甲；第四格是四色套版举棒大圣。
+- `out/v6_check_f050e.png`：右侧 74px 竖排【十万天兵合围】、2K 天兵层、
+  8 层 Trail + 2.4px blur 的旋棍残影。
+- `out/v6_check_f085.png`：2200×356 的 2K 眼部横条真正铺满画面。
+- `out/v6_check_f120g.png`：36 柱 + 斗拱 + 柱础 + 金环 + 断裂碎块 + Bloom；
+  右上【无坚不摧】清晰可读（上下两半纸白/鎏金斜切）。
+- `out/v6_check_f160b.png`：跪撑大圣有完整的金甲、朱砂披风与面部，不再是黑团。
+- `out/v6_check_f270.png`：2048² 生图怒颜反白印张，不再是 480p 红斑。
+
+**成片**：`out/senbon_v6_mvp.mp4` 1920×1080 / 30 fps / 300 帧 / 10.005 s /
+15.1 MB。按 `docs/AGENT_TOOLING.md §11.6` 从 MP4 反向回抽 7 帧：
+
+| 时间 | 文件 | 读图结论 |
+|---|---|---|
+| 0.5 s | `out/v6_mp4_0.5.png` | 四分屏：南天门盘龙阙楼、凌霄殿重檐、银甲天兵、举棒大圣 |
+| 1.8 s | `out/v6_mp4_1.8.png` | 满月逆光、74px 竖排大字、天兵层、Trail 残影 |
+| 2.8 s | `out/v6_mp4_2.8.png` | **眼部横切在最终 MP4 内确实出现**，2200×356 清晰 |
+| 4.0 s | `out/v6_mp4_4.0.png` | **【无坚不摧】四字在最终 MP4 内清晰可读** |
+| 6.5 s | `out/v6_mp4_6.5.png` | 五指山下 + 复合符咒 + 有内部细节的跪撑大圣 |
+| 8.0 s | `out/v6_mp4_8.0.png` | 纯黑悬签【罪名】【是】 |
+| 9.2 s | `out/v6_mp4_9.2.png` | 2048² 木刻怒颜，五官与獠牙可辨，无像素红斑 |
+
+接触表：`out/senbon_v6_contact_sheet.png`（20 个时间点，1920×864）。
+
+### 16.4 代价
+
+- 生图 7 张：眼部 66 s、怒颜 33 s、南天门 56 s、凌霄殿 66 s、天兵 52 s、
+  clean slash 54 s，另加 V5 四姿原图（约 110 s/张）。每次看完成图再下一张。
+- rembg 首张含 176 MB 模型下载约 45 s；之后 4 张共 20 s。
+- vtracer + resvg：南天门 28 s / 凌霄殿 22 s / 天兵 20 s，SVG 12–20 MB。
+- 视觉迭代：1A 3 轮、1B 4 轮、2A 1 轮、2B 6 轮（黑→棕→冷灰暖金→弧形刀光→
+  降裂口亮度）、3A 2 轮、4B 1 轮；still 共 ~20 张，单张 15–25 s。
+- `EffectComposer` 首帧全黑排查约 40 min：试了 `--gl=angle`、删 Bloom、换材质、
+  改相机，最后定位是 `ManualFrameRenderer` 的 `advance()` 早于 composer effect；
+  `LateAdvance` 一次修好。
+- 成片渲染 300 帧 @ `--concurrency=2` 约 4 分钟；3D 段单帧 2–4.6 s，
+  最慢帧集中在 99–139（崩裂 + Bloom）。
+
+### 16.5 结论（保留 / 回滚 / 未解决）
+
+**保留**
+
+- 2K 生图 + rembg 四色套版；角色内部细节与“无白边”同时成立。
+- vtracer + resvg 的建筑/天兵矢量化；边缘比 LANCZOS 放大干净。
+- `@remotion/three` + Bloom + Outlines：2B 终于是有相机的真 3D。
+- `LateAdvance` 与 `SlashType` 显式高度：两条都是可复用的硬约定，已写进
+  `AGENTS.md §14` 与 `docs/AGENT_TOOLING.md §11`。
+
+**回滚 / 推翻**
+
+- 推翻 §13.4“三维必须用 `threeDCamera.ts` 手写投影”：V6 起 2B 必须走 three.js，
+  `threeDCamera.ts` 已删除。
+- 推翻 §15.1“眼部横条用三色版 `eye_band()`”：V6 不再从 480p 做眼部，
+  改用 2K 生图 + 裁带。
+- 推翻 §15 的“剪影内部恒为 #120D14”：角色必须是四色套版，只有黑版线是 #120D14。
+- 删除 V5 的 `colour_*.png` / `silhouette_*.png` / `trapped_print.png`，
+  避免被后续场景误用。
+
+**未解决（诚实记录）**
+
+1. 1B 的天兵层在 2D 平面上仍是一条“地平线军队带”，不是真正的纵深阵列；
+   要让十万天兵有前后景，需要 3D 实例化或分层多张生图。
+2. 2B 的柱子虽然有了柱础/斗拱/三渲二描边，但在近景仍偏“粗管”；
+   需要更细的雕龙高模或法线贴图，而不是继续加金环。
+3. 1B 的 Trail 仍是“扇形残影”：470°/s 的旋转 + 8 层冻结在视觉上就是扇形；
+   要更接近光学模糊，应降低转速或把运动交给 `CameraMotionBlur`。
+4. 3A 的山体仍是“暖棕渐变 + 黑剪影”，皴法体积不足；本次只修角色，不修山。
+5. 无 GPU 的 SwiftShader 下 Bloom 亮度与真机有差异；交付以本机 MP4 为准。
+
+### 16.6 影响文件
+
+- 新增：`src/primitives/senbon_style/CelestialThrone3D.tsx`、
+  `scripts/rasterize_svg.mjs`、`public/wukong_assets/`（9 PNG + manifest + README）。
+- 删除：`CelestialCollapse3D.tsx`、`utils/threeDCamera.ts`、V5 的 8 张 superseded PNG。
+- 修改：`scripts/build_wukong_assets.py`（全量重写）、`ClimaxAsset.tsx`、
+  `FourPaperPanels.tsx`、`MoonSpinShot.tsx`、`EyeWoodblockShot.tsx`、
+  `MountainCleft.tsx`、`WoodblockJumpCuts.tsx`、`WukongClimaxSegment.tsx`、
+  `senbonPlan.ts`、`package.json`、`assets.manifest.json`、`AGENTS.md`（§14）、
+  `docs/AGENT_TOOLING.md`（§11）、`README.md`。
+

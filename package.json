@@ -9,14 +9,18 @@
     "typecheck": "tsc --noEmit",
     "render": "remotion render src/index.ts WukongPrologue out/wukong-prologue.mp4",
     "still": "remotion still src/index.ts WukongPrologue out/wukong-poster.png",
-    "still:senbon": "remotion still src/index.ts WukongClimaxSegment out/v5_check_f085.png --frame=85",
-    "render:senbon": "remotion render src/index.ts WukongClimaxSegment out/senbon_v5_mvp.mp4",
+    "still:senbon": "remotion still src/index.ts WukongClimaxSegment out/v6_check_f085.png --frame=85",
+    "render:senbon": "remotion render src/index.ts WukongClimaxSegment out/senbon_v6_mvp.mp4",
     "assets:wukong": "python scripts/build_wukong_assets.py"
   },
   "dependencies": {
+    "@react-three/drei": "10.7.9",
     "@react-three/fiber": "9.8.2",
+    "@react-three/postprocessing": "3.2.2",
     "@remotion/media-utils": "4.0.537",
+    "@remotion/motion-blur": "4.0.537",
     "@remotion/three": "4.0.537",
+    "postprocessing": "6.39.5",
     "react": "19.3.1",
     "react-dom": "19.3.1",
     "remotion": "4.0.537",
@@ -24,6 +28,7 @@
   },
   "devDependencies": {
     "@remotion/cli": "4.0.537",
+    "@resvg/resvg-js": "2.6.2",
     "@types/node": "24.10.1",
     "@types/react": "19.3.0",
     "@types/react-dom": "19.3.0",
