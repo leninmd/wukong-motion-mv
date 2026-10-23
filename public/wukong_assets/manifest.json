@@ -1,0 +1,72 @@
+{
+  "version": "v5",
+  "assets": {
+    "face_glare_woodblock": {
+      "file": "face_glare_woodblock.png",
+      "source": "ref f271 (00:18.0)",
+      "size": [
+        1280,
+        1200
+      ],
+      "note": "咬牙怒视特写，五阶套色 + 黑版线",
+      "bytes": 1812938,
+      "sha": "e7d8b22b49f8"
+    },
+    "eyes_closeup_woodblock": {
+      "file": "eyes_closeup_woodblock.png",
+      "source": "ref f271 (00:18.0) eye band",
+      "size": [
+        1920,
+        660
+      ],
+      "bytes": 1391600,
+      "sha": "330a49747ba9"
+    },
+    "trapped_print": {
+      "file": "trapped_print.png",
+      "source": "ref f166 (00:14.5)",
+      "size": [
+        1400,
+        900
+      ],
+      "bytes": 1697409,
+      "sha": "499df1aad59d"
+    },
+    "silhouette_spin_staff": {
+      "file": "silhouette_spin_staff.png",
+      "source": "gen/hero_spin_raw.png",
+      "w": 1049,
+      "h": 1500,
+      "solidity": 0.3906,
+      "bytes": 25629,
+      "sha": "03effd6acf0c"
+    },
+    "silhouette_side_slash": {
+      "file": "silhouette_side_slash.png",
+      "source": "gen/hero_slash_raw.png",
+      "w": 1830,
+      "h": 1500,
+      "solidity": 0.4115,
+      "bytes": 35031,
+      "sha": "807d8e720aba"
+    },
+    "silhouette_trapped": {
+      "file": "silhouette_trapped.png",
+      "source": "gen/hero_trapped_raw.png",
+      "w": 1062,
+      "h": 1500,
+      "solidity": 0.5416,
+      "bytes": 29978,
+      "sha": "aef3aa6491e6"
+    },
+    "silhouette_raise_staff": {
+      "file": "silhouette_raise_staff.png",
+      "source": "gen/hero_raise_raw.png",
+      "w": 1215,
+      "h": 1500,
+      "solidity": 0.4439,
+      "bytes": 24688,
+      "sha": "4f6a474dd195"
+    }
+  }
+}

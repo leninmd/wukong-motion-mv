@@ -87,7 +87,7 @@ export const shotAt = (seconds: number): ShotSpan => {
 
 export const CUE = {
   /* Sub1A —— 四分屏微缩画卷 */
-  panelDrop: [sb(0), sb(6), sb(12), sb(18)],
+  panelDrop: [sb(0), sb(2), sb(4), sb(6)],
   panelExit: sb(26),
   panelGone: sb(30),
 
@@ -101,8 +101,8 @@ export const CUE = {
 
   /* Sub2B —— 3D 崩裂 + 劈字 */
   palace: {start: sb(98), end: sb(150)},
-  slash: {reveal: sb(104), cut: sb(115)},
-  invert: [sb(115), sb(116)],
+  slash: {reveal: sb(104), cut: sb(112)},
+  invert: [sb(112), sb(113)],
 
   /* Sub3A —— 巨岩 + 铁索 */
   rockDrops: [sb(150), sb(151), sb(152), sb(153), sb(154)],
@@ -141,6 +141,8 @@ export interface PanelSlot {
   title: string;
   caption: string;
   scene: PanelSceneKind;
+  /** V5：该格的和纸底色（四格四色）。 */
+  tone: string;
   dropAt: number;
   accent: 'gold' | 'cinnabar';
 }
@@ -154,6 +156,7 @@ export const PANELS: PanelSlot[] = [
     title: '南天门',
     caption: '玉境 · 南天门巨柱',
     scene: 'gate',
+    tone: '#EAE0CE',
     dropAt: CUE.panelDrop[0]!,
     accent: 'gold',
   },
@@ -165,6 +168,7 @@ export const PANELS: PanelSlot[] = [
     title: '凌霄殿',
     caption: '凌霄 · 飞檐与赤金满月',
     scene: 'palace',
+    tone: '#7A1C1C',
     dropAt: CUE.panelDrop[1]!,
     accent: 'cinnabar',
   },
@@ -176,6 +180,7 @@ export const PANELS: PanelSlot[] = [
     title: '银戈林',
     caption: '十万 · 银白长戈森林',
     scene: 'spear',
+    tone: '#1B1521',
     dropAt: CUE.panelDrop[2]!,
     accent: 'gold',
   },
@@ -187,6 +192,7 @@ export const PANELS: PanelSlot[] = [
     title: '大圣',
     caption: '合围 · 侧面挥棒残影',
     scene: 'hero',
+    tone: '#C29526',
     dropAt: CUE.panelDrop[3]!,
     accent: 'cinnabar',
   },
@@ -225,12 +231,12 @@ export interface ChainSlot {
 
 /** 六道实体铁索，交叉锁死岩壁。 */
 export const CHAINS: ChainSlot[] = [
-  {id: 'c1', arriveAt: CUE.chains[0]!, x1: 40, y1: 250, x2: 1880, y2: 760, sag: 20},
-  {id: 'c2', arriveAt: CUE.chains[1]!, x1: 1880, y1: 230, x2: 40, y2: 790, sag: 24},
-  {id: 'c3', arriveAt: CUE.chains[2]!, x1: 960, y1: -120, x2: 960, y2: 900, sag: 0},
-  {id: 'c4', arriveAt: CUE.chains[3]!, x1: -120, y1: 548, x2: 2040, y2: 548, sag: -14},
-  {id: 'c5', arriveAt: CUE.chains[4]!, x1: 100, y1: 1000, x2: 1820, y2: 180, sag: 18},
-  {id: 'c6', arriveAt: CUE.chains[5]!, x1: 1820, y1: 1000, x2: 100, y2: 180, sag: 18},
+  {id: 'c1', arriveAt: CUE.chains[0]!, x1: -40, y1: 300, x2: 1960, y2: 470, sag: 26},
+  {id: 'c2', arriveAt: CUE.chains[1]!, x1: 1960, y1: 250, x2: -40, y2: 410, sag: 30},
+  {id: 'c3', arriveAt: CUE.chains[2]!, x1: -40, y1: 690, x2: 1960, y2: 860, sag: -22},
+  {id: 'c4', arriveAt: CUE.chains[3]!, x1: 1960, y1: 720, x2: -40, y2: 900, sag: -26},
+  {id: 'c5', arriveAt: CUE.chains[4]!, x1: 120, y1: 1010, x2: 1800, y2: 640, sag: 18},
+  {id: 'c6', arriveAt: CUE.chains[5]!, x1: 1800, y1: 1010, x2: 120, y2: 640, sag: 18},
 ];
 
 /* -------------------------------------------------------------------------- */
@@ -249,12 +255,12 @@ export interface OfudaSlot {
 }
 
 export const OFUDA: OfudaSlot[] = [
-  {id: 't1', text: '五指山下', revealAt: CUE.ofuda[0]!, x: 300, y: 336, width: 178, height: 424, rotate: -6.5},
-  {id: 't2', text: '偿', revealAt: CUE.ofuda[1]!, x: 782, y: 254, width: 150, height: 310, rotate: 4},
-  {id: 't3', text: '自', revealAt: CUE.ofuda[2]!, x: 1136, y: 254, width: 150, height: 310, rotate: -4.5},
-  {id: 't4', text: '由', revealAt: CUE.ofuda[3]!, x: 1588, y: 360, width: 168, height: 366, rotate: 6},
-  {id: 't5', text: '的', revealAt: CUE.ofuda[4]!, x: 512, y: 786, width: 144, height: 290, rotate: 5},
-  {id: 't6', text: '罪', revealAt: CUE.ofuda[5]!, x: 1402, y: 786, width: 152, height: 306, rotate: -6},
+  {id: 't1', text: '五指山下', revealAt: CUE.ofuda[0]!, x: 286, y: 396, width: 174, height: 418, rotate: -6.5},
+  {id: 't2', text: '偿', revealAt: CUE.ofuda[1]!, x: 470, y: 742, width: 148, height: 306, rotate: 4},
+  {id: 't3', text: '自', revealAt: CUE.ofuda[2]!, x: 1452, y: 748, width: 148, height: 306, rotate: -4.5},
+  {id: 't4', text: '由', revealAt: CUE.ofuda[3]!, x: 1638, y: 404, width: 168, height: 360, rotate: 6},
+  {id: 't5', text: '的', revealAt: CUE.ofuda[4]!, x: 622, y: 210, width: 142, height: 288, rotate: 5},
+  {id: 't6', text: '罪', revealAt: CUE.ofuda[5]!, x: 1300, y: 214, width: 150, height: 300, rotate: -6},
 ];
 
 /* -------------------------------------------------------------------------- */

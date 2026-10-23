@@ -1,10 +1,10 @@
 {
-  "version": 3,
+  "version": 4,
   "project": "wukong-motion-mv",
   "segment": "climax_09_19",
   "composition": "WukongClimaxSegment",
-  "approach": "pure-code",
-  "note": "V4 仍为纯代码：SVG 路径 / pattern / 渐变 + Three.js 基础几何体 + CSS 3D。没有 AI 位图；assets 为空是验收要求。八个微切镜 + 0.3 s 黑场留白。",
+  "approach": "asset-pipeline + code",
+  "note": "V5 起角色不再由代码画：真实参考帧的木刻套色（face / eyes）与立绘抠底剪影（silhouette_*）先进 public/wukong_assets/，运行期只贴图。背景、字体、三维、粒子仍为纯代码。八个微切镜 + 0.3 s 黑场。",
   "canvas": {
     "width": 1920,
     "height": 1080,
@@ -12,67 +12,71 @@
     "frames": 300
   },
   "palette": [
-    "#0B090A",
-    "#F4EFE6",
-    "#D93025",
-    "#FCC934"
+    "#120D14",
+    "#EAE0CE",
+    "#7A1C1C",
+    "#1B1521",
+    "#C29526",
+    "#FFF3D1",
+    "#D93025"
   ],
+  "paletteNote": "V5 和纸反色：墨 / 古宣纸 / 深绯 / 深黛 / 泥金 / 满月暖白 / 朱砂。AGENTS.md §9.8 允许复刻段做明度色相微调，扩散范围仅限本段。",
   "shots": [
     {
       "id": "s1a",
-      "name": "玉境 · 四分屏微缩画卷",
+      "name": "玉境 · 四色和纸画格",
       "frames": "0-30",
-      "subject": "4 × 480px 竖格：南天门巨柱 / 凌霄殿飞檐满月 / 银白长戈森林 / 大圣侧面挥棒；编号印章壹贰叁肆",
-      "primitives": ["ComicPanels", "OrnateSealStamp", "WukongRig(side_lunge)"]
+      "subject": "四道竖幅和纸画格：米白南天门 / 深绯飞檐满月 / 深黛银戈林 / 泥金大圣剪影；壹贰叁肆编号印跨框砸下",
+      "primitives": ["FourPaperPanels", "OrnateSealStamp", "ClimaxAsset(raise)"]
     },
     {
       "id": "s1b",
-      "name": "十万天兵 · 侧面棍盾",
+      "name": "十万天兵 · 满月逆光旋棍",
       "frames": "30-75",
-      "subject": "大圣侧面弓步在 X=35%；多层同心圆半调棍盾；40 天兵自右向左冲锋；前景虚焦长戈",
-      "primitives": ["CourtSky", "SiegeFog", "SiegeCharge", "StaffShield", "WukongRig(side_lunge)"]
+      "subject": "780px 暖白满月偏左后方；云海压底；真实剪影在 X=35%；虚线椭圆棍影 + 箭雨 + 右缘天兵墙",
+      "primitives": ["MoonSpinShot", "MoonDisc", "CloudBank", "ClimaxAsset(spin)"]
     },
     {
       "id": "s2a",
-      "name": "怎敌我 · 眼部横切",
+      "name": "怎敌我 · 宣纸白底眼部横切",
       "frames": "75-98",
-      "subject": "−5° 双金边漫画横条内嵌 WukongFaceCloseup 眼部；右侧【怎】【敌】【我】依次砸落",
-      "primitives": ["EyeCutBand", "WukongFaceCloseup(eyes)"]
+      "subject": "整屏翻成暖白宣纸；−5° 玄黑金边横条内嵌参考帧 00:18 的木刻眼部；金色闪电；右侧【怎】【敌】【我】",
+      "primitives": ["EyeWoodblockShot", "PaperField", "InkSpecks"]
     },
     {
       "id": "s2b",
-      "name": "无坚不摧 · 俯瞰崩裂",
+      "name": "无坚不摧 · 真三维崩裂",
       "frames": "98-150",
-      "subject": "X=20% 左下角背影俯瞰；Z 轴推进 + 15° 滚转的 3D 柱阵崩裂；18° 半调刀光；右上描金书法",
-      "primitives": ["CrumblingPalace3D", "GiantSlashArc", "WukongRig(back_overlook)", "UnbreakableBanner"]
+      "subject": "36 根八棱殿柱（柱头斗拱 + 柱础）+ 3000 粒子 + 地面 3D 网格；相机螺旋俯冲；112 帧刀光横扫；三圈地面波纹；左下真实立绘侧影；右上斜切【无坚不摧】",
+      "primitives": ["CelestialCollapse3D", "createCamera", "ClimaxAsset(slashColour)"]
     },
     {
       "id": "s3a",
-      "name": "五指山下 · 巨岩铁索",
+      "name": "五指山下 · 明暗裂谷",
       "frames": "150-175",
-      "subject": "五道浮世绘肌理巨岩柱下砸；侧面单膝跪地、双掌上撑、披风双翎狂舞；六道实体铁索",
-      "primitives": ["BoulderCage", "IronChain", "WukongRig(kneel_boulder)"]
+      "subject": "整块黑山压下；山体下缘一线赭金受光；跪撑剪影自下而上擦除入场；六道铁索",
+      "primitives": ["MountainCleft", "IronChain", "ClimaxAsset(trapped)"]
     },
     {
       "id": "s3b",
       "name": "偿自由的罪 · 复合符咒",
       "frames": "175-225",
-      "subject": "六张五层复合符咒弹簧钉入：【五指山下】【偿】【自】【由】【的】【罪】",
-      "primitives": ["ComplexOfudaTalisman", "BoulderCage"]
+      "subject": "六张五层复合符咒弹簧钉入两侧山体：【五指山下】【偿】【自】【由】【的】【罪】",
+      "primitives": ["ComplexOfudaTalisman", "MountainCleft"]
     },
     {
       "id": "s4a",
       "name": "罪名是老孙 · 纯黑悬签",
       "frames": "225-256",
-      "subject": "#050404 纯黑深渊；三道铁索 + 远中近三层白签；聚光灯扫过，主牌依次翻面亮出【罪名】【是】【老孙】",
+      "subject": "#050404 纯黑深渊；三道铁索 + 远中近三层白签；聚光灯依次亮出【罪名】【是】【老孙】",
       "primitives": ["SuspendedTags", "IronChain"]
     },
     {
       "id": "s4b",
-      "name": "不敬权威 · 四连跳切",
+      "name": "不敬权威 · 红黑版画四连跳切",
       "frames": "256-291",
-      "subject": "1.0→1.35→1.8→2.4 四连跳切高精度脸谱；金色裂屏刀光；四枚裂纹巨印【不】【敬】【权】【威】；290 白闪",
-      "primitives": ["WukongFaceCloseup(full)", "OrnateSealStamp", "CrackSlash"]
+      "subject": "真实参考帧的木刻怒颜；白底墨版 / 朱砂红底反白墨线交替四次跳切；四枚裂纹朱印【不】【敬】【权】【威】；290 白闪",
+      "primitives": ["WoodblockJumpCuts", "ClimaxAsset(face)"]
     },
     {
       "id": "s5",
@@ -82,7 +86,71 @@
       "primitives": []
     }
   ],
-  "assets": [],
+  "assets": [
+    {
+      "id": "face_glare_woodblock",
+      "type": "png",
+      "file": "public/wukong_assets/face_glare_woodblock.png",
+      "size": [1280, 1200],
+      "source": "参考片 00:18.0（f271）咬牙怒视特写",
+      "pipeline": "五阶色调分层 + 朱砂/鎏金分色 + Sobel/黑帽黑版线 + 和纸颗粒",
+      "usedBy": ["s4b"]
+    },
+    {
+      "id": "eyes_closeup_woodblock",
+      "type": "png",
+      "file": "public/wukong_assets/eyes_closeup_woodblock.png",
+      "size": [1920, 660],
+      "source": "参考片 00:18.0（f271）眼部横带",
+      "pipeline": "同上，punch=2.05 加强黑版",
+      "usedBy": ["s2a"]
+    },
+    {
+      "id": "silhouette_spin_staff",
+      "type": "png(alpha)",
+      "file": "public/wukong_assets/silhouette_spin_staff.png",
+      "size": [1049, 1500],
+      "source": "生图网关：全身侧面旋棍立绘（纯白底）",
+      "pipeline": "白底抠除 → 外轮廓填洞 → 2× 平滑 → 纯 #120D14 剪影",
+      "usedBy": ["s1b"]
+    },
+    {
+      "id": "silhouette_side_slash",
+      "type": "png(alpha)",
+      "file": "public/wukong_assets/silhouette_side_slash.png",
+      "size": [1830, 1500],
+      "source": "生图网关：横扫弓步立绘",
+      "pipeline": "同上（彩色版另存 colour_side_slash.png，给 s2b 前景用）",
+      "usedBy": ["s2b(彩色)"]
+    },
+    {
+      "id": "silhouette_trapped",
+      "type": "png(alpha)",
+      "file": "public/wukong_assets/silhouette_trapped.png",
+      "size": [1062, 1500],
+      "source": "生图网关：单膝跪地、双手撑住巨岩",
+      "pipeline": "同上",
+      "usedBy": ["s3a", "s3b"]
+    },
+    {
+      "id": "silhouette_raise_staff",
+      "type": "png(alpha)",
+      "file": "public/wukong_assets/silhouette_raise_staff.png",
+      "size": [1215, 1500],
+      "source": "生图网关：正面举棒怒吼",
+      "pipeline": "同上",
+      "usedBy": ["s1a"]
+    },
+    {
+      "id": "trapped_print",
+      "type": "png",
+      "file": "public/wukong_assets/trapped_print.png",
+      "size": [1400, 900],
+      "source": "参考片 00:14.5（f166）后脑与红箍",
+      "pipeline": "木刻套色（备用素材，V5 正片未启用）",
+      "usedBy": []
+    }
+  ],
   "audio": {
     "playback": "public/audio/climax_real_vocal.wav",
     "spectrum": "public/audio/climax_real_vocal.wav",
@@ -101,6 +169,12 @@
       "skills/webgl-animation-skills",
       "skills/motion-design-skills"
     ],
-    "usedFor": ["halftone", "particle sparks", "rule-of-thirds composition", "micro-beat editing", "deterministic Remotion"]
+    "usedFor": [
+      "halftone",
+      "particle sparks",
+      "rule-of-thirds composition",
+      "micro-beat editing",
+      "deterministic Remotion"
+    ]
   }
 }

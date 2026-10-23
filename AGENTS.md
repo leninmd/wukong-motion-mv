@@ -152,3 +152,27 @@ npx remotion still src/index.ts WukongPrologue out/qa-prologue.png --frame=240
 发现问题先改代码再重渲，不允许带着已知瑕疵去渲染整片。抽帧文件统一命名
 `out/v4_check_f###.png`，成片为 `out/senbon_v4_mvp.mp4`，接触表
 `out/senbon_v4_contact_sheet.png`。
+
+## 13. 角色造型资产铁律（2026-10-23 增补，V5）
+
+V4 用 SVG `<polygon>` 手写大圣的五官与身体，被判定为「折纸积木人」；V5 起作废。
+本节约束的是**角色**，不是背景：建筑、云、字、粒子仍然用代码画。
+
+1. **禁止用代码画角色**。孙悟空的脸、身体、手脚、冠、翎，只允许来自
+   `public/wukong_assets/` 的真实资产（参考帧木刻套色 / 立绘抠底剪影），
+   经 `<ClimaxAsset />` 或 `<Img />` 合成。新增角色形象必须先过
+   `scripts/build_wukong_assets.py`，不允许在场景里临时拼多边形。
+2. **剪影不描边**。纯黑剪影内部恒为 `#120D14`；需要从暗背景里分离时，只允许
+   （a）背后给亮底（满月 / 天光 / 宣纸），（b）1px 宣纸色边缘，
+   （c）朱砂/青/金三层错位残影。**禁止**黄色荧光描边、禁止 drop-shadow 光晕。
+3. **明暗节奏优先于暗场炫技**。每 10 秒至少要有两种明亮底色（和纸米白、满月暖白、
+   泥金）与两种深底（深绯、深黛/玄黑）交替；不允许整段一黑到底。
+4. **三维必须是真投影**。需要空间运镜时，用 `src/utils/threeDCamera.ts` 的
+   `createCamera`（移植自 `_archive_dufu/world3d.js`）；禁止在 2D 斜网格上摆矩形
+   冒充透视。碎裂必须写成 `p = p0 + v·t + ½g·t²` 的解析解，禁止逐帧积分
+   （Remotion 并发渲染会乱序求帧）。
+5. **资产先烘焙后引用**。参考帧与立绘的原始文件落在 `out/`（gitignore），成品落在
+   `public/wukong_assets/` 并在 `README.md` 与 `manifest.json` 登记来源、尺寸、sha。
+   禁止在 `src/` 里出现生图会话路径或本机绝对路径。
+6. **自检命名**：V5 起抽帧用 `out/v5_check_f###.png`，成片 `out/senbon_v5_mvp.mp4`，
+   接触表 `out/senbon_v5_contact_sheet.png`。§12.3 的四条同样适用于 V5。

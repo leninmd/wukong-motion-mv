@@ -3,7 +3,7 @@
 > 一部以代码为笔、以鼓点为骨的填词调音 MV。
 > 视觉节奏对标《千本樱》代码生成 MV；听觉与叙事张力对标《美猴王》鬼畜调音。
 
-当前状态：**阶段四 · V4 八微切镜完成**（2026-10-23）。
+当前状态：**阶段五 · V5 真实造型资产 + 真三维 + 和纸反色**（2026-10-23）。
 
 阶段一建立了全新 Remotion 仓库、素材契约、工程宪法 `AGENTS.md`，并用 `WukongPrologue` 验证了「宣纸纹 × 三维金墨点云 × 火星/飞灰 × 朱砂印 × 切片打字机」的合成链路。
 
@@ -11,7 +11,15 @@
 
 阶段四（V4）把 10 秒重构成 **8 个微切镜 + 0.3 s 黑场**：四分屏微缩画卷、侧面旋风棍盾、眼部斜切横条、左下角俯瞰 3D 崩裂、五指山巨岩铁索、五层复合符咒、纯黑悬签阵、四连跳切高精度脸谱。新增 `OrnateSealStamp` / `ComplexOfudaTalisman` / `WukongFaceCloseup` / `IronChain` 等 13 个复合图元，并把「五层复合图元」「三分法侧影」「抽帧视觉自检」写进 `AGENTS.md §12`。
 
-> 本机无独立 GPU，且本轮明确禁止调用外部生图模型；纯代码是验收要求，不是权宜之计。
+阶段五（V5）推翻了 V4 的「用代码画角色」：**孙悟空不再由 SVG 多边形拼**，改由
+`scripts/build_wukong_assets.py` 把参考片真帧（六小龄童 00:18 的咬牙怒视）与生图网关的
+四姿立绘离线烘焙成木刻套色与纯黑剪影，运行期只贴图；2B 换成移植自 `_archive_dufu/world3d.js`
+的**真透视投影**（36 根八棱殿柱 + 3000 粒子 + 螺旋俯冲相机）；全片改为**和纸反色**的明暗节奏
+（四色画格 → 满月逆光 → 宣纸白底 → 暗金崩裂 → 明暗裂谷 → 红黑版画），不再一黑到底靠荧光描边。
+对应的硬约束写进 `AGENTS.md §13`。
+
+> 本机无独立 GPU。V5 的角色资产是**离线烘焙**的：参考帧与立绘先进 `out/`，成品 PNG 进
+> `public/wukong_assets/`，渲染期不发起任何网络或 AIGC 调用。
 
 ## 先读这两份
 
@@ -27,21 +35,27 @@ npm run typecheck
 npm run compositions
 ```
 
-渲染高潮复刻段的七个验收静帧（30 fps / 300 帧）：
+重建角色资产（可选，成品已入库；需要参考片与本机 cv2）：
 
 ```powershell
-$frames = @(22,50,85,120,195,240,278)
+python scripts/build_wukong_assets.py
+```
+
+渲染高潮复刻段的验收静帧（30 fps / 300 帧）：
+
+```powershell
+$frames = @(8,22,50,85,120,160,200,270)
 foreach ($f in $frames) {
-  npx remotion still src/index.ts WukongClimaxSegment ("out/v4_check_f{0:000}.png" -f $f) --frame=$f
+  npx remotion still src/index.ts WukongClimaxSegment ("out/v5_check_f{0:000}.png" -f $f) --frame=$f
 }
-npx remotion render src/index.ts WukongClimaxSegment out/senbon_v4_mvp.mp4 --concurrency=4
+npx remotion render src/index.ts WukongClimaxSegment out/senbon_v5_mvp.mp4 --concurrency=4
 ```
 
 抽帧后必须用 `read_image` / 看图逐项确认：① 右缘印章/文字不裁切；② 大圣不在 X=50%；
-③ 黑场无上一镜残留；④ 2.4× 脸谱仍经得起看。再看接触表：
+③ 黑场无上一镜残留；④ 有没有任何「几何拼凑小人」；⑤ 明暗节奏是否成立。再看接触表：
 
 ```powershell
-& "D:\dev\runtimes\python\Python313\python.exe" scripts\contact_sheet.py out\senbon_v4_mvp.mp4 out\senbon_v4_contact_sheet.png
+python scripts\contact_sheet.py out\senbon_v5_mvp.mp4 out\senbon_v5_contact_sheet.png
 ```
 
 音频与对齐自检：
@@ -69,25 +83,42 @@ npm run render
 
 所以本段重做时的取舍是：**往"印刷海报"靠，而不是往"夜戏特效"靠**。大色块承担构图，金线承担细节，快切承担节奏。
 
-## 高潮复刻段：八微切镜 + 黑场（纯代码）
+## 高潮复刻段：八微切镜 + 黑场（真实资产 + 代码）
 
 分镜切成八刀零九段（10 秒），每一刀的边界在 `src/sequences/senbonPlan.ts` 里由分镜秒表与对齐 JSON 共同解出：
 
 | # | 帧 | 唱词 | 主体 / 构图 / 物理 |
 |---|---|---|---|
-| 1A | 0–30 | 玉境 | 4×480px 四分屏微缩画卷：南天门巨柱 / 凌霄殿满月 / 银戈森林 / 侧面挥棒 + 壹贰叁肆印章 |
-| 1B | 30–75 | 十万天兵合围 | 大圣侧面弓步在 X=35%；三层同心圆半调棍盾；40 天兵自右向左；前景 blur(8px) 巨戈 |
-| 2A | 75–98 | 怎敌我 | −5° 双金边横条 + 高精度眼部脸谱；【怎】【敌】【我】黑边金字依次砸落 |
-| 2B | 98–150 | 无坚不摧 | 大圣背影 X=20%/Y≈76%；3D 柱阵 Z 轴推进 + 15° 滚转；18° 半调刀光；右上描金书法 12px 错位切开 |
-| 3A | 150–175 | 五指山下 | 五道浮世绘肌理巨岩、六道实体铁索；侧面单膝跪地双臂 V 形上撑 |
-| 3B | 175–225 | 偿自由的罪 | 六张五层复合符咒弹簧钉入：【五指山下】【偿】【自】【由】【的】【罪】 |
+| 1A | 0–30 | 玉境 | 四道竖幅**四色和纸画格**（米白南天门 / 深绯飞檐满月 / 深黛银戈林 / 泥金举棒剪影）+ 壹贰叁肆朱印跨框 |
+| 1B | 30–75 | 十万天兵合围 | 780px 暖白满月偏左后方 + 云海；**真实剪影在 X=35%**；三层虚线椭圆棍影 + 箭雨 + 右缘天兵墙 |
+| 2A | 75–98 | 怎敌我 | 整屏翻成**暖白宣纸**；−5° 玄黑金边横条内嵌**参考帧 00:18 的木刻眼部**；金色闪电；【怎】【敌】【我】 |
+| 2B | 98–150 | 无坚不摧 | **真投影**：36 根八棱殿柱（斗拱+柱础）+ 3000 粒子 + 地面 3D 网格；螺旋俯冲；112 帧刀光；三圈地面波纹；左下真实立绘侧影 |
+| 3A | 150–175 | 五指山下 | 整块黑山压下 + 暖金天光；**跪撑剪影**自下而上擦除入场；六道实体铁索 |
+| 3B | 175–225 | 偿自由的罪 | 六张五层复合符咒弹簧钉入两侧山体：【五指山下】【偿】【自】【由】【的】【罪】 |
 | 4A | 225–256 | 罪名是老孙 | `#050404` 纯黑深渊；三道铁索 + 三层白签；聚光灯下主牌依次翻面 |
-| 4B | 256–291 | 不敬权威 | 四连跳切 1.0→1.35→1.8→2.4；金色裂屏刀光；四枚裂纹巨印；290 白闪 |
+| 4B | 256–291 | 不敬权威 | **红黑版画四连跳切**：白底墨版 / 朱砂反白交替；四枚裂纹朱印；290 白闪 |
 | — | 291–300 | （留白） | 纯黑 `#000000`，只剩余音 |
 
-### 纯代码视觉原语（现在的做法）
+### V5 原语（当前正片在用）
 
-`src/primitives/senbon_style/` 是这一段的全部“美术资产”：
+`src/primitives/senbon_style/` 与 `public/wukong_assets/` 是这一段的两套资产：前者是布景与排版，后者是**角色**（见 `AGENTS.md §13`）。
+
+| 文件 | 作用 |
+|---|---|
+| `ClimaxAsset` | **角色唯一入口**：贴真实 PNG，负责残影（朱砂/青/金三层 CSS mask）与宣纸色边缘；不描边 |
+| `CelestialCollapse3D` | 真投影八棱柱 + 3000 粒子 + 地面网格 + 螺旋俯冲 + 解析解碎裂 |
+| `PaperStage` | 和纸底（`PaperField`）、满月（`MoonDisc`）、云浪（`CloudBank`）、墨点（`InkSpecks`） |
+| `FourPaperPanels` | 四色和纸画格 + 编号朱印 + 三幕小景（南天门/飞檐/银戈林） |
+| `MoonSpinShot` | 满月逆光 + 三层虚线椭圆棍影 + 箭雨 + 右缘天兵墙 |
+| `EyeWoodblockShot` | 宣纸白底 + −5° 木刻眼部横条 + 金色闪电 + 三字 |
+| `MountainCleft` | 黑山体 + 暖金天光 + 跪撑剪影 + 铁索 + 复合符咒 |
+| `WoodblockJumpCuts` | 红黑版画四连跳切 + 巨印 + 裂纹 + 白闪 |
+| `utils/threeDCamera` | 从 `_archive_dufu/world3d.js` 移植的透视相机（lookAt 正交基 + roll） |
+
+复用不改的 V4 构件：`OrnateSealStamp`、`ComplexOfudaTalisman`、`IronChain`、`SuspendedTags`、`HalftoneOverlay`。
+V4 的 `WukongRig` / `WukongFaceCloseup` / `ComicPanels` / `BoulderCage` / `CrumblingPalace3D` 等仍留在仓库作对照，但**不再被正片 import**。
+
+### V4 纯代码原语（历史对照）
 
 | 文件 | 作用 |
 |---|---|
@@ -121,19 +152,21 @@ npm run render
 
 > 规格说明（对应 `AGENTS.md` 第 0 条）：主片母版仍是 1920×1080 / 60 fps。复刻段因为要对齐 30 fps 的参考素材，**显式**在 `src/config/theme.ts` 的 `CLIMAX` 中声明 30 fps / 300 帧，而不是在调用点偷偷改帧率；所有 cue 仍由 `frameFromSeconds()` 从秒换算。
 
-## V4 交付物（2026-10-23）
+## V5 交付物（2026-10-23）
 
 | 文件 | 说明 |
 |---|---|
-| `out/senbon_v4_mvp.mp4` | 1920×1080 / 30 fps / 10.005 s / h264 + aac 48k stereo |
-| `out/v4_check_f022.png` | 四分屏：四格落位、编号完整、右缘不裁切 |
-| `out/v4_check_f050.png` | 1B：侧面弓步 X=35%、半调棍盾、40 天兵 |
-| `out/v4_check_f085.png` | 2A：−5° 眼部横条 + 高精度脸谱 + 短金芒 |
-| `out/v4_check_f120.png` | 2B：左下背影 X=20%、3D 崩裂、18° 刀光、劈字 |
-| `out/v4_check_f195.png` | 3A/3B：五岩柱 + 六实体铁索 + 双臂上撑 + 复合符咒 |
-| `out/v4_check_f240.png` | 4A：`#050404` 纯黑悬签、无猴子残留 |
-| `out/v4_check_f278.png` | 4B：2.4× 高精度脸谱 + 裂纹巨印 |
-| `out/senbon_v4_contact_sheet.png` | 20 个时间点接触表 |
+| `out/senbon_v5_mvp.mp4` | 1920×1080 / 30 fps / 10.005 s / h264 + aac 48k stereo |
+| `public/wukong_assets/` | 7 张真实造型资产 + `manifest.json` + `README.md` |
+| `out/v5_check_f008.png` | 1A 起手：四格依次落位 |
+| `out/v5_check_f022.png` | 1A 落定：四色画格 + 四枚朱印跨框 |
+| `out/v5_check_f050.png` | 1B：满月逆光 + 真实剪影 X=35% + 棍影 + 天兵墙 |
+| `out/v5_check_f085.png` | 2A：宣纸白底横条内的木刻眼部 + 【怎】 |
+| `out/v5_check_f120.png` | 2B：真三维崩裂 + 左下侧影 + 【无坚不摧】 |
+| `out/v5_check_f160.png` | 3A：黑山 + 天光 + 跪撑剪影 + 铁索 |
+| `out/v5_check_f200.png` | 3B：六张复合符咒钉壁 |
+| `out/v5_check_f270.png` | 4B：朱砂反白版画怒颜 + 巨印 |
+| `out/senbon_v5_contact_sheet.png` | 20 个时间点接触表 |
 
 外部动效先验库在 `skills/`（只读、不打包），取用点见 `skills/README.md`。
 
@@ -154,7 +187,7 @@ src/
   compositions/
     WukongPrologue.tsx         阶段一视觉底片（非正片歌词）
   sequences/
-    WukongClimaxSegment.tsx    阶段四高潮复刻段（八微切镜 / 30 fps / 300 帧 / 纯代码）
+    WukongClimaxSegment.tsx    阶段五高潮复刻段（八微切镜 / 30 fps / 300 帧 / 真实资产 + 代码）
     senbonPlan.ts              分镜秒表 + 歌词锚点 + 冲击/震屏/反色 cue 的唯一来源
     climaxPlan.ts              对齐 JSON 的旧解析层（仍复用其 fallbackEnergy）
   config/
@@ -164,11 +197,11 @@ src/
     spectrum.ts                32-band 鼓组频谱 + useStemEnergy 三频段能量
     sfx.ts                     音效 cue → frame 调度
   primitives/
-    senbon_style/              ★ 纯代码视觉原语族（OrnateSealStamp / ComplexOfudaTalisman /
-                               WukongFaceCloseup / IronChain / ComicPanels / StaffShield /
-                               SiegeCharge / CrumblingPalace3D / GiantSlashArc /
-                               UnbreakableBanner / EyeCutBand / SuspendedTags / BoulderCage /
-                               WukongRig / CourtSky / HalftoneOverlay）
+    senbon_style/              ★ V5 原语族（ClimaxAsset / CelestialCollapse3D / PaperStage /
+                               FourPaperPanels / MoonSpinShot / EyeWoodblockShot /
+                               MountainCleft / WoodblockJumpCuts / OrnateSealStamp /
+                               ComplexOfudaTalisman / IronChain / SuspendedTags /
+                               HalftoneOverlay）+ V4 对照件（WukongRig / WukongFaceCloseup 等）
     paperTexture.ts / PaperSurface.tsx   宣纸/麻纸/纤维/颗粒
     Vignette.tsx               暗角 + 胶片颗粒
     Seal.tsx                   朱砂毛边印章（仅 WukongPrologue 使用）
@@ -184,8 +217,17 @@ src/
     math.ts                    确定性 rng/hash/noise/缓动/弹簧
     timing.ts                  秒 ↔ 帧唯一换算入口
     alignment.ts               字级对齐 JSON 类型与解析
+    threeDCamera.ts            透视相机（移植自 _archive_dufu/world3d.js）+ 螺旋俯冲轨道
   _archive_dufu/               杜甫原工程只读归档（不参与构建）
+
+public/
+  wukong_assets/               ★ V5 真实造型资产（剪影 / 木刻脸 / 眼部）+ manifest + README
+  audio/ alignment/ fonts/ ... 音频、字级对齐、字体契约
+
 scripts/
+  build_wukong_assets.py       ★ 参考帧 + 立绘 → 木刻套色 / 纯黑剪影
+  contact_sheet.py             成片接触表
+  agy_image.mjs                生图网关桥（离线，只在烘焙期用）
   gen_plates.py                按 assets.manifest.json 生成 AI 板并规整为 1920×1080 PNG
   agy_image.mjs                Antigravity CLI 保活调用桥（stream-json）
   score.py                     合成整支配乐 + 逐字共振峰"人声"

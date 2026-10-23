@@ -9,8 +9,9 @@
     "typecheck": "tsc --noEmit",
     "render": "remotion render src/index.ts WukongPrologue out/wukong-prologue.mp4",
     "still": "remotion still src/index.ts WukongPrologue out/wukong-poster.png",
-    "still:senbon": "remotion still src/index.ts WukongClimaxSegment out/v4_check_f120.png --frame=120",
-    "render:senbon": "remotion render src/index.ts WukongClimaxSegment out/senbon_v4_mvp.mp4"
+    "still:senbon": "remotion still src/index.ts WukongClimaxSegment out/v5_check_f085.png --frame=85",
+    "render:senbon": "remotion render src/index.ts WukongClimaxSegment out/senbon_v5_mvp.mp4",
+    "assets:wukong": "python scripts/build_wukong_assets.py"
   },
   "dependencies": {
     "@react-three/fiber": "9.8.2",

@@ -250,7 +250,7 @@ $frames = @(22,50,85,120,195,240,278)
 foreach ($f in $frames) {
   npx remotion still src/index.ts WukongClimaxSegment ("out/v4_check_f{0:000}.png" -f $f) --frame=$f
 }
-& "D:\dev\runtimes\python\Python313\python.exe" scripts/contact_sheet.py out/senbon_v4_mvp.mp4 out/senbon_v4_contact_sheet.png
+& "D:\dev\runtimes\python\Python313\python.exe" scripts/contact_sheet.py out/senbon_v5_mvp.mp4 out/senbon_v5_contact_sheet.png
 ```
 
 抽帧后**必须用 `read_image` 读图**，逐项确认 AGENTS.md §12.3 的四条；不要只看文件大小。
@@ -275,3 +275,52 @@ foreach ($f in $frames) {
 | 脸谱像笑脸南瓜 | 嘴弧向上、4 颗方牙 + 2 颗大獠牙 | 改为嘴角下沉的怒相、3 颗尖牙 + 2 颗外翻獠牙、深色口鼻区 |
 | 眼部横条有一条横贯全脸的白线 | 背景径向速度线角度=0/π + 脸组件里一条全宽 rect | 速度线跳过水平角；删除全宽线，改为每只眼向外的短金芒 |
 | 书法被刀光线长期横切 | 刀光 SVG 一直保持 opacity 1 | 切开后 0.08 s 内淡出，只保留 12px 错位 |
+
+### 10. V5 造型资产管线（新增）
+
+### 10.1 一条命令重建角色资产
+
+```powershell
+# 需要 cv2 / numpy / Pillow。本机两个解释器都可用：
+#   D:\dev\runtimes\python\Python313\python.exe  → cv2 4.12 / numpy 2.2.6 / Pillow 11.3
+#   DSH 内置 python（本次安装 opencv-python-headless 5.0.0）
+# 参考片默认读 ~/Downloads/大雨还在下…mp4
+python scripts/build_wukong_assets.py
+python scripts/build_wukong_assets.py --skip-video   # 只重建剪影
+npm run assets:wukong
+```
+
+- 参考帧缓存：`out/ref/frames/f001..f300.png`（09–19 s，852×480，gitignore）。
+  若目录为空，脚本自己用 Remotion 自带的 ffmpeg 抽帧（`-vsync 0`，不要用 `fps=`，
+  这个精简构建没有 fps 滤镜）。
+- 生图原始图：`out/gen/hero_{spin,slash,trapped,raise}_raw.png`（gitignore）。
+  网关返回的可能是 JPEG 但扩展名是 `.png`，**按内容解码**，不要按后缀判断。
+- 成品：`public/wukong_assets/`，7 张 PNG + `manifest.json` + `README.md`。
+
+### 10.2 木刻套色参数（改风格只动这里）
+
+| 参数 | 位置 | 说明 |
+|---|---|---|
+| `scale` | `woodblock(..., scale=)` | LANCZOS 放大倍数；源只有 480p，面部 2.7、眼部 4.4 |
+| `levels` | `woodblock(..., levels=5)` | 色调分层数；多了像水彩，少了像色块 |
+| `punch` | `woodblock(..., punch=)` | 把中间调推向两端；面部 1.34、眼部 2.05 |
+| `red / gold` 阈值 | `sat - 0.38 / 0.20` | 朱砂与鎏金的分色线，抬高会减少红 |
+| 黑版 | Sobel `(mag-26)/40` + 黑帽 `(bh-8)/16` | 边缘与细线两路取 max |
+
+### 10.3 立绘 → 剪影
+
+`alpha_from_white()` 用「非白即前景」+ `findContours` 外轮廓填洞，**再过一道面积
+阈值（>0.4% 整图）**——生图会在人物周围画速度线、泥点，不滤掉会在剪影上留碎屑。
+平滑用 `GaussianBlur(sigma=1.6*scale)` 再二值，边缘才不会有台阶。
+
+### 10.4 V5 踩坑（新增）
+
+| 现象 | 原因 | 处理 |
+|---|---|---|
+| 剪影出现「小胡子」 | 生图自带的速度线被当成前景 | 面积阈值 0.4%，只留主体连通域 |
+| 3D 柱子像纸筒 | 只有侧面 + 全边描金，没有柱头/柱础 | 加斗拱石板与柱础；只在受光面留一条金线 |
+| 柱顶是一个黑洞 | 顶面用 `rgba(12,6,8,0.92)` 填充 | 顶段不画黑顶，改由斗拱盖住 |
+| 劈砍镜头像彩纸雨 | 每块碎片同时起飞 | `delay = 0.02 + |x|*0.009 + piece*0.012`，从刀光处往外炸 |
+| 5.1 s 出现空镜 | 山体在切镜后才开始落 | 下落起点提前 0.42 s，切进来就已经压在头顶 |
+| 裂谷像门框 | 两道竖直岩壁 + 矩形光柱 | 改为「整块山体 + 横向暖天光」，光是缝出来的不是画出来的 |
+| 木刻脸偏水彩 | punch 不足 + 源分辨率低 | punch 1.34/2.05；仍偏柔和，已在日志 §15 记为未解决 |

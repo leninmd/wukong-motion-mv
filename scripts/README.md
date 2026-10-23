@@ -66,6 +66,17 @@ python scripts/verify_climax.py
 
 退出码非 0 即失败，不允许「能渲染就算过」。
 
+## 2.5 角色资产管线（V5）
+
+```powershell
+python scripts/build_wukong_assets.py
+python scripts/build_wukong_assets.py --skip-video
+```
+
+把参考片 09–19 s 的真帧与生图网关的四姿立绘，离线烘焙成
+`public/wukong_assets/` 的木刻套色与纯黑剪影。细节见
+[`public/wukong_assets/README.md`](../public/wukong_assets/README.md)。
+
 ## 3. 频段标定（可选）
 
 ```powershell
@@ -82,5 +93,5 @@ node scripts/spectrum_probe.mjs public/audio/drums_stem.wav 30
 ```powershell
 npx remotion still src/index.ts WukongClimaxSegment out/climax_preview_45.png --frame=45
 npx remotion still src/index.ts WukongClimaxSegment out/climax_preview_210.png --frame=210
-npx remotion render src/index.ts WukongClimaxSegment out/wukong-climax.mp4
+npx remotion render src/index.ts WukongClimaxSegment out/senbon_v5_mvp.mp4
 ```
