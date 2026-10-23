@@ -140,6 +140,47 @@ def woodblock(img: np.ndarray, scale: float = 2.4, levels: int = 5, seed: int = 
 # --------------------------------------------------------------------------- #
 #  剪影
 # --------------------------------------------------------------------------- #
+def eye_band(img: np.ndarray, out_w: int = 2200, out_h: int = 356) -> np.ndarray:
+    """眼部横条专用：三色版（墨 / 朱砂 / 宣纸），比五阶套色更硬。
+
+    横条的宽高比约 6.2:1，所以先在放大图上做整幅三色调，再按眼睛的位置切一条
+    316px 高的带子——不能直接把整张脸压进横条，那样五官会被拉扁。
+    """
+    h, w = img.shape[:2]
+    big = cv2.resize(img, (w * 4, h * 4), interpolation=cv2.INTER_LANCZOS4)
+    big = cv2.bilateralFilter(big, 7, 40, 40)
+
+    lab = cv2.cvtColor(big, cv2.COLOR_BGR2LAB)
+    tone = cv2.createCLAHE(clipLimit=3.2, tileGridSize=(8, 8)).apply(lab[..., 0])
+    lo, hi = np.percentile(tone, 2), np.percentile(tone, 98)
+    t = np.clip((tone - lo) / max(1.0, hi - lo), 0, 1).astype(np.float32)
+
+    gx = cv2.Sobel(tone, cv2.CV_32F, 1, 0, ksize=3)
+    gy = cv2.Sobel(tone, cv2.CV_32F, 0, 1, ksize=3)
+    mag = cv2.GaussianBlur(np.hypot(gx, gy), (0, 0), 1.0)
+    edge = np.clip((mag - 30) / 60, 0, 1)
+    k = max(7, (min(big.shape[:2]) // 40) | 1)
+    blackhat = cv2.morphologyEx(tone, cv2.MORPH_BLACKHAT,
+                                cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (k, k)))
+    line = np.clip((blackhat.astype(np.float32) - 10) / 20, 0, 1)
+    key = np.clip(edge * 0.9 + line, 0, 1)
+
+    out = np.full(big.shape, PAPER, np.float32)
+    mid = np.clip((0.62 - t) / (0.62 * 0.55), 0, 1)[..., None]
+    out = out * (1 - mid * 0.55) + CINNABAR * (mid * 0.55)
+    deep = np.clip((0.62 * 0.62 - t) / (0.62 * 0.62), 0, 1)[..., None]
+    out = out * (1 - deep) + INK * deep
+    out = out * (1 - key[..., None]) + INK * key[..., None]
+    out = np.clip(out, 0, 255).astype(np.uint8)
+
+    # 按横条比例切：以眼睛所在高度（约 45%）为中心
+    band_h = int(round(out.shape[1] / (out_w / out_h)))
+    centre = int(out.shape[0] * 0.375)
+    top = max(0, min(out.shape[0] - band_h, centre - band_h // 2))
+    band = out[top:top + band_h, :]
+    return cv2.resize(band, (out_w, out_h), interpolation=cv2.INTER_AREA)
+
+
 def alpha_from_white(img: np.ndarray, thr: int = 232) -> np.ndarray:
     rgb = cv2.cvtColor(img, cv2.COLOR_BGR2RGB).astype(np.int16)
     mask = ((rgb.min(axis=2)) < thr).astype(np.uint8) * 255
@@ -210,15 +251,15 @@ def main() -> int:
             "note": "咬牙怒视特写，五阶套色 + 黑版线",
         }
 
-        # 眼部：横向宽条，给 Sub2A 的眼部横切
+        # 眼部横带：Sub2A 的 2200×356 横条，单独走一套"三色版"（比五阶套色狠）
         eyes = frame(271)[92:330, 188:676]
-        eyes_out = woodblock(eyes, scale=4.4, seed=23, punch=2.05)
-        eyes_out = cv2.resize(eyes_out, (1920, 660), interpolation=cv2.INTER_AREA)
+        eyes_out = eye_band(eyes)
         cv2.imwrite(str(OUT_DIR / "eyes_closeup_woodblock.png"), eyes_out)
         manifest["assets"]["eyes_closeup_woodblock"] = {
             "file": "eyes_closeup_woodblock.png",
             "source": "ref f271 (00:18.0) eye band",
-            "size": [1920, 660],
+            "size": [int(eyes_out.shape[1]), int(eyes_out.shape[0])],
+            "note": "CLAHE + 三色调（墨/朱砂/宣纸）+ 黑帽细线，专供横条",
         }
 
         # 五指山下：真实的后脑与红箍（00:14.5），压成版画

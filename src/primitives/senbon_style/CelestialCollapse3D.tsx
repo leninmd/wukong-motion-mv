@@ -96,8 +96,8 @@ const buildColumns = (count: number): Column[] => {
     list.push({
       x: (ix - (side - 1) / 2) * gap + jitterX,
       z: (iz - (side - 1) / 2) * gap + jitterZ,
-      height: 8.2 + hash(seed, 3) * 4.2,
-      radius: 0.82 + hash(seed, 4) * 0.22,
+      height: 9.5 + hash(seed, 3) * 4.5,
+      radius: 0.6 + hash(seed, 4) * 0.14,
       seed,
       tilt: (hash(seed, 5) - 0.5) * 0.05,
       tone: index % 3,
@@ -108,7 +108,7 @@ const buildColumns = (count: number): Column[] => {
 
 const buildChunks = (columns: Column[]): Chunk[] =>
   columns.flatMap((column, columnIndex) => {
-    const pieces = 5;
+    const pieces = 3;
     return Array.from({length: pieces}, (_, piece): Chunk => {
       const y0 = (column.height / pieces) * piece;
       const y1 = (column.height / pieces) * (piece + 1);
@@ -128,7 +128,7 @@ const buildChunks = (columns: Column[]): Chunk[] =>
           y: (hash(seed, 14) - 0.5) * 2.2,
           z: (hash(seed, 15) - 0.5) * 3.4,
         },
-        delay: 0.02 + Math.abs(column.x) * 0.009 + piece * 0.012 + (columnIndex % 4) * 0.01,
+        delay: 0.07 + Math.abs(column.x) * 0.022 + piece * 0.034 + (columnIndex % 4) * 0.02,
       };
     });
   });
@@ -206,8 +206,8 @@ export const CelestialCollapse3D: React.FC<CelestialCollapse3DProps> = ({time, s
     /* ---- 相机：切点前后两段，同一函数求值，保证连续性 ---- */
     const camT = Math.min(1, Math.max(0, prog));
     const orbit = diveOrbit(camT, {
-      radius: age > 0 ? [20, 4.2] : [21, 7.4],
-      height: age > 0 ? [17.5, 2.1] : [17.5, 4.6],
+      radius: age > 0 ? [20, 7.2] : [21, 9.0],
+      height: age > 0 ? [17.5, 4.4] : [17.5, 6.2],
       angle: [-1.35, 0.55],
       targetY: 4.4,
     });
@@ -218,7 +218,7 @@ export const CelestialCollapse3D: React.FC<CelestialCollapse3DProps> = ({time, s
         y: orbit.y + Math.sin(t * 27) * shake * 0.25,
         z: orbit.z + Math.cos(t * 23) * shake * 0.4,
       },
-      target: {x: 0, y: 4.2 - age * 1.2, z: 0},
+      target: {x: 0, y: 4.6 - age * 0.6, z: 0},
       fov: 1.12 + prog * 0.22,
       width,
       height,
@@ -326,12 +326,23 @@ export const CelestialCollapse3D: React.FC<CelestialCollapse3DProps> = ({time, s
             const tone = chunk.column.tone;
             // 石材：冷灰的墨（不是棕色的纸筒）；受光面偏暖，背光面几乎全黑
             const base = tone === 1 ? '#2B2226' : tone === 2 ? '#241E23' : '#1E1A20';
-            ctx.fillStyle = shade(base, 0.55 + lit * 0.95);
-            ctx.beginPath();
             const pts = quad as Array<{x: number; y: number}>;
+            ctx.beginPath();
             ctx.moveTo(pts[0]!.x, pts[0]!.y);
             for (let k = 1; k < 4; k += 1) ctx.lineTo(pts[k]!.x, pts[k]!.y);
             ctx.closePath();
+            const topY = Math.min(...pts.map((q) => q.y));
+            const bottomY = Math.max(...pts.map((q) => q.y));
+            if (bottomY - topY > 26) {
+              // 竖向渐变：光从地面/刀光位置往上打，柱底亮、柱顶沉
+              const grad = ctx.createLinearGradient(0, topY, 0, bottomY);
+              grad.addColorStop(0, shade(base, 0.42 + lit * 0.5));
+              grad.addColorStop(0.62, shade(base, 0.55 + lit * 0.85));
+              grad.addColorStop(1, shade(base, 0.7 + lit * 1.15));
+              ctx.fillStyle = grad;
+            } else {
+              ctx.fillStyle = shade(base, 0.55 + lit * 0.95);
+            }
             ctx.fill();
             // 受光面才有一条极细的暖金反光（不是给每根柱子描边）
             if (lit > 0.82) {
@@ -368,7 +379,7 @@ export const CelestialCollapse3D: React.FC<CelestialCollapse3DProps> = ({time, s
           // 顶部斗拱：一块外挑的厚石板，让它读成"殿柱"而不是"管子"
           const isTop = Math.abs(chunk.y1 - chunk.column.height) < 0.001;
           if (isTop) {
-            const capR = radius * 1.55;
+            const capR = radius * 1.32;
             const capBottom = oct.map((o) =>
               rotate({x: pivot.x + o.c * capR, y: chunk.y1, z: pivot.z + o.s * capR}, spin, pivot),
             ).map((p) => camera.project({x: p.x + move.x, y: p.y + move.y, z: p.z + move.z}));
@@ -392,7 +403,7 @@ export const CelestialCollapse3D: React.FC<CelestialCollapse3DProps> = ({time, s
 
           // 断口：焦黑的顶面 + 一线余烬
           const cap = top.filter(Boolean) as Array<{x: number; y: number}>;
-          if (cap.length === 8 && !isTop) {
+          if (cap.length === 8 && !isTop && broken) {
             ctx.fillStyle = 'rgba(58,48,54,0.96)';
             ctx.beginPath();
             ctx.moveTo(cap[0]!.x, cap[0]!.y);

@@ -81,11 +81,11 @@ export const EyeWoodblockShot: React.FC<EyeWoodblockShotProps> = ({
               position: 'absolute',
               left: '50%',
               top: '50%',
-              width: 2040,
-              height: 702,
-              marginLeft: -1020,
-              marginTop: -186,
-              filter: `contrast(1.34) saturate(1.2) brightness(${0.96 + flicker})`,
+              width: 2200,
+              height: 356,
+              marginLeft: -1100,
+              marginTop: -178,
+              filter: `contrast(1.08) saturate(1.05) brightness(${0.99 + flicker})`,
             }}
           />
         </div>
@@ -97,10 +97,10 @@ export const EyeWoodblockShot: React.FC<EyeWoodblockShotProps> = ({
             inset: 0,
             background: 'linear-gradient(100deg, #8E1A13 0%, #D9A15C 46%, #8E1A13 100%)',
             mixBlendMode: 'color',
-            opacity: 0.32,
+            opacity: 0.14,
           }}
         />
-        <div style={{position: 'absolute', inset: 0, backgroundColor: '#2A0B0A', mixBlendMode: 'multiply', opacity: 0.18}} />
+        <div style={{position: 'absolute', inset: 0, backgroundColor: '#2A0B0A', mixBlendMode: 'multiply', opacity: 0.12}} />
 
         {/* 条内压边：上黑下黑的胶片齿孔感，两侧留金线 */}
         <div

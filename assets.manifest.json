@@ -27,56 +27,86 @@
       "name": "玉境 · 四色和纸画格",
       "frames": "0-30",
       "subject": "四道竖幅和纸画格：米白南天门 / 深绯飞檐满月 / 深黛银戈林 / 泥金大圣剪影；壹贰叁肆编号印跨框砸下",
-      "primitives": ["FourPaperPanels", "OrnateSealStamp", "ClimaxAsset(raise)"]
+      "primitives": [
+        "FourPaperPanels",
+        "OrnateSealStamp",
+        "ClimaxAsset(raise)"
+      ]
     },
     {
       "id": "s1b",
       "name": "十万天兵 · 满月逆光旋棍",
       "frames": "30-75",
       "subject": "780px 暖白满月偏左后方；云海压底；真实剪影在 X=35%；虚线椭圆棍影 + 箭雨 + 右缘天兵墙",
-      "primitives": ["MoonSpinShot", "MoonDisc", "CloudBank", "ClimaxAsset(spin)"]
+      "primitives": [
+        "MoonSpinShot",
+        "MoonDisc",
+        "CloudBank",
+        "ClimaxAsset(spin)"
+      ]
     },
     {
       "id": "s2a",
       "name": "怎敌我 · 宣纸白底眼部横切",
       "frames": "75-98",
       "subject": "整屏翻成暖白宣纸；−5° 玄黑金边横条内嵌参考帧 00:18 的木刻眼部；金色闪电；右侧【怎】【敌】【我】",
-      "primitives": ["EyeWoodblockShot", "PaperField", "InkSpecks"]
+      "primitives": [
+        "EyeWoodblockShot",
+        "PaperField",
+        "InkSpecks"
+      ]
     },
     {
       "id": "s2b",
       "name": "无坚不摧 · 真三维崩裂",
       "frames": "98-150",
       "subject": "36 根八棱殿柱（柱头斗拱 + 柱础）+ 3000 粒子 + 地面 3D 网格；相机螺旋俯冲；112 帧刀光横扫；三圈地面波纹；左下真实立绘侧影；右上斜切【无坚不摧】",
-      "primitives": ["CelestialCollapse3D", "createCamera", "ClimaxAsset(slashColour)"]
+      "primitives": [
+        "CelestialCollapse3D",
+        "createCamera",
+        "ClimaxAsset(slashColour)"
+      ]
     },
     {
       "id": "s3a",
       "name": "五指山下 · 明暗裂谷",
       "frames": "150-175",
       "subject": "整块黑山压下；山体下缘一线赭金受光；跪撑剪影自下而上擦除入场；六道铁索",
-      "primitives": ["MountainCleft", "IronChain", "ClimaxAsset(trapped)"]
+      "primitives": [
+        "MountainCleft",
+        "IronChain",
+        "ClimaxAsset(trapped)"
+      ]
     },
     {
       "id": "s3b",
       "name": "偿自由的罪 · 复合符咒",
       "frames": "175-225",
       "subject": "六张五层复合符咒弹簧钉入两侧山体：【五指山下】【偿】【自】【由】【的】【罪】",
-      "primitives": ["ComplexOfudaTalisman", "MountainCleft"]
+      "primitives": [
+        "ComplexOfudaTalisman",
+        "MountainCleft"
+      ]
     },
     {
       "id": "s4a",
       "name": "罪名是老孙 · 纯黑悬签",
       "frames": "225-256",
       "subject": "#050404 纯黑深渊；三道铁索 + 远中近三层白签；聚光灯依次亮出【罪名】【是】【老孙】",
-      "primitives": ["SuspendedTags", "IronChain"]
+      "primitives": [
+        "SuspendedTags",
+        "IronChain"
+      ]
     },
     {
       "id": "s4b",
       "name": "不敬权威 · 红黑版画四连跳切",
       "frames": "256-291",
       "subject": "真实参考帧的木刻怒颜；白底墨版 / 朱砂红底反白墨线交替四次跳切；四枚裂纹朱印【不】【敬】【权】【威】；290 白闪",
-      "primitives": ["WoodblockJumpCuts", "ClimaxAsset(face)"]
+      "primitives": [
+        "WoodblockJumpCuts",
+        "ClimaxAsset(face)"
+      ]
     },
     {
       "id": "s5",
@@ -91,61 +121,95 @@
       "id": "face_glare_woodblock",
       "type": "png",
       "file": "public/wukong_assets/face_glare_woodblock.png",
-      "size": [1280, 1200],
+      "size": [
+        1280,
+        1200
+      ],
       "source": "参考片 00:18.0（f271）咬牙怒视特写",
       "pipeline": "五阶色调分层 + 朱砂/鎏金分色 + Sobel/黑帽黑版线 + 和纸颗粒",
-      "usedBy": ["s4b"]
+      "usedBy": [
+        "s4b"
+      ]
     },
     {
       "id": "eyes_closeup_woodblock",
       "type": "png",
       "file": "public/wukong_assets/eyes_closeup_woodblock.png",
-      "size": [1920, 660],
+      "size": [
+        2200,
+        356
+      ],
       "source": "参考片 00:18.0（f271）眼部横带",
-      "pipeline": "同上，punch=2.05 加强黑版",
-      "usedBy": ["s2a"]
+      "pipeline": "eye_band()：CLAHE 3.2 + 三色调（墨/朱砂/宣纸）+ 黑帽细线，按横条比例切 316px 带，1:1 贴合",
+      "usedBy": [
+        "s2a"
+      ]
     },
     {
       "id": "silhouette_spin_staff",
       "type": "png(alpha)",
       "file": "public/wukong_assets/silhouette_spin_staff.png",
-      "size": [1049, 1500],
+      "size": [
+        1049,
+        1500
+      ],
       "source": "生图网关：全身侧面旋棍立绘（纯白底）",
       "pipeline": "白底抠除 → 外轮廓填洞 → 2× 平滑 → 纯 #120D14 剪影",
-      "usedBy": ["s1b"]
+      "usedBy": [
+        "s1b"
+      ]
     },
     {
       "id": "silhouette_side_slash",
       "type": "png(alpha)",
       "file": "public/wukong_assets/silhouette_side_slash.png",
-      "size": [1830, 1500],
+      "size": [
+        1830,
+        1500
+      ],
       "source": "生图网关：横扫弓步立绘",
       "pipeline": "同上（彩色版另存 colour_side_slash.png，给 s2b 前景用）",
-      "usedBy": ["s2b(彩色)"]
+      "usedBy": [
+        "s2b(彩色)"
+      ]
     },
     {
       "id": "silhouette_trapped",
       "type": "png(alpha)",
       "file": "public/wukong_assets/silhouette_trapped.png",
-      "size": [1062, 1500],
+      "size": [
+        1062,
+        1500
+      ],
       "source": "生图网关：单膝跪地、双手撑住巨岩",
       "pipeline": "同上",
-      "usedBy": ["s3a", "s3b"]
+      "usedBy": [
+        "s3a",
+        "s3b"
+      ]
     },
     {
       "id": "silhouette_raise_staff",
       "type": "png(alpha)",
       "file": "public/wukong_assets/silhouette_raise_staff.png",
-      "size": [1215, 1500],
+      "size": [
+        1215,
+        1500
+      ],
       "source": "生图网关：正面举棒怒吼",
       "pipeline": "同上",
-      "usedBy": ["s1a"]
+      "usedBy": [
+        "s1a"
+      ]
     },
     {
       "id": "trapped_print",
       "type": "png",
       "file": "public/wukong_assets/trapped_print.png",
-      "size": [1400, 900],
+      "size": [
+        1400,
+        900
+      ],
       "source": "参考片 00:14.5（f166）后脑与红箍",
       "pipeline": "木刻套色（备用素材，V5 正片未启用）",
       "usedBy": []

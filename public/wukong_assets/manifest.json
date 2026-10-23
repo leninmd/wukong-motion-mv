@@ -16,11 +16,12 @@
       "file": "eyes_closeup_woodblock.png",
       "source": "ref f271 (00:18.0) eye band",
       "size": [
-        1920,
-        660
+        2200,
+        356
       ],
-      "bytes": 1391600,
-      "sha": "330a49747ba9"
+      "note": "CLAHE + 三色调（墨/朱砂/宣纸）+ 黑帽细线，专供横条",
+      "bytes": 651688,
+      "sha": "807e2ae7734a"
     },
     "trapped_print": {
       "file": "trapped_print.png",

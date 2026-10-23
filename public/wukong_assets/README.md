@@ -24,7 +24,7 @@ npm run assets:wukong
 | 文件 | 尺寸 | 用途 | 说明 |
 |---|---|---|---|
 | `face_glare_woodblock.png` | 1280×1200 | s4b 四连跳切 | 参考片 00:18.0 真帧套色，五官来自六小龄童 |
-| `eyes_closeup_woodblock.png` | 1920×660 | s2a 眼部横切 | 同一帧的眼部横带，punch=2.05 强化黑版 |
+| `eyes_closeup_woodblock.png` | 2200×356 | s2a 眼部横切 | 同一帧的眼部横带，`eye_band()` 三色版（CLAHE + 墨/朱砂/宣纸 + 黑帽细线），按横条比例切片 |
 | `silhouette_spin_staff.png` | 1049×1500 | s1b 满月逆光 | 纯黑剪影，无描边、无荧光线 |
 | `silhouette_side_slash.png` | 1830×1500 | s2b（彩色版） | `colour_side_slash.png` 供前景侧影 |
 | `silhouette_trapped.png` | 1062×1500 | s3a / s3b | 单膝跪地、双手撑岩 |
